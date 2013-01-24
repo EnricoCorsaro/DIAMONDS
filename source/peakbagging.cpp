@@ -2,8 +2,8 @@
 // Created by Enrico Corsaro @ IvS - 24 January 2013
 // e-mail: enrico.corsaro@ster.kuleuven.be
 // Source code file "peakbagging.cpp"
-#include "MathExtra.h"
-#include "FileProcess.h"
+#include "../include/MathExtra.h"
+#include "../include/FileProcess.h"
 
 int main()
 {
