@@ -1,0 +1,35 @@
+# Files never to be ignored by git
+
+# Compiled source 
+
+*.class
+*.dll
+*.exe
+*.o
+*.so
+*.gch
+
+# Packages
+
+*.7z
+*.dmg
+*.gz
+*.tgz
+*.iso
+*.jar
+*.rar
+*.tar
+*.zip
+*.bz2
+
+# Logs and databases
+
+*.log
+*.sql
+*.sqlite
+
+# OSX generated files
+
+.DS_Store*
+Icon?
+Thumbs.db
