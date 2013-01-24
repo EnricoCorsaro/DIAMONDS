@@ -24,8 +24,8 @@ class FileProcess
 	}
 	
 
-	// Read an ASCII file in a two columns format containing float numbers
-	// and save them in two vectors having double type, both accessible from outside
+	// Reads an ASCII file having a two columns format of doubles and stores each
+	// column in a vector returned as a public data member
 	void read2ColDouble ()
 	{
 		ifstream inputFile		;
@@ -45,7 +45,7 @@ class FileProcess
 		{
 			inputFile >> x.at(i) >> y.at(i) ;
 		}
-		//inputFile.close()		;
+		inputFile.close()		;
 
 		return;
 	}
