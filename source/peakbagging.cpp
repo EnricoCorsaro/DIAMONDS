@@ -15,6 +15,7 @@ int main()
     int Niter = 1000;     // Number of nested iterations (usually 1000)
     
     NestedSampler nestedSampler(Ndata, Niter);
+    nestedSampler.run();
     
     cout << right << setw(10) << "Parameter value" << right << setw(20) << "logLikelihood" << endl;
     for (int i = 0; i < Niter; i++)
