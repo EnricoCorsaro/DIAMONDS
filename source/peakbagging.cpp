@@ -7,27 +7,25 @@
 #include <iomanip>
 #include "MathExtra.h"
 #include "FileProcess.h"
-#include "Nesting.h"
+#include "NestedSampler.h"
 
 int main()
 {
-    int n_obj;      // Number of objects per nested iteration (usually 100)
-    int n_nest;     // Number of nested iterations (usually 1000)
+    int Ndata = 100;      // Number of objects per nested iteration (usually 100)
+    int Niter = 1000;     // Number of nested iterations (usually 1000)
     
-    n_obj = 100;
-    n_nest = 1000;
-    Nesting nestObj( n_obj, n_nest );
+    NestedSampler nestedSampler(Ndata, Niter);
     
     cout << right << setw(10) << "Parameter value" << right << setw(20) << "logLikelihood" << endl;
-    for (int i = 0; i < n_nest; i++ )
+    for (int i = 0; i < Niter; i++)
     {
-       cout << right << setw(10) << nestObj.postP.at(i) 
-       << right << setw(20) << nestObj.postlogL.at(i) << endl;
+       cout << right << setw(10) << nestedSampler.postP[i]
+       << right << setw(20) << nestedSampler.postlogL[i] << endl;
     }
     
     cout << endl;
     cout << " ------------------------------------------------" << endl;
-    cout << " Evidence: logZ = " << nestObj.results.at(0) << " +/- " << nestObj.results.at(1) << endl;
-    cout << " Information: H = " << nestObj.results.at(2) << endl;
+    cout << " Evidence: logZ = " << nestedSampler.results[0] << " +/- " << nestedSampler.results[1] << endl;
+    cout << " Information: H = " << nestedSampler.results[2] << endl;
     cout << " ------------------------------------------------" << endl;
 }
