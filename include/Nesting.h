@@ -87,7 +87,7 @@ class Nesting
                 do 
                 {
                     copy = rand() % n_obj;              // 0 <= copy < n_obj
-                } while ( copy == worst && n_obj > 1 );
+                } while ( copy == worst && n_obj > 1 ); // do not replace if n_obj = 1
 
                 logLstar = logL.at(worst);
                 priorM.at(worst) = priorM.at(copy);
