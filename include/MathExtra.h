@@ -32,7 +32,7 @@ class MathExtra
 
         inline double product(const vector<double> &vec);
         inline double sum(const vector<double> &vec);
-        inline double logExpSum(const double x, const double y);
+        double logExpSum(double x, double y);
     
     protected:
     

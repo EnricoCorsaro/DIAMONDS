@@ -197,7 +197,7 @@ inline double MathExtra::sum(const vector<double> &vec)
 // OUTPUT: log(exp(x)+exp(y))
 //
 
-inline double MathExtra::logExpSum(const double x, const double y)
+double MathExtra::logExpSum(double x, double y)
 {
     return (x>=y ? x+log(1.+exp(y-x)) : y + log(1.+exp(x-y)));
 }
