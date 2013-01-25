@@ -4,9 +4,9 @@
 // Header file "MathExtra.h"
 
 
+
 #ifndef MATHEXTRA_H
 #define MATHEXTRA_H
-
 
 #include <cmath>
 #include <numeric>

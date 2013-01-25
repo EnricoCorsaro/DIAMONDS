@@ -5,16 +5,27 @@
 
 #include "MathExtra.h"
 #include "FileProcess.h"
+#include "Nesting.h"
 
 int main()
 {
-	double logwidth;	// ln(width in prior mass)
-	double H = 0.;		// Information achieved from prior to posterior, initially  0
-	double logZ = 0.;	// ln(Evidence Z), initially 0
-	double logZnew;		// Updated logZ
-	int nest;           // Nested sampling iteration count
-    int n = 1;
-
-	// Outermost interval of prior mass: width = 1 means total prior mass
-	logwidth = log(1. - exp(-1. / n));
+    int n_obj;      // Number of objects per nested iteration (usually 100)
+    int n_nest;     // Number of nested iterations (usually 1000)
+    
+    n_obj = 100;
+    n_nest = 1000;
+    Nesting nestObj( n_obj, n_nest );
+    
+    cout << right << setw(10) << "Parameter value" << right << setw(20) << "logLikelihood" << endl;
+    for (int i = 0; i < n_nest; i++ )
+    {
+       cout << right << setw(10) << nestObj.postP.at(i) 
+       << right << setw(20) << nestObj.postlogL.at(i) << endl;
+    }
+    
+    cout << endl;
+    cout << " ------------------------------------------------" << endl;
+    cout << " Evidence: logZ = " << nestObj.results.at(0) << " +/- " << nestObj.results.at(1) << endl;
+    cout << " Information: H = " << nestObj.results.at(2) << endl;
+    cout << " ------------------------------------------------" << endl;
 }
