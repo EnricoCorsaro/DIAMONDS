@@ -4,8 +4,11 @@
 // Created by Enrico Corsaro @ IvS - 24 January 2013
 // e-mail: enrico.corsaro@ster.kuleuven.be
 // Header file "Nesting.h"
+
+#include <cfloat>
 #include "MathExtra.h"
 #include "FileProcess.h"
+
 
 class Nesting
 {
