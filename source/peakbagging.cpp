@@ -3,6 +3,8 @@
 // e-mail: enrico.corsaro@ster.kuleuven.be
 // Source code file "peakbagging.cpp"
 
+#include <iostream>
+#include <iomanip>
 #include "MathExtra.h"
 #include "FileProcess.h"
 #include "Nesting.h"
