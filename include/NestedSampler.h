@@ -29,7 +29,7 @@ class NestedSampler
 
         void drawFromPrior();
         void drawFromConstrainedPrior(double logL_limit, int worst);
-        double informationGain(double oldH, double logZ_old, double logZ_new, int worst);
+        double updateInformationGain(double oldH, double logZ_old, double logZ_new, int worst);
 };
 
 #endif

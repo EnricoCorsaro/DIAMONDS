@@ -67,7 +67,7 @@ void NestedSampler::run()
         // Update evidence Z and information H
         
         logZnew = mathObj.logExpSum(logZ, logW.at(worst));
-        H = informationGain(H, logZ, logZnew, worst);
+        H = updateInformationGain(H, logZ, logZnew, worst);
         logZ = logZnew;
 
         // Save nested samples for posterior
@@ -199,7 +199,7 @@ void NestedSampler::drawFromConstrainedPrior(double logL_limit, int worst)
 
 
 
-// NestedSampler::informationGain()
+// NestedSampler::updateInformationGain()
 // 
 // PURPOSE: Computes the information gain from old to new evidence
 //
@@ -208,7 +208,7 @@ void NestedSampler::drawFromConstrainedPrior(double logL_limit, int worst)
 // OUTPUT:
 //
 
-double NestedSampler::informationGain(double oldH, double logZ_old, double logZ_new, int worst)
+double NestedSampler::updateInformationGain(double oldH, double logZ_old, double logZ_new, int worst)
 {    
     return exp(logW[worst] - logZ_new) * logL[worst]
            + exp(logZ_old - logZ_new) * (oldH + logZ_old) - logZ_new;
