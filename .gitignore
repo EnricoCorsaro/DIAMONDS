@@ -1,4 +1,6 @@
-# Files never to be ignored by git
+
+build/
+source/temp*.cpp
 
 # Compiled source 
 
