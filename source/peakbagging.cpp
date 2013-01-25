@@ -2,8 +2,9 @@
 // Created by Enrico Corsaro @ IvS - 24 January 2013
 // e-mail: enrico.corsaro@ster.kuleuven.be
 // Source code file "peakbagging.cpp"
-#include "../include/MathExtra.h"
-#include "../include/FileProcess.h"
+
+#include "MathExtra.h"
+#include "FileProcess.h"
 
 int main()
 {
@@ -12,6 +13,7 @@ int main()
 	double logZ = 0.;	// ln(Evidence Z), initially 0
 	double logZnew;		// Updated logZ
 	int nest;           // Nested sampling iteration count
+    int n = 1;
 
 	// Outermost interval of prior mass: width = 1 means total prior mass
 	logwidth = log(1. - exp(-1. / n));
