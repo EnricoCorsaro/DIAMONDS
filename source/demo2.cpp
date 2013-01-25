@@ -52,11 +52,22 @@ int main()
 	unsigned long nlines		;
 	int ncolumns			;
 	//const char * filename = "test.dat"		;
-	FileProcess 	file1 ( "test.dat" )		;
+	//FileProcess 	file1 ( "test.dat" )		;
 	
-	file1.read2ColDouble()	;
+	//file1.read2ColDouble()	;
 
-	cout << file1.x.at(99) << setw(20) << setprecision(4) << file1.y.at(99) << endl;
-	
-	return 0;
+	// cout << file1.x.at(99) << setw(20) << setprecision(4) << file1.y.at(99) << endl;
+
+
+    int N = 100;
+    int worst = 67;
+    int copy;
+
+    do 
+    {
+        copy = rand() % N;
+    }   while (copy == worst && N > 1);
+
+    cout << copy << endl;
+    return 0;
 }

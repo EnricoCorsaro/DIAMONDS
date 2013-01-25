@@ -15,16 +15,16 @@ class FileProcess
         int ncolumns;
         vector<double> x;
         vector<double> y;
-	
+    
         // Public member functions
         // // Class constructor. Requires the filename as input.
         FileProcess (const char *name)
         {
             filename = name;
-            nlines	= countLine();
+            nlines  = countLine();
             ncolumns = countColumn();
         }
-	
+    
 
         // Reads an ASCII file having a two columns format of doubles and stores each
         // column in a vector returned as a public data member
@@ -32,16 +32,16 @@ class FileProcess
         {
             ifstream inputFile;
             inputFile.open(filename);
-		
+        
             if (!inputFile)
             {
                 cout << "Could not open file. Quitting program." << endl;
                 exit(1);
             }
-	
+    
             x.resize(nlines);
             y.resize(nlines);
-		
+        
             for (int i = 0; inputFile && (i < nlines); i++)
             {
                 inputFile >> x.at(i) >> y.at(i);
@@ -50,7 +50,7 @@ class FileProcess
 
             return;
         }
-	
+    
 
     private:
 
@@ -59,7 +59,7 @@ class FileProcess
         {
             ifstream inputFile;
             inputFile.open(filename);
-	
+    
             if (!inputFile)
             {
                 cout << "Could not open file. Quitting program." << endl;
@@ -81,7 +81,7 @@ class FileProcess
         {
             ifstream inputFile;
             inputFile.open(filename);
-	
+    
             if (!inputFile)
             {
                 cout << "Could not open file. Quitting program." << endl;
@@ -94,7 +94,7 @@ class FileProcess
 
             stringstream stringFile(line);
             string ss;
-	
+    
             while (stringFile >> ss)
                 ++ncol;
 
@@ -103,4 +103,4 @@ class FileProcess
         }
 
         const char *filename;
-}	;
+}   ;

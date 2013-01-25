@@ -21,7 +21,7 @@ class MathExtra
 
             y.resize(xsize);
 	    
-            for ( int i=0; i < x.size(); i++ )
+            for ( int i = 0; i < x.size(); i++ )
             {
                 y.at(i) = amp/(1 + pow( ((x.at(i)-x0)/gamma), 2) );
             }
@@ -65,8 +65,7 @@ class MathExtra
             for ( int i = 0; i < xsize; i++ )
             {
                 fac = 1./(sqrt(2.*PI) * sigma.at(i));
-                delta.at(i)	= -0.5*pow( (x_obs.at(i) - x_theor.at(i)), 2) /
-				(pow(sigma.at(i), 2));
+                delta.at(i)	= -0.5*pow( (x_obs.at(i) - x_theor.at(i)), 2) / (pow(sigma.at(i), 2));
                 likelihood.at(i) = fac * exp(delta.at(i));
              }
 	
@@ -91,7 +90,7 @@ class MathExtra
             vector<double> lambda0(xsize);
             vector<double> lambda(xsize);
 		
-            for (unsigned long j = 0; j < xsize; j++)
+            for ( unsigned long j = 0; j < xsize; j++ )
             {
                 delta.at(j)	= pow( ( x_obs.at(j) - x_theor.at(j) ), 2) / ( pow(sigma.at(j), 2) );
                 lambda0.at(j) = -1.*log(sqrt(2.*PI) * sigma.at(j));
