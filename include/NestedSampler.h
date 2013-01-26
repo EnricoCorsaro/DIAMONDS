@@ -1,3 +1,7 @@
+// Class for nested sampling inference
+// Enrico Corsaro @ IvS - 24 January 2013
+// e-mail: enrico.corsaro@ster,kuleuven.be
+// Header file "NestedSampler.h"
 
 #ifndef NESTEDSAMPLER_H
 #define NESTEDSAMPLER_H
@@ -29,7 +33,7 @@ class NestedSampler
 
         void drawFromPrior();
         void drawFromConstrainedPrior(double logL_limit, int worst);
-        double updateInformationGain(double oldH, double logZ_old, double logZ_new, int worst);
+        double updateInformationGain(double H_old, double logZ_old, double logZ_new, int worst);
 };
 
 #endif

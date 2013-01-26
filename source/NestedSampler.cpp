@@ -1,18 +1,16 @@
-
 #include "NestedSampler.h"
 
-
 // NestedSampler::NestedSampler()
-// 
-// PURPOSE: constructor
-//
+// PURPOSE: 
+//      Class constructor
 // INPUT:
-//
+//      Ndata = Number of objects for nested sampling
+//      Niter = Number of nested iterations
 // OUTPUT:
 //
 
 NestedSampler::NestedSampler(int Ndata = 100, int Niter = 1000)
-: Ndata(Ndata), Niter(Niter)
+: Ndata(Ndata), Niter(Niter)            // What is this for ???
 {
     // Set vector sizes
     
@@ -23,18 +21,16 @@ NestedSampler::NestedSampler(int Ndata = 100, int Niter = 1000)
     postlogL.resize(Niter);
     postP.resize(Niter);
     results.resize(3);
-}
-
+} // END NestedSampler::NestedSampler
 
 
 
 
 // NestedSampler::run()
-// 
-// PURPOSE: 
-//
+// PURPOSE:
+//      Start nested sampling computation. Save results in 
+//      public data-member vectors "postlogL", "postP", "results"
 // INPUT:
-//
 // OUTPUT:
 //
 
@@ -105,19 +101,15 @@ void NestedSampler::run()
     results.at(2) = H;
 
     return;
-    
-} // end NestedSampler::run()
-
+} // END NestedSampler::run()
 
 
 
 
 // NestedSampler::drawFromPrior()
-// 
-// PURPOSE: Initialize all objects for nested sampling with no constraints on likelihood
-//
+// PURPOSE: 
+//      Initialize all objects for nested sampling with no constraints on likelihood
 // INPUT:
-//
 // OUTPUT:
 //
 
@@ -149,20 +141,18 @@ void NestedSampler::drawFromPrior()
     }
 
     return;
-
-} // end drawFromPrior()
-
-
+} // END NestedSampler::drawFromPrior()
 
 
 
 
 // NestedSampler::drawFromConstrainedPrior()
-// 
-// PURPOSE: Replace worst object in nested sampling with new one subject to constraint L > L*
-//
+// PURPOSE: 
+//      Replace worst object in nested sampling with new one subject to 
+//      new constraint logL > logL_limit
 // INPUT:
-//
+//      logL_limit = New constraint on log Likelihood value
+//      worst = subscript of edge object in nested iteration
 // OUTPUT:
 //
 
@@ -192,25 +182,25 @@ void NestedSampler::drawFromConstrainedPrior(double logL_limit, int worst)
 
     return;
 
-} // end NestedSampler::drawFromConstrainedPrior()
+} // END NestedSampler::drawFromConstrainedPrior()
 
 
 
 
-
-
-// NestedSampler::updateInformationGain()
-// 
-// PURPOSE: Computes the information gain from old to new evidence
-//
+// NestedSampler::updateInformationGain() 
+// PURPOSE: 
+//      Updates the information gain from old to new evidence
 // INPUT:
-//
+//      H_old = Old information H
+//      logZ_old = old log Evidence
+//      logZ_new = new log Evidence
 // OUTPUT:
+//      New value of information gain H
 //
 
-double NestedSampler::updateInformationGain(double oldH, double logZ_old, double logZ_new, int worst)
+double NestedSampler::updateInformationGain(double H_old, double logZ_old, double logZ_new, int worst)
 {    
     return exp(logW[worst] - logZ_new) * logL[worst]
-           + exp(logZ_old - logZ_new) * (oldH + logZ_old) - logZ_new;
-}
+           + exp(logZ_old - logZ_new) * (H_old + logZ_old) - logZ_new;
+} // END NestedSampler::updateInformationGain
 
