@@ -11,6 +11,9 @@
 # Notes:
 #   - Prefer 'cmake ..' in the build/ directory above 'cmake' in the
 #     parent directory, because the former does an out-of-source build.
+#
+#   - You can change the default compiler by using (e.g.)"
+#     $ cmake -D CMAKE_CXX_COMPILER=/usr/bin/clang++ ..
 
 
 project(MultiNest)
@@ -31,11 +34,19 @@ file(GLOB sourceFiles ${CMAKE_CURRENT_SOURCE_DIR}/source/*.cpp)
 
 
 # Set the compiler flags
-# -O3 = level 3 optimization; -Wall = enable all compiler's warning messages
-# -fmessage-length=0 = each error message on a single line (no line-wrapping)
+# First those common to both gcc and clang:
+# -O3   = level 3 optimization; 
+# -Wall = enable all compiler's warning messages
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall -fmessage-length=0 -pthread")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -Wall")
 
+# Then those specific for the compiler, for using C++11 support.
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -stdlib=libc++ -std=c++0x")    
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
+endif()
 
 # Create an executable target
 

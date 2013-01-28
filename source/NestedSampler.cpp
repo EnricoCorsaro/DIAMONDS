@@ -9,7 +9,7 @@
 // OUTPUT:
 //
 
-NestedSampler::NestedSampler(int Ndata = 100, int Niter = 1000)
+NestedSampler::NestedSampler(int Ndata, int Niter)
 : Ndata(Ndata), Niter(Niter)
 {
     // Set vector sizes
