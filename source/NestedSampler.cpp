@@ -10,7 +10,7 @@
 //
 
 NestedSampler::NestedSampler(int Ndata = 100, int Niter = 1000)
-: Ndata(Ndata), Niter(Niter)            // What is this for ???
+: Ndata(Ndata), Niter(Niter)
 {
     // Set vector sizes
     
@@ -43,8 +43,7 @@ void NestedSampler::run()
     double logZnew;
     int copy;
     int worst;
-    MathExtra mathObj;                  // Object providing extra math functions
-    
+
     drawFromPrior();
     logwidth = log(1.0 - exp(-1.0/Ndata));      // initialize prior mass interval
 
@@ -62,7 +61,7 @@ void NestedSampler::run()
         
         // Update evidence Z and information H
         
-        logZnew = mathObj.logExpSum(logZ, logW.at(worst));
+        logZnew = MathExtra::logExpSum(logZ, logW.at(worst));
         H = updateInformationGain(H, logZ, logZnew, worst);
         logZ = logZnew;
 
@@ -117,7 +116,6 @@ void NestedSampler::drawFromPrior()
 {
     double param_max, param_min;        // Maximum and minimum parameter values
     double prior_const;                 // 1-dimensional flat prior constant value
-    MathExtra mathObj;                  // Object providing extra math functions
             
     param_max = 20;
     param_min = 0;
@@ -133,11 +131,12 @@ void NestedSampler::drawFromPrior()
         param.at(i) = priorM.at(i)/prior_const + param_min;
     }
 
-    mathObj.gaussProfile(param, param0, sigma, 10);	// output stored in mathObj.y
+    vector<double> y;
+    MathExtra::gaussProfile(y, param, param0, sigma, 10);
     
-    for ( int i = 0; i < Ndata; i++ )
+    for (int i = 0; i < Ndata; i++)
     {
-        logL.at(i) = log(mathObj.y.at(i));
+        logL.at(i) = log(y.at(i));
     }
 
     return;
@@ -160,7 +159,6 @@ void NestedSampler::drawFromConstrainedPrior(double logL_limit, int worst)
 {
     double param_max, param_min;        // Maximum and minimum parameter values
     double prior_const;                 // 1-dimensional flat prior constant value
-    MathExtra mathObj;                  // Object providing extra math functions
             
     param_max = 20;
     param_min = 0;
@@ -172,12 +170,13 @@ void NestedSampler::drawFromConstrainedPrior(double logL_limit, int worst)
 
     // Find new object subject to constraint logL > LogL_limit
 
+    vector<double> y;
     while (logL.at(worst) < logL_limit)
     {
         priorM.at(worst) = rand()/(RAND_MAX + 1.);
         param.at(worst) = priorM.at(worst)/prior_const + param_min;
-        mathObj.gaussProfile(param, param0, sigma, 10);	// output stored in mathObj.y
-        logL.at(worst) = log(mathObj.y.at(worst));
+        MathExtra::gaussProfile(y, param, param0, sigma, 10);
+        logL.at(worst) = log(y.at(worst));
     }
 
     return;

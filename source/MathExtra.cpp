@@ -1,12 +1,5 @@
 #include "MathExtra.h"
 
-// MathExtra::MathExtra
-//
-// PURPOSE:
-//      Class constructor
-// INPUT:
-// OUTPUT:
-//
 
 
 
@@ -17,6 +10,7 @@
 //      Saves the dependent variable values into a vector y accessible as
 //      public data member.
 // INPUT:
+//      y = vector containing the result
 //      x = vector containing independent variable values
 //      x0 = centroid of the Lorentzian profile
 //      gamma = width of the Lorentzian profile
@@ -24,10 +18,9 @@
 // OUTPUT:
 //
 
-void MathExtra::lorentzProfile(vector<double> &x, double x0, double gamma, double amp)
+void MathExtra::lorentzProfile(vector<double> &y, vector<double> &x, double x0, double gamma, double amp)
 {
-    unsigned long xsize = x.size();
-    
+    const unsigned long xsize = x.size();
     y.resize(xsize);
     
     for (unsigned int i=0; i < x.size(); i++)
@@ -48,6 +41,7 @@ void MathExtra::lorentzProfile(vector<double> &x, double x0, double gamma, doubl
 //      Saves the dependent variable values into a vector y accessible as
 //      public data member.
 // INPUT:
+//      y = vector containing the result
 //      x = vector containing independent variable values
 //      x0 = mean value of the Gaussian profile
 //      sigma = standard deviation of the Gaussian profile
@@ -55,13 +49,12 @@ void MathExtra::lorentzProfile(vector<double> &x, double x0, double gamma, doubl
 // OUTPUT:
 //
 
-void MathExtra::gaussProfile(vector<double> &x, double x0, double sigma, double amp)
+void MathExtra::gaussProfile(vector<double> &y, vector<double> &x, double x0, double sigma, double amp)
 {
     double fac;
-    unsigned long xsize = x.size();
-    
+    const unsigned long xsize = x.size();
     y.resize(xsize);
-    fac = 1./(sqrt(2.*PI) * sigma);
+    fac = 1./(sqrt(2.*MathExtra::PI) * sigma);
     
     for (unsigned int i = 0; i < x.size(); i++)
     {
@@ -102,9 +95,8 @@ double MathExtra::gaussLikelihood(vector<double> &x_obs, vector<double> &x_theor
     
     for (unsigned int i = 0; i < xsize; i++)
     {
-        fac = 1./(sqrt(2.*PI) * sigma.at(i));
-        delta.at(i)	= -0.5*pow( (x_obs.at(i) - x_theor.at(i)), 2) /
-        (pow(sigma.at(i), 2));
+        fac = 1./(sqrt(2.*MathExtra::PI) * sigma.at(i));
+        delta.at(i)	= -0.5*pow(x_obs.at(i) - x_theor.at(i), 2) / pow(sigma.at(i), 2);
         likelihood.at(i) = fac * exp(delta.at(i));
     }
 	
@@ -136,7 +128,6 @@ double MathExtra::logGaussLikelihood(vector<double> &x_obs, vector<double> &x_th
         exit(1);
     }
     
-    double likel;
     unsigned long xsize = x_obs.size();
     vector<double> delta(xsize);
     vector<double> lambda0(xsize);
@@ -144,14 +135,13 @@ double MathExtra::logGaussLikelihood(vector<double> &x_obs, vector<double> &x_th
     
     for (unsigned long j = 0; j < xsize; j++)
     {
-        delta.at(j)	= pow( ( x_obs.at(j) - x_theor.at(j) ), 2) / ( pow(sigma.at(j), 2) );
+        delta.at(j)	= pow(x_obs.at(j) - x_theor.at(j), 2) / pow(sigma.at(j), 2);
         lambda0.at(j) = -1.*log(sqrt(2.*PI) * sigma.at(j));
         lambda.at(j) = lambda0.at(j) -0.5*delta.at(j);
     }
     
-    likel = sum(lambda);
-    
-    return likel;
+    return sum(lambda);
+
 } // END MathExtra::logGaussLikelihood()
 
 
