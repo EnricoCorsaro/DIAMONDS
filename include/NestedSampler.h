@@ -9,30 +9,31 @@
 #include <cfloat>
 #include "MathExtra.h"
 #include "FileProcess.h"
+#include "RandomVariate.h"
 
 
 class NestedSampler
 {
     public:
         
-        NestedSampler(int Ndata, int Niter);    // constructor
-        void run();
-        vector<double> param;                   // parameter values (the free parameters of the problem)
-        vector<double> postlogL;                // likelihood samples from nested sampling
-        vector<double> postP;                   // parameter values corresponding to posterior sample
-        vector<double> results;                 // output logZ, logZ_err, information H
+        NestedSampler(RandomVariate &variate); 
+        void run(int Nobjects, int Niter);
+        double getLogEvidence();
+        double getLogEvidenceError();
+        double getInformationH();
+        vector<double> param;                           // parameter values (the free parameters of the problem)
+        vector<double> posteriorSample;                 // parameter values sampled from the posterior
+        vector<double> logLikelihoodOfPosteriorSample;  // logLikelihood values corresponding to the posterior sample 
+        vector<double> results;                         // output logZ, logZ_err, information H
 
 	private:
-
-        int Ndata;
-        int Niter;
         
-        vector<double> priorM;          // prior mass values between 0 and last nested boundary
-        vector<double> logL;            // log-likelihood values
-        vector<double> logW;            // weight = width * likelihood
-
-        void drawFromPrior();
-        void drawFromConstrainedPrior(double logL_limit, int worst);
+        RandomVariate &randomVariate;           // random variate to draw (constrained) prior from
+        double informationH;
+        double logEvidence;
+        double logEvidenceError;
+        vector<double> logLikelihood;           // log-likelihood values
+        vector<double> logWeight;               // sum(weight) = Evidence Z
         double updateInformationGain(double H_old, double logZ_old, double logZ_new, int worst);
 };
 
