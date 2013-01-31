@@ -34,35 +34,62 @@ void MathExtra::lorentzProfile(vector<double> &y, vector<double> &x, double x0, 
 
 
 
-// MathExtra::gaussProfile()
+
+
+// MathExtra::logGaussProfile()
+//
 // PURPOSE: 
-//      Computes a simple Gaussian profile given the centroid, 
+//      Computes the logarithm of a Gaussian profile given the centroid, 
+//      the standard deviation and the amplitude, for one given x-value
+//
+// INPUT:
+//      x = independent variable
+//      mu = mean value of the Gaussian profile
+//      sigma = standard deviation of the Gaussian profile
+//      amp = maximum amplitude of the Gaussian profile (default = 1)
+//
+// OUTPUT:
+
+
+double MathExtra::logGaussProfile(double x, double mu, double sigma, double amp)
+{
+    const double prefactor = log(amp) - 0.5 * log(2*MathExtra::PI) - log(sigma);
+    return prefactor - 0.5 * (x - mu) * (x - mu) / (sigma * sigma);
+} 
+
+
+
+
+
+
+
+// MathExtra::logGaussProfile()
+//
+// PURPOSE: 
+//      Computes the logarithm of a Gaussian profile given the centroid, 
 //      the standard deviation and the amplitude.
-//      Saves the dependent variable values into a vector y accessible as
-//      public data member.
+//
 // INPUT:
 //      y = vector containing the result
 //      x = vector containing independent variable values
-//      x0 = mean value of the Gaussian profile
+//      mu = mean value of the Gaussian profile
 //      sigma = standard deviation of the Gaussian profile
 //      amp = maximum amplitude of the Gaussian profile (default = 1)
-// OUTPUT:
 //
+// OUTPUT:
 
-void MathExtra::gaussProfile(vector<double> &y, vector<double> &x, double x0, double sigma, double amp)
+
+void MathExtra::logGaussProfile(vector<double> &y, vector<double> &x, double mu, double sigma, double amp)
 {
-    double fac;
-    const unsigned long xsize = x.size();
-    y.resize(xsize);
-    fac = 1./(sqrt(2.*MathExtra::PI) * sigma);
-    
+    const double prefactor = log(amp) - 0.5 * log(2*MathExtra::PI) - log(sigma);
+    y.resize(x.size());
     for (unsigned int i = 0; i < x.size(); i++)
     {
-        y.at(i) = fac * exp (-1.*pow( (x.at(i) - x0), 2) / (2.* pow(sigma, 2)));
+        y.at(i) = prefactor - 0.5 * (x.at(i) - mu) * (x.at(i) - mu) / (sigma * sigma);
     }
-    
     return;
-} // END MathExtra::gaussProfile
+} 
+
 
 
 
