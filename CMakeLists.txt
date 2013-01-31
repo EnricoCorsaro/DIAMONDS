@@ -12,7 +12,7 @@
 #   - Prefer 'cmake ..' in the build/ directory above 'cmake' in the
 #     parent directory, because the former does an out-of-source build.
 #
-#   - You can change the default compiler by using (e.g.)"
+#   - You can change the default compiler by using (e.g. on Mac OSX)"
 #     $ cmake -D CMAKE_CXX_COMPILER=/usr/bin/clang++ ..
 
 
