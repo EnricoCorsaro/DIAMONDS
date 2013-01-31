@@ -8,25 +8,29 @@
 #include "MathExtra.h"
 #include "FileProcess.h"
 #include "NestedSampler.h"
+#include "NormalVariate.h"
 
 int main()
 {
     int Ndata = 100;      // Number of objects per nested iteration (usually 100)
     int Niter = 1000;     // Number of nested iterations (usually 1000)
     
-    NestedSampler nestedSampler(Ndata, Niter);
-    nestedSampler.run();
+    NormalVariate normalVariate(10.0, 3.0);
+    normalVariate.setBoundaries(0.0, 20.0);
+    NestedSampler nestedSampler(normalVariate);
+    nestedSampler.run(Ndata, Niter);
     
     cout << right << setw(10) << "Parameter value" << right << setw(20) << "logLikelihood" << endl;
     for (int i = 0; i < Niter; i++)
     {
-       cout << right << setw(10) << nestedSampler.postP[i]
-       << right << setw(20) << nestedSampler.postlogL[i] << endl;
+       cout << right << setw(10) << nestedSampler.posteriorSample[i]
+            << right << setw(20) << nestedSampler.logLikelihoodOfPosteriorSample[i] 
+            << endl;
     }
     
     cout << endl;
     cout << " ------------------------------------------------" << endl;
-    cout << " Evidence: logZ = " << nestedSampler.results[0] << " +/- " << nestedSampler.results[1] << endl;
-    cout << " Information: H = " << nestedSampler.results[2] << endl;
+    cout << " Evidence: logZ = " << nestedSampler.getLogEvidence() << " +/- " << nestedSampler.getLogEvidenceError() << endl;
+    cout << " Information: H = " << nestedSampler.getInformationH() << endl;
     cout << " ------------------------------------------------" << endl;
 }
