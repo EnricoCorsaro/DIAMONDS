@@ -59,8 +59,6 @@ NormalVariate::~NormalVariate()
 
 void NormalVariate::drawNestedValues(vector<double> &values, vector<double> &logDensities, int Nvalues)
 {
-    srand(time(0));
-    
     for (int i = 0; i < Nvalues; i++)
     {
         values.at(i) = minimum + uniform(engine) * (maximum - minimum);
