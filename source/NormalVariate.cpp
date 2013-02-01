@@ -89,8 +89,6 @@ void NormalVariate::drawNestedValues(vector<double> &values, vector<double> &log
 
 void NormalVariate::drawNestedValueWithConstraint(double &value, double &logDensity, double logDensityConstraint)
 {
-    srand(time(0));
-
     do
     {
         value = minimum + uniform(engine) * (maximum - minimum);
