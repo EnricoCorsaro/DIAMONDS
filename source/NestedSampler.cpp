@@ -100,6 +100,14 @@ void NestedSampler::run(int Nobjects, int Niter)
     int copy;
     int worst;
 
+    // Set up the random number generator. It generates random numbers
+    // between 0 and Nobjects, inclusive. The engine's seed is based on the 
+    // current time.
+    
+    uniform_int_distribution<int> uniform_distribution(0, Nobjects-1);
+    mt19937 engine(time(0));
+    auto uniform = bind(uniform_distribution, engine);
+
     // Set vector sizes
     
     param.resize(Nobjects);
@@ -145,13 +153,17 @@ void NestedSampler::run(int Nobjects, int Niter)
         logLikelihoodOfPosteriorSample.at(nest) = logLikelihood.at(worst);  // save corresponding likelihood
     
         // Replace worst object in favour of a copy of different survivor
+        // No replacement if Nobjects = 1.
         
-        srand(time(0));
-        do 
+        if (Nobjects > 1)
         {
-            copy = rand() % Nobjects;              // 0 <= copy < Nobjects
-        } 
-        while (copy == worst && Nobjects > 1);     // do not replace if Nobjects = 1
+            do 
+            {
+                copy = uniform();              // 0 <= copy < Nobjects
+            } 
+            while (copy == worst);     // do not replace if Nobjects = 1
+        }
+        cout << "Here" << endl;
 
         logLikelihoodConstraint = logLikelihood.at(worst);
         param.at(worst) = param.at(copy);

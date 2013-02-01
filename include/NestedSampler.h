@@ -6,7 +6,9 @@
 #ifndef NESTEDSAMPLER_H
 #define NESTEDSAMPLER_H
 
+#include <vector>
 #include <cfloat>
+#include <random>
 #include "MathExtra.h"
 #include "FileProcess.h"
 #include "RandomVariate.h"
