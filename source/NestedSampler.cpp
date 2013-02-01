@@ -147,13 +147,13 @@ void NestedSampler::run(int Nobjects, int Niter)
         informationH = updateInformationGain(informationH, logEvidence, logEvidenceNew, worst);
         logEvidence = logEvidenceNew;
 
-        // Save nested samples for posterior
+        // Save the posterior sample and its corresponding likelihood
 
         posteriorSample.at(nest) = param.at(worst);                         // save parameter value
         logLikelihoodOfPosteriorSample.at(nest) = logLikelihood.at(worst);  // save corresponding likelihood
     
         // Replace worst object in favour of a copy of different survivor
-        // No replacement if Nobjects = 1.
+        // No replacement if Nobjects == 1.
         
         if (Nobjects > 1)
         {
@@ -161,7 +161,7 @@ void NestedSampler::run(int Nobjects, int Niter)
             {
                 copy = uniform();              // 0 <= copy < Nobjects
             } 
-            while (copy == worst);     // do not replace if Nobjects = 1
+            while (copy == worst);
         }
         cout << "Here" << endl;
 
