@@ -15,7 +15,7 @@
 // OUTPUT:
 
 NormalVariate::NormalVariate(double mu, double sigma)
-: uniform(0.0, 1.0), engine(3124), mu(mu), sigma(sigma)
+: uniform(0.0, 1.0), engine(time(0)), mu(mu), sigma(sigma)
 {
 
 }

@@ -4,6 +4,7 @@
 
 #include <vector>
 #include <random>
+#include <ctime>
 #include "RandomVariate.h"
 #include "MathExtra.h"
 
