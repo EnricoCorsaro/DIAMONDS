@@ -10,36 +10,87 @@
 #ifndef EIGEN_INCOMPLETE_LUT_H
 #define EIGEN_INCOMPLETE_LUT_H
 
+
 namespace Eigen { 
 
-/**
- * \brief Incomplete LU factorization with dual-threshold strategy
- * During the numerical factorization, two dropping rules are used :
- *  1) any element whose magnitude is less than some tolerance is dropped.
- *    This tolerance is obtained by multiplying the input tolerance @p droptol 
- *    by the average magnitude of all the original elements in the current row.
- *  2) After the elimination of the row, only the @p fill largest elements in 
- *    the L part and the @p fill largest elements in the U part are kept 
- *    (in addition to the diagonal element ). Note that @p fill is computed from 
- *    the input parameter @p fillfactor which is used the ratio to control the fill_in 
- *    relatively to the initial number of nonzero elements.
- * 
- * The two extreme cases are when @p droptol=0 (to keep all the @p fill*2 largest elements)
- * and when @p fill=n/2 with @p droptol being different to zero. 
- * 
- * References : Yousef Saad, ILUT: A dual threshold incomplete LU factorization, 
- *              Numerical Linear Algebra with Applications, 1(4), pp 387-402, 1994.
- * 
- * NOTE : The following implementation is derived from the ILUT implementation
- * in the SPARSKIT package, Copyright (C) 2005, the Regents of the University of Minnesota 
- *  released under the terms of the GNU LGPL: 
- *    http://www-users.cs.umn.edu/~saad/software/SPARSKIT/README
- * However, Yousef Saad gave us permission to relicense his ILUT code to MPL2.
- * See the Eigen mailing list archive, thread: ILUT, date: July 8, 2012:
- *   http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2012/07/msg00064.html
- * alternatively, on GMANE:
- *   http://comments.gmane.org/gmane.comp.lib.eigen/3302
- */
+namespace internal {
+    
+/** \internal
+  * Compute a quick-sort split of a vector 
+  * On output, the vector row is permuted such that its elements satisfy
+  * abs(row(i)) >= abs(row(ncut)) if i<ncut
+  * abs(row(i)) <= abs(row(ncut)) if i>ncut 
+  * \param row The vector of values
+  * \param ind The array of index for the elements in @p row
+  * \param ncut  The number of largest elements to keep
+  **/ 
+template <typename VectorV, typename VectorI>
+int QuickSplit(VectorV &row, VectorI &ind, int ncut)
+{
+  typedef typename VectorV::RealScalar RealScalar;
+  using std::swap;
+  int mid;
+  int n = row.size(); /* length of the vector */
+  int first, last ; 
+  
+  ncut--; /* to fit the zero-based indices */
+  first = 0; 
+  last = n-1; 
+  if (ncut < first || ncut > last ) return 0;
+  
+  do {
+    mid = first; 
+    RealScalar abskey = std::abs(row(mid)); 
+    for (int j = first + 1; j <= last; j++) {
+      if ( std::abs(row(j)) > abskey) {
+        ++mid;
+        swap(row(mid), row(j));
+        swap(ind(mid), ind(j));
+      }
+    }
+    /* Interchange for the pivot element */
+    swap(row(mid), row(first));
+    swap(ind(mid), ind(first));
+    
+    if (mid > ncut) last = mid - 1;
+    else if (mid < ncut ) first = mid + 1; 
+  } while (mid != ncut );
+  
+  return 0; /* mid is equal to ncut */ 
+}
+
+}// end namespace internal
+
+/** \ingroup IterativeLinearSolvers_Module
+  * \class IncompleteLUT
+  * \brief Incomplete LU factorization with dual-threshold strategy
+  *
+  * During the numerical factorization, two dropping rules are used :
+  *  1) any element whose magnitude is less than some tolerance is dropped.
+  *    This tolerance is obtained by multiplying the input tolerance @p droptol 
+  *    by the average magnitude of all the original elements in the current row.
+  *  2) After the elimination of the row, only the @p fill largest elements in 
+  *    the L part and the @p fill largest elements in the U part are kept 
+  *    (in addition to the diagonal element ). Note that @p fill is computed from 
+  *    the input parameter @p fillfactor which is used the ratio to control the fill_in 
+  *    relatively to the initial number of nonzero elements.
+  * 
+  * The two extreme cases are when @p droptol=0 (to keep all the @p fill*2 largest elements)
+  * and when @p fill=n/2 with @p droptol being different to zero. 
+  * 
+  * References : Yousef Saad, ILUT: A dual threshold incomplete LU factorization, 
+  *              Numerical Linear Algebra with Applications, 1(4), pp 387-402, 1994.
+  * 
+  * NOTE : The following implementation is derived from the ILUT implementation
+  * in the SPARSKIT package, Copyright (C) 2005, the Regents of the University of Minnesota 
+  *  released under the terms of the GNU LGPL: 
+  *    http://www-users.cs.umn.edu/~saad/software/SPARSKIT/README
+  * However, Yousef Saad gave us permission to relicense his ILUT code to MPL2.
+  * See the Eigen mailing list archive, thread: ILUT, date: July 8, 2012:
+  *   http://listengine.tuxfamily.org/lists.tuxfamily.org/eigen/2012/07/msg00064.html
+  * alternatively, on GMANE:
+  *   http://comments.gmane.org/gmane.comp.lib.eigen/3302
+  */
 template <typename _Scalar>
 class IncompleteLUT : internal::noncopyable
 {
@@ -126,10 +177,6 @@ class IncompleteLUT : internal::noncopyable
 
 protected:
 
-    template <typename VectorV, typename VectorI>
-    int QuickSplit(VectorV &row, VectorI &ind, int ncut);
-
-
     /** keeps off-diagonal entries; drops diagonal entries */
     struct keep_diag {
       inline bool operator() (const Index& row, const Index& col, const Scalar&) const
@@ -169,51 +216,6 @@ template<typename Scalar>
 void IncompleteLUT<Scalar>::setFillfactor(int fillfactor)
 {
   this->m_fillfactor = fillfactor;   
-}
-
-
-/**
- * Compute a quick-sort split of a vector 
- * On output, the vector row is permuted such that its elements satisfy
- * abs(row(i)) >= abs(row(ncut)) if i<ncut
- * abs(row(i)) <= abs(row(ncut)) if i>ncut 
- * \param row The vector of values
- * \param ind The array of index for the elements in @p row
- * \param ncut  The number of largest elements to keep
- **/ 
-template <typename Scalar>
-template <typename VectorV, typename VectorI>
-int IncompleteLUT<Scalar>::QuickSplit(VectorV &row, VectorI &ind, int ncut)
-{
-  using std::swap;
-  int mid;
-  int n = row.size(); /* length of the vector */
-  int first, last ; 
-  
-  ncut--; /* to fit the zero-based indices */
-  first = 0; 
-  last = n-1; 
-  if (ncut < first || ncut > last ) return 0;
-  
-  do {
-    mid = first; 
-    RealScalar abskey = std::abs(row(mid)); 
-    for (int j = first + 1; j <= last; j++) {
-      if ( std::abs(row(j)) > abskey) {
-        ++mid;
-        swap(row(mid), row(j));
-        swap(ind(mid), ind(j));
-      }
-    }
-    /* Interchange for the pivot element */
-    swap(row(mid), row(first));
-    swap(ind(mid), ind(first));
-    
-    if (mid > ncut) last = mid - 1;
-    else if (mid < ncut ) first = mid + 1; 
-  } while (mid != ncut );
-  
-  return 0; /* mid is equal to ncut */ 
 }
 
 template <typename Scalar>
@@ -400,7 +402,7 @@ void IncompleteLUT<Scalar>::factorize(const _MatrixType& amat)
     len = (std::min)(sizel, nnzL);
     typename Vector::SegmentReturnType ul(u.segment(0, sizel));
     typename VectorXi::SegmentReturnType jul(ju.segment(0, sizel));
-    QuickSplit(ul, jul, len);
+    internal::QuickSplit(ul, jul, len);
 
     // store the largest m_fill elements of the L part
     m_lu.startVec(ii);
@@ -429,7 +431,7 @@ void IncompleteLUT<Scalar>::factorize(const _MatrixType& amat)
     len = (std::min)(sizeu, nnzU);
     typename Vector::SegmentReturnType uu(u.segment(ii+1, sizeu-1));
     typename VectorXi::SegmentReturnType juu(ju.segment(ii+1, sizeu-1));
-    QuickSplit(uu, juu, len);
+    internal::QuickSplit(uu, juu, len);
 
     // store the largest elements of the U part
     for(int k = ii + 1; k < ii + len; k++)
@@ -463,4 +465,3 @@ struct solve_retval<IncompleteLUT<_MatrixType>, Rhs>
 } // end namespace Eigen
 
 #endif // EIGEN_INCOMPLETE_LUT_H
-

@@ -27,55 +27,20 @@ inline void stable_norm_kernel(const ExpressionType& bl, Scalar& ssq, Scalar& sc
   // then we can neglect this sub vector
   ssq += (bl*invScale).squaredNorm();
 }
-}
 
-/** \returns the \em l2 norm of \c *this avoiding underflow and overflow.
-  * This version use a blockwise two passes algorithm:
-  *  1 - find the absolute largest coefficient \c s
-  *  2 - compute \f$ s \Vert \frac{*this}{s} \Vert \f$ in a standard way
-  *
-  * For architecture/scalar types supporting vectorization, this version
-  * is faster than blueNorm(). Otherwise the blueNorm() is much faster.
-  *
-  * \sa norm(), blueNorm(), hypotNorm()
-  */
 template<typename Derived>
-inline typename NumTraits<typename internal::traits<Derived>::Scalar>::Real
-MatrixBase<Derived>::stableNorm() const
+inline typename NumTraits<typename traits<Derived>::Scalar>::Real
+blueNorm_impl(const EigenBase<Derived>& _vec)
 {
-  using std::min;
-  const Index blockSize = 4096;
-  RealScalar scale(0);
-  RealScalar invScale(1);
-  RealScalar ssq(0); // sum of square
-  enum {
-    Alignment = (int(Flags)&DirectAccessBit) || (int(Flags)&AlignedBit) ? 1 : 0
-  };
-  Index n = size();
-  Index bi = internal::first_aligned(derived());
-  if (bi>0)
-    internal::stable_norm_kernel(this->head(bi), ssq, scale, invScale);
-  for (; bi<n; bi+=blockSize)
-    internal::stable_norm_kernel(this->segment(bi,(min)(blockSize, n - bi)).template forceAlignedAccessIf<Alignment>(), ssq, scale, invScale);
-  return scale * internal::sqrt(ssq);
-}
-
-/** \returns the \em l2 norm of \c *this using the Blue's algorithm.
-  * A Portable Fortran Program to Find the Euclidean Norm of a Vector,
-  * ACM TOMS, Vol 4, Issue 1, 1978.
-  *
-  * For architecture/scalar types without vectorization, this version
-  * is much faster than stableNorm(). Otherwise the stableNorm() is faster.
-  *
-  * \sa norm(), stableNorm(), hypotNorm()
-  */
-template<typename Derived>
-inline typename NumTraits<typename internal::traits<Derived>::Scalar>::Real
-MatrixBase<Derived>::blueNorm() const
-{
+  typedef typename Derived::Scalar Scalar;
+  typedef typename Derived::RealScalar RealScalar;  
+  typedef typename Derived::Index Index;
   using std::pow;
   using std::min;
   using std::max;
+  using std::sqrt;
+  using std::abs;
+  const Derived& vec(_vec.derived());
   static Index nmax = -1;
   static RealScalar b1, b2, s1m, s2m, overfl, rbig, relerr;
   if(nmax <= 0)
@@ -109,26 +74,26 @@ MatrixBase<Derived>::blueNorm() const
 
     overfl  = rbig*s2m;             // overflow boundary for abig
     eps     = RealScalar(pow(double(ibeta), 1-it));
-    relerr  = internal::sqrt(eps);         // tolerance for neglecting asml
+    relerr  = sqrt(eps);         // tolerance for neglecting asml
     abig    = RealScalar(1.0/eps - 1.0);
     if (RealScalar(nbig)>abig)  nmax = int(abig);  // largest safe n
     else                        nmax = nbig;
   }
-  Index n = size();
+  Index n = vec.size();
   RealScalar ab2 = b2 / RealScalar(n);
   RealScalar asml = RealScalar(0);
   RealScalar amed = RealScalar(0);
   RealScalar abig = RealScalar(0);
-  for(Index j=0; j<n; ++j)
+  for(typename Derived::InnerIterator it(vec, 0); it; ++it)
   {
-    RealScalar ax = internal::abs(coeff(j));
+    RealScalar ax = abs(it.value());
     if(ax > ab2)     abig += internal::abs2(ax*s2m);
     else if(ax < b1) asml += internal::abs2(ax*s1m);
     else             amed += internal::abs2(ax);
   }
   if(abig > RealScalar(0))
   {
-    abig = internal::sqrt(abig);
+    abig = sqrt(abig);
     if(abig > overfl)
     {
       return rbig;
@@ -136,7 +101,7 @@ MatrixBase<Derived>::blueNorm() const
     if(amed > RealScalar(0))
     {
       abig = abig/s2m;
-      amed = internal::sqrt(amed);
+      amed = sqrt(amed);
     }
     else
       return abig/s2m;
@@ -145,20 +110,69 @@ MatrixBase<Derived>::blueNorm() const
   {
     if (amed > RealScalar(0))
     {
-      abig = internal::sqrt(amed);
-      amed = internal::sqrt(asml) / s1m;
+      abig = sqrt(amed);
+      amed = sqrt(asml) / s1m;
     }
     else
-      return internal::sqrt(asml)/s1m;
+      return sqrt(asml)/s1m;
   }
   else
-    return internal::sqrt(amed);
+    return sqrt(amed);
   asml = (min)(abig, amed);
   abig = (max)(abig, amed);
   if(asml <= abig*relerr)
     return abig;
   else
-    return abig * internal::sqrt(RealScalar(1) + internal::abs2(asml/abig));
+    return abig * sqrt(RealScalar(1) + internal::abs2(asml/abig));
+}
+} // end namespace internal
+
+/** \returns the \em l2 norm of \c *this avoiding underflow and overflow.
+  * This version use a blockwise two passes algorithm:
+  *  1 - find the absolute largest coefficient \c s
+  *  2 - compute \f$ s \Vert \frac{*this}{s} \Vert \f$ in a standard way
+  *
+  * For architecture/scalar types supporting vectorization, this version
+  * is faster than blueNorm(). Otherwise the blueNorm() is much faster.
+  *
+  * \sa norm(), blueNorm(), hypotNorm()
+  */
+template<typename Derived>
+inline typename NumTraits<typename internal::traits<Derived>::Scalar>::Real
+MatrixBase<Derived>::stableNorm() const
+{
+  using std::min;
+  using std::sqrt;
+  const Index blockSize = 4096;
+  RealScalar scale(0);
+  RealScalar invScale(1);
+  RealScalar ssq(0); // sum of square
+  enum {
+    Alignment = (int(Flags)&DirectAccessBit) || (int(Flags)&AlignedBit) ? 1 : 0
+  };
+  Index n = size();
+  Index bi = internal::first_aligned(derived());
+  if (bi>0)
+    internal::stable_norm_kernel(this->head(bi), ssq, scale, invScale);
+  for (; bi<n; bi+=blockSize)
+    internal::stable_norm_kernel(this->segment(bi,(min)(blockSize, n - bi)).template forceAlignedAccessIf<Alignment>(), ssq, scale, invScale);
+  return scale * sqrt(ssq);
+}
+
+/** \returns the \em l2 norm of \c *this using the Blue's algorithm.
+  * A Portable Fortran Program to Find the Euclidean Norm of a Vector,
+  * ACM TOMS, Vol 4, Issue 1, 1978.
+  *
+  * For architecture/scalar types without vectorization, this version
+  * is much faster than stableNorm(). Otherwise the stableNorm() is faster.
+  *
+  * \sa norm(), stableNorm(), hypotNorm()
+  */
+template<typename Derived>
+inline typename NumTraits<typename internal::traits<Derived>::Scalar>::Real
+MatrixBase<Derived>::blueNorm() const
+{
+  return internal::blueNorm_impl(*this);
 }
 
 /** \returns the \em l2 norm of \c *this avoiding undeflow and overflow.

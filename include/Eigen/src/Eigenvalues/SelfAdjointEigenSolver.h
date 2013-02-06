@@ -384,6 +384,7 @@ template<typename MatrixType>
 SelfAdjointEigenSolver<MatrixType>& SelfAdjointEigenSolver<MatrixType>
 ::compute(const MatrixType& matrix, int options)
 {
+  using std::abs;
   eigen_assert(matrix.cols() == matrix.rows());
   eigen_assert((options&~(EigVecMask|GenEigMask))==0
           && (options&EigVecMask)!=EigVecMask
@@ -408,9 +409,10 @@ SelfAdjointEigenSolver<MatrixType>& SelfAdjointEigenSolver<MatrixType>
   MatrixType& mat = m_eivec;
 
   // map the matrix coefficients to [-1:1] to avoid over- and underflow.
-  RealScalar scale = matrix.cwiseAbs().maxCoeff();
+  mat = matrix.template triangularView<Lower>();
+  RealScalar scale = mat.cwiseAbs().maxCoeff();
   if(scale==RealScalar(0)) scale = RealScalar(1);
-  mat = matrix / scale;
+  mat.template triangularView<Lower>() /= scale;
   m_subdiag.resize(n-1);
   internal::tridiagonalization_inplace(mat, diag, m_subdiag, computeEigenvectors);
   
@@ -421,7 +423,7 @@ SelfAdjointEigenSolver<MatrixType>& SelfAdjointEigenSolver<MatrixType>
   while (end>0)
   {
     for (Index i = start; i<end; ++i)
-      if (internal::isMuchSmallerThan(internal::abs(m_subdiag[i]),(internal::abs(diag[i])+internal::abs(diag[i+1]))))
+      if (internal::isMuchSmallerThan(abs(m_subdiag[i]),(abs(diag[i])+abs(diag[i+1]))))
         m_subdiag[i] = 0;
 
     // find the largest unreduced block
@@ -675,6 +677,7 @@ template<typename SolverType> struct direct_selfadjoint_eigenvalues<SolverType,2
   
   static inline void run(SolverType& solver, const MatrixType& mat, int options)
   {
+    using std::sqrt;
     eigen_assert(mat.cols() == 2 && mat.cols() == mat.rows());
     eigen_assert((options&~(EigVecMask|GenEigMask))==0
             && (options&EigVecMask)!=EigVecMask
@@ -736,6 +739,7 @@ namespace internal {
 template<int StorageOrder,typename RealScalar, typename Scalar, typename Index>
 static void tridiagonal_qr_step(RealScalar* diag, RealScalar* subdiag, Index start, Index end, Scalar* matrixQ, Index n)
 {
+  using std::abs;
   RealScalar td = (diag[end-1] - diag[end])*RealScalar(0.5);
   RealScalar e = subdiag[end-1];
   // Note that thanks to scaling, e^2 or td^2 cannot overflow, however they can still

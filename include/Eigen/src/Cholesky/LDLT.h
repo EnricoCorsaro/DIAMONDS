@@ -248,6 +248,7 @@ template<> struct ldlt_inplace<Lower>
   template<typename MatrixType, typename TranspositionType, typename Workspace>
   static bool unblocked(MatrixType& mat, TranspositionType& transpositions, Workspace& temp, int* sign=0)
   {
+    using std::abs;
     typedef typename MatrixType::Scalar Scalar;
     typedef typename MatrixType::RealScalar RealScalar;
     typedef typename MatrixType::Index Index;
@@ -280,6 +281,13 @@ template<> struct ldlt_inplace<Lower>
 
         if(sign)
           *sign = real(mat.diagonal().coeff(index_of_biggest_in_corner)) > 0 ? 1 : -1;
+      }
+      else if(sign)
+      {
+        // LDLT is not guaranteed to work for indefinite matrices, but let's try to get the sign right
+        int newSign = real(mat.diagonal().coeff(index_of_biggest_in_corner)) > 0;
+        if(newSign != *sign)
+          *sign = 0;
       }
 
       // Finish early if the matrix is not full rank.
@@ -534,8 +542,7 @@ template<typename Derived>
 bool LDLT<MatrixType,_UpLo>::solveInPlace(MatrixBase<Derived> &bAndX) const
 {
   eigen_assert(m_isInitialized && "LDLT is not initialized.");
-  const Index size = m_matrix.rows();
-  eigen_assert(size == bAndX.rows());
+  eigen_assert(m_matrix.rows() == bAndX.rows());
 
   bAndX = this->solve(bAndX);
 

@@ -57,7 +57,6 @@ struct IOFormat
   : matPrefix(_matPrefix), matSuffix(_matSuffix), rowPrefix(_rowPrefix), rowSuffix(_rowSuffix), rowSeparator(_rowSeparator),
     coeffSeparator(_coeffSeparator), precision(_precision), flags(_flags)
   {
-    rowSpacer = "";
     int i = int(matSuffix.length())-1;
     while (i>=0 && matSuffix[i]!='\n')
     {
@@ -129,6 +128,7 @@ struct significant_decimals_default_impl
   static inline int run()
   {
     using std::ceil;
+    using std::log;
     return cast<RealScalar,int>(ceil(-log(NumTraits<RealScalar>::epsilon())/log(RealScalar(10))));
   }
 };

@@ -114,7 +114,7 @@ inline int umfpack_get_determinant(std::complex<double> *Mx, double *Ex, void *N
   * using the UmfPack library. The sparse matrix A must be squared and full rank.
   * The vectors or matrices X and B can be either dense or sparse.
   *
-  * \WARNING The input matrix A should be in a \b compressed and \b column-major form.
+  * \warning The input matrix A should be in a \b compressed and \b column-major form.
   * Otherwise an expensive copy will be made. You can call the inexpensive makeCompressed() to get a compressed matrix.
   * \tparam _MatrixType the type of the sparse matrix A, it must be a SparseMatrix<>
   *
@@ -215,14 +215,14 @@ class UmfPackLU : internal::noncopyable
       *
       * \sa compute()
       */
-//     template<typename Rhs>
-//     inline const internal::sparse_solve_retval<UmfPAckLU, Rhs> solve(const SparseMatrixBase<Rhs>& b) const
-//     {
-//       eigen_assert(m_isInitialized && "UmfPAckLU is not initialized.");
-//       eigen_assert(rows()==b.rows()
-//                 && "UmfPAckLU::solve(): invalid number of rows of the right hand side matrix b");
-//       return internal::sparse_solve_retval<UmfPAckLU, Rhs>(*this, b.derived());
-//     }
+    template<typename Rhs>
+    inline const internal::sparse_solve_retval<UmfPackLU, Rhs> solve(const SparseMatrixBase<Rhs>& b) const
+    {
+      eigen_assert(m_isInitialized && "UmfPackLU is not initialized.");
+      eigen_assert(rows()==b.rows()
+                && "UmfPackLU::solve(): invalid number of rows of the right hand side matrix b");
+      return internal::sparse_solve_retval<UmfPackLU, Rhs>(*this, b.derived());
+    }
 
     /** Performs a symbolic decomposition on the sparcity of \a matrix.
       *
@@ -381,7 +381,8 @@ bool UmfPackLU<MatrixType>::_solve(const MatrixBase<BDerived> &b, MatrixBase<XDe
   const int rhsCols = b.cols();
   eigen_assert((BDerived::Flags&RowMajorBit)==0 && "UmfPackLU backend does not support non col-major rhs yet");
   eigen_assert((XDerived::Flags&RowMajorBit)==0 && "UmfPackLU backend does not support non col-major result yet");
-
+  eigen_assert(b.derived().data() != x.derived().data() && " Umfpack does not support inplace solve");
+  
   int errorCode;
   for (int j=0; j<rhsCols; ++j)
   {
@@ -420,7 +421,7 @@ struct sparse_solve_retval<UmfPackLU<_MatrixType>, Rhs>
 
   template<typename Dest> void evalTo(Dest& dst) const
   {
-    dec()._solve(rhs(),dst);
+    this->defaultEvalTo(dst);
   }
 };
 
