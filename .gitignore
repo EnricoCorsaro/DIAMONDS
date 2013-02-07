@@ -2,6 +2,11 @@
 build/
 source/temp*.cpp
 macro/
+source/.*swo
+source/.*swp
+include/.*swo
+include/.*swp
+
 
 # Compiled source 
 
