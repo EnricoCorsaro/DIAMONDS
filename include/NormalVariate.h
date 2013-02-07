@@ -1,3 +1,9 @@
+// Class for implementing object construction from prior and likelihood distributions.
+// This class is to be used within the NestedSampler class.
+// Created by Joris De Ridder @ IvS - 01 February 2013
+// e-mail: joris.deridder@ster.kuleuven.be
+// Header file "NormalVariate.h"
+
 
 #ifndef NORMALVARIATE_H
 #define NORMALVARIATE_H

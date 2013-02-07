@@ -23,7 +23,7 @@ class NestedSampler
         double getLogEvidence();
         double getLogEvidenceError();
         double getInformationH();
-        vector<double> param;                           // parameter values (the free parameters of the problem)
+        vector<double> parameter;                           // parameter values (the free parameters of the problem)
         vector<double> posteriorSample;                 // parameter values sampled from the posterior
         vector<double> logLikelihoodOfPosteriorSample;  // logLikelihood values corresponding to the posterior sample 
 
