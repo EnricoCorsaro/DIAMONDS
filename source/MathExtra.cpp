@@ -13,21 +13,20 @@
 //      y = vector containing the result
 //      x = vector containing independent variable values
 //      x0 = centroid of the Lorentzian profile
-//      gamma = width of the Lorentzian profile
+//      gamma = width of the Lorentzian profile (mode linewidth)
 //      amp = maximum height of the Lorentzian profile
 // OUTPUT:
 //
 
 void MathExtra::lorentzProfile(vector<double> &y, vector<double> &x, double x0, double gamma, double amp)
 {
-    const unsigned long xsize = x.size();
-    y.resize(xsize);
+    y.resize(x.size());
     
-    for (unsigned int i=0; i < x.size(); i++)
+    for (unsigned long i=0; i < x.size(); i++)
     {
-        y.at(i) = amp/(1 + pow( ((x.at(i)-x0)/gamma), 2) );
+        y.at(i) = (amp*amp)/((x.at(i)-x0)*(x.at(i)-x0) + (gamma/2.)*(gamma/2.));
     }
-    
+
     return;
 } // END MathExtra::lorentzProfile()
 
@@ -50,7 +49,6 @@ void MathExtra::lorentzProfile(vector<double> &y, vector<double> &x, double x0, 
 //
 // OUTPUT:
 
-
 double MathExtra::logGaussProfile(double x, double mu, double sigma, double amp)
 {
     const double prefactor = log(amp) - 0.5 * log(2*MathExtra::PI) - log(sigma);
@@ -62,12 +60,11 @@ double MathExtra::logGaussProfile(double x, double mu, double sigma, double amp)
 
 
 
-
 // MathExtra::logGaussProfile()
 //
 // PURPOSE: 
 //      Computes the logarithm of a Gaussian profile given the centroid, 
-//      the standard deviation and the amplitude.
+//      the standard deviation and the amplitude for a set of values.
 //
 // INPUT:
 //      y = vector containing the result
@@ -83,7 +80,7 @@ void MathExtra::logGaussProfile(vector<double> &y, vector<double> &x, double mu,
 {
     const double prefactor = log(amp) - 0.5 * log(2*MathExtra::PI) - log(sigma);
     y.resize(x.size());
-    for (unsigned int i = 0; i < x.size(); i++)
+    for (unsigned long i = 0; i < x.size(); i++)
     {
         y.at(i) = prefactor - 0.5 * (x.at(i) - mu) * (x.at(i) - mu) / (sigma * sigma);
     }
@@ -120,7 +117,7 @@ double MathExtra::gaussLikelihood(vector<double> &x_obs, vector<double> &x_theor
     vector<double> delta(xsize);
     vector<double> likelihood(xsize);
     
-    for (unsigned int i = 0; i < xsize; i++)
+    for (unsigned long i = 0; i < xsize; i++)
     {
         fac = 1./(sqrt(2.*MathExtra::PI) * sigma.at(i));
         delta.at(i)	= -0.5*pow(x_obs.at(i) - x_theor.at(i), 2) / pow(sigma.at(i), 2);
