@@ -1,13 +1,10 @@
 #include "NestedSampler.h"
 
 // NestedSampler::NestedSampler()
-//
 // PURPOSE: 
 //      Class constructor
-//
 // INPUT:
 //      variate: a RandomVariate class used as Prior to draw from
-//
 // OUTPUT:
 
 NestedSampler::NestedSampler(RandomVariate &variate)
@@ -19,11 +16,10 @@ NestedSampler::NestedSampler(RandomVariate &variate)
 
 
 
-
-
 // NestedSampler::getLogEvidence()
 //
 // PURPOSE:
+//      Gets private data member logEvidence
 //
 // INPUT:
 //
@@ -37,13 +33,10 @@ double NestedSampler::getLogEvidence()
 
 
 
-
-
-
-
 // NestedSampler::getLogEvidenceError()
 //
 // PURPOSE:
+//      Gets private data member logEvidenceError
 //
 // INPUT:
 //
@@ -57,12 +50,10 @@ double NestedSampler::getLogEvidenceError()
 
 
 
-
-
-
 // NestedSampler::getInformationH()
 //
 // PURPOSE:
+//      Gets private data member informationH
 //
 // INPUT:
 //
@@ -77,19 +68,13 @@ double NestedSampler::getInformationH()
 
 
 
-
-
-
 // NestedSampler::run()
-//
 // PURPOSE:
 //      Start nested sampling computation. Save results in 
-//      public vectors "logLikelihoodOfPosteriorSample", "posteriorSample", "results"
-//
+//      public vectors "logLikelihoodOfPosteriorSample", "posteriorSample"
 // INPUT:
 //      Nobjects = Number of objects for nested sampling
 //      Niter = Number of nested iterations
-//
 // OUTPUT:
 
 void NestedSampler::run(int Nobjects, int Niter)
@@ -101,15 +86,13 @@ void NestedSampler::run(int Nobjects, int Niter)
     int worst;
 
     // Set up the random number generator. It generates random numbers
-    // between 0 and Nobjects, inclusive. The engine's seed is based on the 
-    // current time.
-    
+    // between 0 and Nobjects-1, inclusive. The engine's seed is based on the 
+    // current time (Marsenne Twister pesudo-random generator).
     uniform_int_distribution<int> uniform_distribution(0, Nobjects-1);
     mt19937 engine(time(0));
-    auto uniform = bind(uniform_distribution, engine);
+    auto uniform = bind(uniform_distribution, engine);              // Binding uniform distribution to engine
 
     // Set vector sizes
-    
     param.resize(Nobjects);
     logLikelihood.resize(Nobjects);
     logWeight.resize(Niter);
@@ -118,19 +101,15 @@ void NestedSampler::run(int Nobjects, int Niter)
     posteriorSample.resize(Niter);
 
     // Initialize prior values
-    
     randomVariate.drawNestedValues(param, logLikelihood, Nobjects);
     
     // Initialize prior mass interval
-    
     logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));  
 
     // Nested sampling loop
-    
     for (int nest = 0; nest < Niter; nest++)
     {
         // Find worst object in the collection
-        
         worst = 0;
         for (int i = 1; i < Nobjects; i++)
         {
@@ -142,19 +121,16 @@ void NestedSampler::run(int Nobjects, int Niter)
         logWeight.at(worst) = logWidthInPriorMass + logLikelihood.at(worst);                
         
         // Update evidence Z and information H
-        
         logEvidenceNew = MathExtra::logExpSum(logEvidence, logWeight.at(worst));
         informationH = updateInformationGain(informationH, logEvidence, logEvidenceNew, worst);
         logEvidence = logEvidenceNew;
 
         // Save the posterior sample and its corresponding likelihood
-
         posteriorSample.at(nest) = param.at(worst);                         // save parameter value
         logLikelihoodOfPosteriorSample.at(nest) = logLikelihood.at(worst);  // save corresponding likelihood
     
         // Replace worst object in favour of a copy of different survivor
         // No replacement if Nobjects == 1.
-        
         if (Nobjects > 1)
         {
             do 
@@ -170,14 +146,10 @@ void NestedSampler::run(int Nobjects, int Niter)
         logLikelihood.at(worst) = logLikelihood.at(copy);
         
         // Evolve the replaced object with the new constraint logLikelihood > logLikelihoodConstraint
-        
         randomVariate.drawNestedValueWithConstraint(param.at(worst), logLikelihood.at(worst), logLikelihoodConstraint);
         
         // Shrink interval
-        
         logWidthInPriorMass -= 1.0 / Nobjects;
-
-        // Save the results to public data member
     }
     
     // Compute uncertainty on the log of the Evidence Z

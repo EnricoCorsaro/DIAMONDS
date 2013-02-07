@@ -26,7 +26,6 @@ class NestedSampler
         vector<double> param;                           // parameter values (the free parameters of the problem)
         vector<double> posteriorSample;                 // parameter values sampled from the posterior
         vector<double> logLikelihoodOfPosteriorSample;  // logLikelihood values corresponding to the posterior sample 
-        vector<double> results;                         // output logZ, logZ_err, information H
 
 	private:
         
@@ -35,7 +34,7 @@ class NestedSampler
         double logEvidence;
         double logEvidenceError;
         vector<double> logLikelihood;           // log-likelihood values
-        vector<double> logWeight;               // sum(weight) = Evidence Z
+        vector<double> logWeight;               // sum(weight) = Evidence
         double updateInformationGain(double H_old, double logZ_old, double logZ_new, int worst);
 };
 
