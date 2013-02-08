@@ -9,6 +9,7 @@
 #include <vector>
 #include <fstream>
 #include <iostream>
+#include <iomanip>
 #include <sstream>
 
 
@@ -24,7 +25,8 @@ class FileProcess
         vector<double> x;
         vector<double> y;
         FileProcess(const char *name);
-        void read2ColDouble ();
+        void read2ColDouble();
+        void write2ColDouble(vector<double> &x1, vector<double> &x2, string title1=" ", string title2=" ");
         
     private:
 

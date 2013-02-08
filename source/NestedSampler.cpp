@@ -129,7 +129,7 @@ void NestedSampler::run(int Nobjects, int Niter)
             } 
             while (copy == worst);
         }
-        cout << "Here" << endl;
+        //cout << "Here" << endl;
 
         logLikelihoodConstraint = logLikelihood.at(worst);
         parameter.at(worst) = parameter.at(copy);

@@ -1,6 +1,6 @@
 
 build/
-source/temp*.cpp
+test/
 macro/
 source/.*swo
 source/.*swp

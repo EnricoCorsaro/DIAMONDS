@@ -19,16 +19,11 @@ int main()
     normalVariate.setBoundaries(0.0, 20.0);
     NestedSampler nestedSampler(normalVariate);
     nestedSampler.run(Nobjects, Niter);
-    
-    cout << right << setw(10) << "Parameter value" << right << setw(20) << "logLikelihood" << endl;
-    for (int i = 0; i < Niter; i++)
-    {
-       cout << right << setw(10) << nestedSampler.posteriorSample[i]
-            << right << setw(20) << nestedSampler.logLikelihoodOfPosteriorSample[i] 
-            << endl;
-    }
-    
-    cout << endl;
+   
+    FileProcess outputSample("posterior.dat");
+    outputSample.write2ColDouble(nestedSampler.posteriorSample,nestedSampler.logLikelihoodOfPosteriorSample,
+    "Parameter","logLikelihood");
+
     cout << " ------------------------------------------------" << endl;
     cout << " Evidence: logZ = " << nestedSampler.getLogEvidence() << " +/- " << nestedSampler.getLogEvidenceError() << endl;
     cout << " Information: H = " << nestedSampler.getInformationH() << endl;
