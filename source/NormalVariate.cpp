@@ -15,7 +15,7 @@
 // OUTPUT:
 
 NormalVariate::NormalVariate(double mu, double sigma)
-: uniform(0.0, 1.0), engine(time(0)), mu(mu), sigma(sigma)
+: RandomVariate(1), uniform(0.0, 1.0), engine(time(0)), mu(mu), sigma(sigma)
 {
 
 }
@@ -57,14 +57,18 @@ NormalVariate::~NormalVariate()
 //
 // OUTPUT:
 
-void NormalVariate::drawNestedValues(vector<double> &values, vector<double> &logDensities, int Nvalues)
+
+void NormalVariate::drawNestedValues(RefArrayXXd values, RefArrayXd logDensities, int Nvalues)
 {
-    for (int i = 0; i < Nvalues; i++)
+    ArrayXd uniformNumbers(Nvalues);
+    for (int i = 0; i < Nvalues; i++) 
     {
-        values.at(i) = minimum + uniform(engine) * (maximum - minimum);
+        uniformNumbers(i) = uniform(engine);
     }
+
+    values.row(0) = minimum(0) + uniformNumbers * (maximum(0) - minimum(0));
     
-    MathExtra::logGaussProfile(logDensities, values, mu, sigma);
+    MathExtra::logGaussProfile(logDensities, values.row(0), mu, sigma, 1.0);
     return;
 }
 
@@ -85,12 +89,12 @@ void NormalVariate::drawNestedValues(vector<double> &values, vector<double> &log
 //
 // OUTPUT:
 
-void NormalVariate::drawNestedValueWithConstraint(double &value, double &logDensity, double logDensityConstraint)
+void NormalVariate::drawNestedValueWithConstraint(RefArrayXd value, double &logDensity, double logDensityConstraint)
 {
     do
     {
-        value = minimum + uniform(engine) * (maximum - minimum);
-        logDensity = MathExtra::logGaussProfile(value, mu, sigma);
+        value(0) = minimum(0) + uniform(engine) * (maximum(0) - minimum(0));
+        logDensity = MathExtra::logGaussProfile(value(0), mu, sigma);
     }
     while (logDensity < logDensityConstraint);
     
