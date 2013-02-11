@@ -8,14 +8,17 @@
 #ifndef NORMALVARIATE_H
 #define NORMALVARIATE_H
 
-#include <vector>
 #include <random>
 #include <ctime>
+#include <Eigen/Core>
 #include "RandomVariate.h"
 #include "MathExtra.h"
 
 
 using namespace std;
+typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
+typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
+
 
 class NormalVariate : public RandomVariate
 {
@@ -23,9 +26,9 @@ class NormalVariate : public RandomVariate
     
         NormalVariate(double mu, double sigma);
         ~NormalVariate();
-        virtual void drawNestedValues(vector<double> &values, vector<double> &logDensities, int Nvalues);
-        virtual void drawNestedValueWithConstraint(double &value, double &logDensity, double logDensityConstraint);
-        
+        virtual void drawNestedValues(RefArrayXXd values, RefArrayXd logDensities, int Nvalues);
+        virtual void drawNestedValueWithConstraint(RefArrayXd value, double &logDensity, double logDensityConstraint);
+                
     protected:
     
     private:

@@ -11,7 +11,7 @@
 // OUTPUT:
 
 NormalVariate::NormalVariate(double mu, double sigma)
-: uniform(0.0, 1.0), engine(time(0)), mu(mu), sigma(sigma)
+: RandomVariate(1), uniform(0.0, 1.0), engine(time(0)), mu(mu), sigma(sigma)
 {
 
 }
@@ -46,14 +46,19 @@ NormalVariate::~NormalVariate()
 //      Nvalues: number of objects from nested loop to be initialized
 // OUTPUT:
 
-void NormalVariate::drawNestedValues(vector<double> &values, vector<double> &logLikelihood, int Nvalues)
+
+void NormalVariate::drawNestedValues(RefArrayXXd values, RefArrayXd logDensities, int Nvalues)
+
 {
-    for (int i = 0; i < Nvalues; i++)
+    ArrayXd uniformNumbers(Nvalues);
+    for (int i = 0; i < Nvalues; i++) 
     {
-        values.at(i) = minimum + uniform(engine) * (maximum - minimum);     // Converting prior mass values to parameter values
+        uniformNumbers(i) = uniform(engine);
     }
+
+    values.row(0) = minimum(0) + uniformNumbers * (maximum(0) - minimum(0));
     
-    MathExtra::logGaussProfile(logLikelihood, values, mu, sigma);           // Evaluate logLikelihood values of the parameters
+    MathExtra::logGaussProfile(logDensities, values.row(0), mu, sigma, 1.0);
     return;
 }
 
@@ -62,24 +67,27 @@ void NormalVariate::drawNestedValues(vector<double> &values, vector<double> &log
 
 
 // NormalVariate::drawNestedValueWithConstraint()
+//
 // PURPOSE: 
 //      Draw parameter values from a uniform (flat) proper prior and a one-dimensional Gaussian Likelihood
-//      by using the contraint logLikelihood > logLikelihood*
+//      by using the contraint logDensity > logDensityConstraint
+//
 // INPUT:
-//      values: vector to be initialized from prior mass distribution 
-//      logLikelihood: vector to be initialized with corresponding logLikelihood values
-//      logLikelihoodConstraint: constraining value for the logLikelihood function
+//      values: Array to be initialized from prior mass distribution 
+//      logDensity: Array to be initialized with corresponding logDensity values
+//      logDensityConstraint: constraining value for the logDensity function
 //      Nvalues: number of objects from nested loop to be initialized
+//
 // OUTPUT:
 
-void NormalVariate::drawNestedValueWithConstraint(double &value, double &logLikelihood, double logLikelihoodConstraint)
+void NormalVariate::drawNestedValueWithConstraint(RefArrayXd value, double &logDensity, double logDensityConstraint)
 {
     do
     {
-        value = minimum + uniform(engine) * (maximum - minimum);
-        logLikelihood = MathExtra::logGaussProfile(value, mu, sigma);
+        value(0) = minimum(0) + uniform(engine) * (maximum(0) - minimum(0));
+        logDensity = MathExtra::logGaussProfile(value(0), mu, sigma);
     }
-    while (logLikelihood < logLikelihoodConstraint);
+    while (logDensity < logDensityConstraint);
     
     return;
 }

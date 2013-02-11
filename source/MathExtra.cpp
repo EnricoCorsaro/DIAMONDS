@@ -42,10 +42,10 @@ void MathExtra::lorentzProfile(vector<double> &y, vector<double> &x, double x0, 
 //      the standard deviation and the amplitude, for one given x-value
 //
 // INPUT:
-//      x = independent variable
-//      mu = mean value of the Gaussian profile
-//      sigma = standard deviation of the Gaussian profile
-//      amp = maximum amplitude of the Gaussian profile (default = 1)
+//      x : independent variable
+//      mu : mean value of the Gaussian profile
+//      sigma : standard deviation of the Gaussian profile
+//      amp : maximum amplitude of the Gaussian profile (default = 1)
 //
 // OUTPUT:
 
@@ -67,25 +67,30 @@ double MathExtra::logGaussProfile(double x, double mu, double sigma, double amp)
 //      the standard deviation and the amplitude for a set of values.
 //
 // INPUT:
-//      y = vector containing the result
-//      x = vector containing independent variable values
-//      mu = mean value of the Gaussian profile
-//      sigma = standard deviation of the Gaussian profile
-//      amp = maximum amplitude of the Gaussian profile (default = 1)
+//      y : Eigen array containing the result
+//      x : Eigen array containing independent variable values
+//      mu : mean value of the Gaussian profile
+//      sigma : standard deviation of the Gaussian profile
+//      amp : maximum amplitude of the Gaussian profile (default = 1)
 //
 // OUTPUT:
+//      void
+//
+// REMARKS:
+//      - TODO: Argument x is 'const ArrayXd', which causes a copy. Making a
+//              Ref<> object requires a contiguous array, which may not work
+//              with expressions like array.row(0). Think about how to fix this.
+//      
 
-
-void MathExtra::logGaussProfile(vector<double> &y, vector<double> &x, double mu, double sigma, double amp)
+void MathExtra::logGaussProfile(RefArrayXd y, const ArrayXd x, const double mu, const double sigma, const double amp)
 {
     const double prefactor = log(amp) - 0.5 * log(2*MathExtra::PI) - log(sigma);
-    y.resize(x.size());
-    for (unsigned long i = 0; i < x.size(); i++)
-    {
-        y.at(i) = prefactor - 0.5 * (x.at(i) - mu) * (x.at(i) - mu) / (sigma * sigma);
-    }
+    y = prefactor - 0.5 * (x - mu) * (x - mu) / (sigma * sigma);
+    
     return;
 } 
+
+
 
 
 
