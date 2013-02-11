@@ -6,12 +6,16 @@
 #ifndef NESTEDSAMPLER_H
 #define NESTEDSAMPLER_H
 
-#include <vector>
 #include <cfloat>
 #include <random>
+#include <Eigen/Dense>
 #include "MathExtra.h"
 #include "FileProcess.h"
 #include "RandomVariate.h"
+
+using Eigen::ArrayXd;
+using Eigen::ArrayXXd;
+
 
 
 class NestedSampler
@@ -23,10 +27,9 @@ class NestedSampler
         double getLogEvidence();
         double getLogEvidenceError();
         double getInformationH();
-        vector<double> param;                           // parameter values (the free parameters of the problem)
-        vector<double> posteriorSample;                 // parameter values sampled from the posterior
-        vector<double> logLikelihoodOfPosteriorSample;  // logLikelihood values corresponding to the posterior sample 
-        vector<double> results;                         // output logZ, logZ_err, information H
+        ArrayXXd param;                         // parameter values (the free parameters of the problem)
+        ArrayXXd posteriorSample;               // parameter values sampled from the posterior
+        ArrayXd logLikelihoodOfPosteriorSample; // logLikelihood values corresponding to the posterior sample 
 
 	private:
         
@@ -34,9 +37,8 @@ class NestedSampler
         double informationH;
         double logEvidence;
         double logEvidenceError;
-        vector<double> logLikelihood;           // log-likelihood values
-        vector<double> logWeight;               // sum(weight) = Evidence Z
-        double updateInformationGain(double H_old, double logZ_old, double logZ_new, int worst);
+        ArrayXd logLikelihood;                  // log-likelihood values
+        ArrayXd logWeight;                      // sum(weight) = Evidence Z
 };
 
 #endif

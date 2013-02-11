@@ -91,31 +91,35 @@ double NestedSampler::getInformationH()
 //      Niter = Number of nested iterations
 //
 // OUTPUT:
+//
+// REMARKS: Eigen Matrices are defaulted column-major. Hence the param and posteriorSample 
+//          are resized as (Ndim, ...), rather than (...,Ndim).
+//          FIXME: we're using integers for indexing the arrays. Size of arrays may
+//                 be too large for this. Check out std::ptrdiff_t.
 
 void NestedSampler::run(int Nobjects, int Niter)
 {
     double logWidthInPriorMass;
     double logLikelihoodConstraint;
     double logEvidenceNew;
-    int copy;
+    int copy=0;
     int worst;
 
-    // Set up the random number generator. It generates random numbers
-    // between 0 and Nobjects, inclusive. The engine's seed is based on the 
+    // Set up the random number generator. It generates integers random numbers
+    // between 0 and Nobjects-1, inclusive. The engine's seed is based on the 
     // current time.
     
     uniform_int_distribution<int> uniform_distribution(0, Nobjects-1);
     mt19937 engine(time(0));
     auto uniform = bind(uniform_distribution, engine);
 
-    // Set vector sizes
+    // Reset the sizes of the Eigen Arrays
     
-    param.resize(Nobjects);
+    param.resize(randomVariate.getNdim(), Nobjects);
     logLikelihood.resize(Nobjects);
     logWeight.resize(Niter);
-    posteriorSample.resize(Niter);
+    posteriorSample.resize(randomVariate.getNdim(), Niter);
     logLikelihoodOfPosteriorSample.resize(Niter);
-    posteriorSample.resize(Niter);
 
     // Initialize prior values
     
@@ -126,31 +130,27 @@ void NestedSampler::run(int Nobjects, int Niter)
     logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));  
 
     // Nested sampling loop
-    
+        
     for (int nest = 0; nest < Niter; nest++)
     {
-        // Find worst object in the collection
+        // Find worst object in the collection. The likelihood of this object
+        // defines the constraint when drawing new objects later on.
         
-        worst = 0;
-        for (int i = 1; i < Nobjects; i++)
-        {
-            if (logLikelihood.at(i) < logLikelihood.at(worst))
-            {
-                worst = i;
-            }
-        }
-        logWeight.at(worst) = logWidthInPriorMass + logLikelihood.at(worst);                
+        logLikelihoodConstraint = logLikelihood.minCoeff(&worst);
+        logWeight(worst) = logWidthInPriorMass + logLikelihood(worst);                
         
-        // Update evidence Z and information H
+        // Update the evidence Z and the information H
         
-        logEvidenceNew = MathExtra::logExpSum(logEvidence, logWeight.at(worst));
-        informationH = updateInformationGain(informationH, logEvidence, logEvidenceNew, worst);
+        logEvidenceNew = MathExtra::logExpSum(logEvidence, logWeight(worst));
+        informationH = exp(logWeight(worst) - logEvidenceNew) * logLikelihood(worst)
+                       + exp(logEvidence - logEvidenceNew) * (informationH + logEvidence) 
+                       - logEvidenceNew;
         logEvidence = logEvidenceNew;
 
         // Save the posterior sample and its corresponding likelihood
 
-        posteriorSample.at(nest) = param.at(worst);                         // save parameter value
-        logLikelihoodOfPosteriorSample.at(nest) = logLikelihood.at(worst);  // save corresponding likelihood
+        posteriorSample.col(nest) = param.col(worst);                       // save parameter value
+        logLikelihoodOfPosteriorSample(nest) = logLikelihood(worst);        // save corresponding likelihood
     
         // Replace worst object in favour of a copy of different survivor
         // No replacement if Nobjects == 1.
@@ -163,15 +163,13 @@ void NestedSampler::run(int Nobjects, int Niter)
             } 
             while (copy == worst);
         }
-        cout << "Here" << endl;
 
-        logLikelihoodConstraint = logLikelihood.at(worst);
-        param.at(worst) = param.at(copy);
-        logLikelihood.at(worst) = logLikelihood.at(copy);
+        param.col(worst) = param.col(copy);
+        logLikelihood(worst) = logLikelihood(copy);
         
         // Evolve the replaced object with the new constraint logLikelihood > logLikelihoodConstraint
         
-        randomVariate.drawNestedValueWithConstraint(param.at(worst), logLikelihood.at(worst), logLikelihoodConstraint);
+        randomVariate.drawNestedValueWithConstraint(param.col(worst), logLikelihood(worst), logLikelihoodConstraint);
         
         // Shrink interval
         
@@ -187,34 +185,4 @@ void NestedSampler::run(int Nobjects, int Niter)
     return;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-// NestedSampler::updateInformationGain() 
-//
-// PURPOSE: 
-//      Updates the information gain from old to new evidence
-//
-// INPUT:
-//      H_old = Old information H
-//      logEvidence_old = old log Evidence
-//      logEvidence_new = new log Evidence
-//
-// OUTPUT:
-//      New value of information gain H
-
-double NestedSampler::updateInformationGain(double H_old, double logEvidence_old, double logEvidence_new, int worst)
-{    
-    return exp(logWeight[worst] - logEvidence_new) * logLikelihood[worst]
-           + exp(logEvidence_old - logEvidence_new) * (H_old + logEvidence_old) - logEvidence_new;
-}
 
