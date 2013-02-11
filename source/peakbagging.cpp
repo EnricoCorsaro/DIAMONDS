@@ -20,17 +20,17 @@ int main()
     NestedSampler nestedSampler(normalVariate);
     nestedSampler.run(Nobjects, Niter);
     
-    cout << right << setw(10) << "Parameter value" << right << setw(20) << "logLikelihood" << endl;
+    cerr << right << setw(10) << "Parameter value" << right << setw(20) << "logLikelihood" << endl;
     for (int i = 0; i < Niter; i++)
     {
-       cout << right << setw(10) << nestedSampler.posteriorSample[i]
-            << right << setw(20) << nestedSampler.logLikelihoodOfPosteriorSample[i] 
+       cout << right << setw(10) << nestedSampler.posteriorSample(i)
+            << right << setw(20) << nestedSampler.logLikelihoodOfPosteriorSample(i) 
             << endl;
     }
     
-    cout << endl;
-    cout << " ------------------------------------------------" << endl;
-    cout << " Evidence: logZ = " << nestedSampler.getLogEvidence() << " +/- " << nestedSampler.getLogEvidenceError() << endl;
-    cout << " Information: H = " << nestedSampler.getInformationH() << endl;
-    cout << " ------------------------------------------------" << endl;
+    cerr << endl;
+    cerr << " ------------------------------------------------" << endl;
+    cerr << " Evidence: logZ = " << nestedSampler.getLogEvidence() << " +/- " << nestedSampler.getLogEvidenceError() << endl;
+    cerr << " Information: H = " << nestedSampler.getInformationH() << endl;
+    cerr << " ------------------------------------------------" << endl;
 }
