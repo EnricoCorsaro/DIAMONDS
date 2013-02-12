@@ -68,7 +68,7 @@ double NestedSampler::getInformationH()
 //      Niter = Number of nested iterations
 // OUTPUT:
 //
-// REMARKS: Eigen Matrices are defaulted column-major. Hence the param and posteriorSample 
+// REMARKS: Eigen Matrices are defaulted column-major. Hence the parameter and posteriorSample 
 //          are resized as (Ndim, ...), rather than (...,Ndim).
 //          FIXME: we're using integers for indexing the arrays. Size of arrays may
 //                 be too large for this. Check out std::ptrdiff_t.
@@ -83,7 +83,7 @@ void NestedSampler::run(int Nobjects, int Niter)
 
     // Set up the random number generator. It generates integers random numbers
     // between 0 and Nobjects-1, inclusive. The engine's seed is based on the 
-    // current time.
+    // current time, and a Marsenne Twister pesudo-random generator is used.
     
     uniform_int_distribution<int> uniform_distribution(0, Nobjects-1);
     mt19937 engine(time(0));
@@ -91,7 +91,7 @@ void NestedSampler::run(int Nobjects, int Niter)
 
     // Reset the sizes of the Eigen Arrays
     
-    param.resize(randomVariate.getNdim(), Nobjects);
+    parameter.resize(randomVariate.getNdim(), Nobjects);
     logLikelihood.resize(Nobjects);
     logWeight.resize(Niter);
     posteriorSample.resize(randomVariate.getNdim(), Niter);
@@ -99,7 +99,7 @@ void NestedSampler::run(int Nobjects, int Niter)
 
     // Initialize prior values
 
-    randomVariate.drawNestedValues(param, logLikelihood, Nobjects);
+    randomVariate.drawNestedValues(parameter, logLikelihood, Nobjects);
     
     // Initialize prior mass interval
 
@@ -125,7 +125,7 @@ void NestedSampler::run(int Nobjects, int Niter)
 
         // Save the posterior sample and its corresponding likelihood
 
-        posteriorSample.col(nest) = param.col(worst);                       // save parameter value
+        posteriorSample.col(nest) = parameter.col(worst);                   // save parameter value
         logLikelihoodOfPosteriorSample(nest) = logLikelihood(worst);        // save corresponding likelihood
 
         // Replace worst object in favour of a copy of different survivor
@@ -140,12 +140,12 @@ void NestedSampler::run(int Nobjects, int Niter)
             while (copy == worst);
         }
 
-        param.col(worst) = param.col(copy);
+        parameter.col(worst) = parameter.col(copy);
         logLikelihood(worst) = logLikelihood(copy);
         
         // Evolve the replaced object with the new constraint logLikelihood > logLikelihoodConstraint
         
-        randomVariate.drawNestedValueWithConstraint(param.col(worst), logLikelihood(worst), logLikelihoodConstraint);
+        randomVariate.drawNestedValueWithConstraint(parameter.col(worst), logLikelihood(worst), logLikelihoodConstraint);
 
         // Shrink interval
 

@@ -27,7 +27,7 @@ class NestedSampler
         double getLogEvidence();
         double getLogEvidenceError();
         double getInformationH();
-        ArrayXXd param;                         // parameter values (the free parameters of the problem)
+        ArrayXXd parameter;                     // parameter values (the free parameters of the problem)
         ArrayXXd posteriorSample;               // parameter values sampled from the posterior
         ArrayXd logLikelihoodOfPosteriorSample; // logLikelihood values corresponding to the posterior sample 
 
