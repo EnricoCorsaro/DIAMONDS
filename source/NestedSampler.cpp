@@ -1,26 +1,63 @@
 #include "NestedSampler.h"
 
+
+
 // NestedSampler::NestedSampler()
+//
 // PURPOSE: 
 //      Constructor. Sets initial information, logEvidence and type of prior and likelihood 
-//      distributions to be used.
+//      distributions to be used. Increases the number of active nested processes.
+//
 // INPUT:
 //      variate: a RandomVariate class used as Prior to draw from
+//
 // OUTPUT:
 
-NestedSampler::NestedSampler(RandomVariate &variate)
-: randomVariate(variate), informationH(0.0), logEvidence(-DBL_MAX)
+NestedSampler::NestedSampler(int Ndim)
+: , 
+  informationH(0.0), 
+  logEvidence(-DBL_MAX)
 {
-
+    ++nestedCounter;
+    cerr << "Nested process initialized" << endl;
+    cerr << "Total number of active nested processes: " << nestedCounter << endl;
 }
 
 
 
 
+
+
+// NestedSampler::~NestedSampler()
+//
+// PURPOSE: 
+//      Destructor. Deletes object of actual Nested sampling computation
+//      distributions to be used. Decreases the number of active nested processes.
+//
+// INPUT:
+//
+// OUTPUT:
+
+NestedSampler::~NestedSampler()
+{
+    --nestedCounter;
+    cerr << "Nested process deleted" << endl;
+    cerr << "Total number of remaining active nested processes: " << nestedCounter << endl;
+}
+
+
+
+
+
+
+
 // NestedSampler::getLogEvidence()
+//
 // PURPOSE:
 //      Gets private data member logEvidence
+//
 // INPUT:
+//
 // OUTPUT:
 
 double NestedSampler::getLogEvidence()
@@ -31,10 +68,16 @@ double NestedSampler::getLogEvidence()
 
 
 
+
+
+
 // NestedSampler::getLogEvidenceError()
+//
 // PURPOSE:
 //      Gets private data member logEvidenceError
+//
 // INPUT:
+//
 // OUTPUT:
 
 double NestedSampler::getLogEvidenceError()
@@ -45,10 +88,16 @@ double NestedSampler::getLogEvidenceError()
 
 
 
+
+
+
 // NestedSampler::getInformationH()
+//
 // PURPOSE:
 //      Gets private data member informationH
+//
 // INPUT:
+//
 // OUTPUT:
 
 double NestedSampler::getInformationH()
@@ -59,30 +108,34 @@ double NestedSampler::getInformationH()
 
 
 
+
+
+
 // NestedSampler::run()
+//
 // PURPOSE:
 //      Start nested sampling computation. Save results in 
 //      public vectors "logLikelihoodOfPosteriorSample", "posteriorSample"
+//
 // INPUT:
-//      Nobjects = Number of objects for nested sampling
-//      Niter = Number of nested iterations
+//      Nobjects : Number of objects for nested sampling
+//      Niter : Number of nested iterations
+//
 // OUTPUT:
 //
 // REMARKS: Eigen Matrices are defaulted column-major. Hence the parameter and posteriorSample 
 //          are resized as (Ndim, ...), rather than (...,Ndim).
-//          FIXME: we're using integers for indexing the arrays. Size of arrays may
-//                 be too large for this. Check out std::ptrdiff_t.
 
 void NestedSampler::run(int Nobjects, int Niter)
 {
     double logWidthInPriorMass;
     double logLikelihoodConstraint;
     double logEvidenceNew;
-    int copy=0;
+    int copy = 0;
     int worst;
 
     // Set up the random number generator. It generates integers random numbers
-    // between 0 and Nobjects-1, inclusive. The engine's seed is based on the 
+    // between 0 and Nobjects-1, inclusive. The engine's seed is based on the
     // current time, and a Marsenne Twister pesudo-random generator is used.
     
     uniform_int_distribution<int> uniform_distribution(0, Nobjects-1);
@@ -90,12 +143,14 @@ void NestedSampler::run(int Nobjects, int Niter)
     auto uniform = bind(uniform_distribution, engine);              // Binding uniform distribution to seed value
 
     // Reset the sizes of the Eigen Arrays
-    
-    parameter.resize(randomVariate.getNdim(), Nobjects);
+    // Vectors containing objects of a single nested iteration
+    parameter.resize(Nobjects);
     logLikelihood.resize(Nobjects);
-    logWeight.resize(Niter);
-    posteriorSample.resize(randomVariate.getNdim(), Niter);
+
+    // Vectors containing worst objects from all nested iterations
+    posteriorSample.resize(Ndim,Niter);
     logLikelihoodOfPosteriorSample.resize(Niter);
+    logWeight.resize(Niter);
 
     // Initialize prior values
 
@@ -103,7 +158,7 @@ void NestedSampler::run(int Nobjects, int Niter)
     
     // Initialize prior mass interval
 
-    logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));  
+    logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));
 
     // Nested sampling loop
 
@@ -125,8 +180,8 @@ void NestedSampler::run(int Nobjects, int Niter)
 
         // Save the posterior sample and its corresponding likelihood
 
-        posteriorSample.col(nest) = parameter.col(worst);                   // save parameter value
-        logLikelihoodOfPosteriorSample(nest) = logLikelihood(worst);        // save corresponding likelihood
+        posteriorSample(nest) = parameter(worst);                          // save parameter value
+        logLikelihoodOfPosteriorSample(nest) = logLikelihood(worst);       // save corresponding likelihood
 
         // Replace worst object in favour of a copy of different survivor
         // No replacement if Nobjects == 1.
@@ -135,17 +190,17 @@ void NestedSampler::run(int Nobjects, int Niter)
         {
             do 
             {
-                copy = uniform();              // 0 <= copy < Nobjects
+                copy = uniform();             // 0 <= copy < Nobjects
             } 
             while (copy == worst);
         }
 
-        parameter.col(worst) = parameter.col(copy);
+        parameter(worst) = parameter(copy);
         logLikelihood(worst) = logLikelihood(copy);
         
         // Evolve the replaced object with the new constraint logLikelihood > logLikelihoodConstraint
         
-        randomVariate.drawNestedValueWithConstraint(parameter.col(worst), logLikelihood(worst), logLikelihoodConstraint);
+        randomVariate.drawNestedValueWithConstraint(parameter(worst), logLikelihood(worst), logLikelihoodConstraint);
 
         // Shrink interval
 

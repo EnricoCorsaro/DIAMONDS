@@ -10,31 +10,50 @@
 #include "MathExtra.h"
 #include "File.h"
 #include "NestedSampler.h"
-#include "NormalVariate.h"
-
 
 int main(int argc, char *argv[])
 {
+    unsigned long Nrows;
+    int Ncols
+    ArrayXXd data;
+    
     if (argc != 2)
     {
-        cerr << "Usage: peakbagging <outputfile>" << endl;
+        cerr << "Usage: peakbagging <inputFile> <outputFile>" << endl;
         exit(EXIT_FAILURE);
     }
 
-    ofstream outputFile(argv[1]);
+    ifstream inputFile(argv[1]);
+    if (!inputFile.good())
+    {
+        cerr << "Error opening input file" << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    File::snifFile(inputFile, Nrows, Ncols);
+    data = File::arrayFromFile(inputFile, Nrows, Ncols);
+
+    ofstream outputFile(argv[2]);
     if (!outputFile.good())
     {
         cerr << "Error opening output file" << endl;
         exit(EXIT_FAILURE);
     }
        
-
     int Nobjects = 100;      // Number of objects per nested iteration (usually 100)
     int Niter    = 1000;     // Number of nested iterations (usually 1000)
+    int Ndim     = 1;        // Number of free parameters (dimensions) of the problem
+    Prior prior(Ndim);
+    ArrayXd parametersMin(Ndim);
+    ArrayXd parameterspMax(Ndim);
+
+    // Should give input values from file
+    parametersMin = 0.0;
+    parametersMax = 20.0;
+
+    prior.setBoundaries(parametersMin, parametersMax);
     
-    NormalVariate normalVariate(10.0, 3.0);
-    normalVariate.setBoundaries(0.0, 20.0);
-    NestedSampler nestedSampler(normalVariate);
+    NestedSampler nestedSampler(Ndim);
     nestedSampler.run(Nobjects, Niter);
 
     outputFile << "# Parameter value    logLikelihood" << endl;
