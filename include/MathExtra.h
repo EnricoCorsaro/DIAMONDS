@@ -29,14 +29,22 @@ namespace MathExtra
 {
 
     const double PI = 4.0 * atan(1.0);
-    void lorentzProfile(vector<double> &y, vector<double> &x, double x0, double gamma, double amp = 1);
+
+    // Functional Profiles
+    void lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, double gamma, double amp = 1);
     double logGaussProfile(double x, double mu, double sigma, double amp = 1);
-    void logGaussProfile(RefArrayXd y, const ArrayXd x, const double mu, const double sigma, const double amp = 1);
-    double gaussLikelihood(vector<double> &x_obs, vector<double> &x_theor, vector<double> &sigma);
-    double logGaussLikelihood(vector<double> &x_obs, vector<double> &x_theor, vector<double> &sigma);
+    void logGaussProfile(RefArrayXd y, const RefArrayXd x, const double mu, const double sigma, const double amp = 1);
+    
+    // Likelihood functions
+    double gaussLikelihood(const RefArrayXd x_obs, const RefArrayXd x_theor, const RefArrayXd sigma);
+    double logGaussLikelihood(const RefArrayXd x_obs, const RefArrayXd x_theor, const RefArrayXd sigma);
+    
+    // Array functions
     inline double product(const vector<double> &vec);
+    double product(const RefArrayXd vec);
     inline double sum(const vector<double> &vec);
+    double sum(const RefArrayXd vec);
     double logExpSum(double x, double y);
 
-}; // end namespace MathExtra
+} // End namespace MathExtra
 #endif

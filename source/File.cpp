@@ -21,10 +21,11 @@
 //      - the stream is not closed afterwards.
 //
 
-Eigen::ArrayXXd File::arrayFromFile(ifstream &inputFile, int Nrows, int Ncols, char separator, char commentChar)
+Eigen::ArrayXXd File::arrayFromFile(ifstream &inputFile, unsigned long Nrows, int Ncols, char separator, char commentChar)
 {
     string line;
-    int iRow=0, iCol=0;
+    unsigned long iRow = 0;
+    int iCol = 0;
     Eigen::ArrayXXd array(Nrows, Ncols);
     
     while(!inputFile.eof())
@@ -111,10 +112,6 @@ Eigen::ArrayXXd File::arrayFromFile(ifstream &inputFile, int Nrows, int Ncols, c
 
 
 
-
-
-
-
 // File::arrayToFile()
 //
 // PURPOSE: writes an Eigen ArrayXXd to an ascii file
@@ -135,9 +132,9 @@ Eigen::ArrayXXd File::arrayFromFile(ifstream &inputFile, int Nrows, int Ncols, c
 
 void File::arrayToFile(ofstream &outputFile, ArrayXXd array, string separator, string terminator)
 {
-    for (int i = 0; i < array.rows(); ++i)
+    for (ptrdiff_t i = 0; i < array.rows(); ++i)
     {
-        for (int j = 0; j < array.cols()-1; ++j)
+        for (ptrdiff_t j = 0; j < array.cols()-1; ++j)
         {
             outputFile << array(i,j) << separator;
         }
@@ -176,7 +173,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, str
 {
     assert(array1.size() == array2.size());
     
-    for (int i = 0; i < array1.rows(); ++i)
+    for (ptrdiff_t i = 0; i < array1.rows(); ++i)
     {
         outputFile << array1(i) << separator << array2(i) << terminator;
     }
@@ -209,7 +206,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, str
 //      - the stream is not closed afterwards.
 //
 
-void File::snifFile(ifstream &inputFile, int &Nrows, int &Ncols, char separator, char commentChar)
+void File::snifFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char separator, char commentChar)
 {
     string line;
     int iRow=0;
