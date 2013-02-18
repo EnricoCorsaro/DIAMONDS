@@ -175,7 +175,7 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedParameters, Likelihood &l
 {
     double logLikelihoodConstraint;
 
-    logLikelihoodConstraint = likelihood.logDensity(nestedParameters);
+    logLikelihoodConstraint = likelihood.logValue(nestedParameters);
 
     // Uniform sampling to find new parameter with logLikelihood > logLikelihoodConstraint
     do
