@@ -1,10 +1,15 @@
+// Derived class for uniform prior computations
+// Created by Enrico Corsaro & Joris De Ridder @ IvS - 15 February 2013
+// e-mail: enrico.corsaro@ster.kuleuven.be
+// Header file "UniformPrior.h"
+// Implementations contained in "UniformPrior.cpp"
+
 
 #ifndef UNIFORMPRIOR_H
 #define UNIFORMPRIOR_H
 
 #include <cassert>
 #include <iostream>
-#include <Eigen/Core>
 #include "Prior.h"
 
 
