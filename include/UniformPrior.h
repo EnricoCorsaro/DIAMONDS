@@ -3,12 +3,15 @@
 #define UNIFORMPRIOR_H
 
 #include <random>
+#include <cassert>
+#include <iostream>
 #include <Eigen/Core>
 #include "Prior.h"
 
 
 using namespace std;
 using Eigen:ArrayXd;
+typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
 
@@ -17,21 +20,23 @@ class UniformPrior : public Prior
 
     public:
 
-        UniformPrior(const RefArrayXd min, const RefArrayXd max);
+        UniformPrior(const RefArrayXd minimum, const RefArrayXd maximum), const int Nobjects;
         ~UniformPrior();
 
         ArrayXd getMinimum();
         ArrayXd getMaximum();
+        double getUniformFactor();
 
-        void draw(RefArrayXXd parameterSample, const double Nobjects);
-        void drawWithConstraint(RefArrayXd parameter, Likelihood &likelihood);
+        virtual void draw(RefArrayXXd nestedParameters);
+        virtual void drawWithConstraint(RefArrayXd nestedParameters, Likelihood &likelihood);
 
     private:
 
         uniform_real_distribution<> uniform;
         mt19937 engine;
-        ArrayXd min;
-        ArrayXd max;
+        ArrayXd minimum;
+        ArrayXd maximum;
+        double uniformFactor;
 
 }; 
 

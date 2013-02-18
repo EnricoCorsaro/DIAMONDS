@@ -7,6 +7,7 @@
 
 
 using namespace std;
+typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
 
@@ -15,18 +16,22 @@ class Prior
 
     public:
 
-        Prior(int Ndim);
+        Prior(const int Ndimensions, const int Nobjects);
         ~Prior();
-        
-        virtual void draw(RefArrayXXd parameterSample, const double Nobjects) = 0;
-        virtual void drawWithConstraint(RefArrayXd parameter, Likelihood &likelihood) = 0;
+        int getNdimensions();
+        int getNobjects();
+
+        // Pure virtual functions implemented in derived classes
+        virtual void draw(RefArrayXXd nestedParameters) = 0;
+        virtual void drawWithConstraint(RefArrayXd worstNestedParameter, Likelihood &likelihood) = 0;
 
     protected:
+        
+        int Ndimensions;
+        int Nobjects;
 
     private:
     
-        int Ndim;
-
 };
 
 #endif
