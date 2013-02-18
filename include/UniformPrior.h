@@ -2,7 +2,6 @@
 #ifndef UNIFORMPRIOR_H
 #define UNIFORMPRIOR_H
 
-#include <random>
 #include <cassert>
 #include <iostream>
 #include <Eigen/Core>
