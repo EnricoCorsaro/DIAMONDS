@@ -36,14 +36,11 @@ namespace MathExtra
     void logGaussProfile(RefArrayXd y, const RefArrayXd x, const double mu, const double sigma, const double amp = 1);
     
     // Likelihood functions
-    double gaussLikelihood(const RefArrayXd x_obs, const RefArrayXd x_theor, const RefArrayXd sigma);
-    double logGaussLikelihood(const RefArrayXd x_obs, const RefArrayXd x_theor, const RefArrayXd sigma);
+    double logGaussLikelihood(const RefArrayXd observations, const RefArrayXd predictions, const RefArrayXd uncertainties);
     
     // Array functions
     inline double product(const vector<double> &vec);
-    double product(const RefArrayXd vec);
     inline double sum(const vector<double> &vec);
-    double sum(const RefArrayXd vec);
     double logExpSum(double x, double y);
 
 } // End namespace MathExtra

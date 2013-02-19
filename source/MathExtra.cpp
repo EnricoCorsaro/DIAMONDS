@@ -32,6 +32,10 @@ void MathExtra::lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, doub
 
 
 
+
+
+
+
 // MathExtra::logGaussProfile()
 //
 // PURPOSE: 
@@ -52,6 +56,11 @@ double MathExtra::logGaussProfile(double x, double mu, double sigma, double amp)
     const double prefactor = log(amp) - 0.5 * log(2*MathExtra::PI) - log(sigma);
     return prefactor - 0.5 * (x - mu) * (x - mu) / (sigma * sigma);
 } 
+
+
+
+
+
 
 
 
@@ -85,41 +94,7 @@ void MathExtra::logGaussProfile(RefArrayXd y, const RefArrayXd x, const double m
 
 
 
-// MathExtra::gaussLikelihood()
-//
-// PURPOSE: 
-//      Computes the gaussian likelihood from a set of observations,
-//      uncertainties, and theoretical predictions.
-//
-// INPUT:
-//      x_obs = vector containing the oberved values
-//      x_theor = vector containing the corresponding predicted values of x
-//      sigma = vector containing the uncertanties on the observed values
-//
-// OUTPUT:
-//      The resulting value of the Gaussian likelihood
-//
 
-double MathExtra::gaussLikelihood(const RefArrayXd x_obs, const RefArrayXd x_theor, const RefArrayXd sigma)
-{
-    if ((x_obs.size() != x_theor.size()) && (x_obs.size() != sigma.size()))
-    {
-        cout << "Array dimensions do not match. Quitting program." << endl;
-        exit(1);
-    }
-    
-    double likel;
-    ArrayXd fac;
-    ArrayXd delta;
-    ArrayXd likelihood;
-    
-    fac = 1./(sqrt(2.*MathExtra::PI) * sigma);
-    delta = -0.5*((x_obs - x_theor)*(x_obs - x_theor)) / (sigma*sigma);
-    likelihood = fac * delta.exp();
-    likel = product(likelihood);
-    
-    return likel;
-} // END MathExtra::gaussianLikelihood()
 
 
 
@@ -131,17 +106,17 @@ double MathExtra::gaussLikelihood(const RefArrayXd x_obs, const RefArrayXd x_the
 //      uncertainties, and theoretical predictions.
 //
 // INPUT:
-//      x_obs : vector containing the oberved values
-//      x_theor : vector containing the corresponding predicted values of x
-//      sigma : vector containing the uncertanties on the observed values
+//      observations : array containing the oberved values
+//      predictions : array containing the corresponding predicted values of x
+//      uncertainties : array containing the uncertanties on the observed values
 //
 // OUTPUT:
 //      The resulting value of the log-Gaussian likelihood
 //
 
-double MathExtra::logGaussLikelihood(const RefArrayXd x_obs, const RefArrayXd x_theor, const RefArrayXd sigma)
+double MathExtra::logGaussLikelihood(const RefArrayXd observations, const RefArrayXd predictions, const RefArrayXd uncertainties)
 {
-    if ((x_obs.size() != x_theor.size()) && (x_obs.size() != sigma.size()))
+    if ((observations.size() != predictions.size()) || (observations.size() != uncertainties.size()))
     {
         cout << "Array dimensions do not match. Quitting program." << endl;
         exit(1);
@@ -151,13 +126,17 @@ double MathExtra::logGaussLikelihood(const RefArrayXd x_obs, const RefArrayXd x_
     ArrayXd lambda0;
     ArrayXd lambda;
     
-    delta = ((x_obs - x_theor)*(x_obs - x_theor)) / (sigma*sigma);
-    lambda0 = -1.*log(sqrt(2.*PI) * sigma);
+    delta = ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);
+    lambda0 = -1.*log(sqrt(2.*PI) * uncertainties);
     lambda = lambda0 -0.5*delta;
     
-    return sum(lambda);
+    return lambda.sum();
 
 } // END MathExtra::logGaussLikelihood()
+
+
+
+
 
 
 
@@ -180,26 +159,6 @@ inline double MathExtra::product(const vector<double> &vec)
 
 
 
-// MathExtra::product()
-// PURPOSE: 
-//      Computes the product of the elements contained in a vector of doubles of class Eigen Array.
-// INPUT:
-//      vec : vector of values to be multiplied
-// OUTPUT:
-//      The productoria of the vector elements
-//
-// REMARK: 
-//      Is there any member function of this class allowing the sum of the elements? I am not finding it.
-
-double MathExtra::product(const RefArrayXd vec)
-{
-    double prod = 1.;
-    for (ptrdiff_t i = 0; i < vec.size(); i++)
-    {
-        prod *= vec(i);
-    }
-    return prod;
-} // END MathExtra::product()
 
 
 
@@ -221,26 +180,6 @@ inline double MathExtra::sum(const vector<double> &vec)
 
 
 
-// MathExtra::sum()
-// PURPOSE: 
-//      Computes the sum of the elements contained in a vector of doubles of Eigen Array class
-// INPUT:
-//      vec = vector of values to be added
-// OUTPUT:
-//      The summation of the vector elements
-//
-// REMARK: 
-//      Is there any member function of this class allowing the sum of the elements? I am not finding it.
-
-double MathExtra::sum(const RefArrayXd vec)
-{
-    double total = 0.;
-    for (ptrdiff_t i = 0; i < vec.size(); i++)
-    {
-        total += vec(i);
-    }
-    return total;
-} // END MathExtra::sum()
 
 
 
