@@ -1,7 +1,6 @@
 #include "MathExtra.h"
 
 
-
 // MathExtra::lorentzProfile()
 //
 // PURPOSE: 
@@ -19,7 +18,7 @@
 // OUTPUT:
 //      void
 
-void MathExtra::lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, double gamma, double amp)
+void MathExtra::lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, double amp, double gamma)
 {
     
         y = (amp*amp)/((x-x0)*(x-x0) + (gamma/2.)*(gamma/2.));

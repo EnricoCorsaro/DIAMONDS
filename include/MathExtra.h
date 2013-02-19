@@ -30,7 +30,7 @@ namespace MathExtra
     const double PI = 4.0 * atan(1.0);
 
     // Functional Profiles
-    void lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, double gamma, double amp = 1);
+    void lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, double gamma, double amp);
     double logGaussProfile(double x, double mu, double sigma, double amp = 1);
     void logGaussProfile(RefArrayXd y, const RefArrayXd x, const double mu, const double sigma, const double amp = 1);
     
