@@ -1,9 +1,16 @@
+// Derived class for normal likelihood computations
+// Created by Enrico Corsaro & Joris De Ridder @ IvS - 15 February 2013
+// e-mail: enrico.corsaro@ster.kuleuven.be
+// Header file "NormalLikelihood.h"
+// Implementations contained in "NormalLikelihood.cpp"
+
+
 #ifndef NORMALLIKELIHOOD_H
 #define NORMALLIKELIHOOD_H
 
 #include <cmath>
-#include <Eigen/Core>
-#include "MathExtra.h"
+#include <iostream>
+#include "Likelihood.h"
 
 
 using namespace std;
@@ -16,17 +23,16 @@ class NormalLikelihood : public Likelihood
 
     public:
 
-        NormalLikelihood(RefArrayXd covariates, RefArrayXd observations, RefArrayXd uncertainties, Model &model);
+        NormalLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
         ~NormalLikelihood();
+        ArrayXd getCovariates();
+        ArrayXd getObservations();
+        ArrayXd getUncertainties();
 
-        double logDensity(RefArrayXd modelParameters);
-
-    protected:
-    
-        
+        virtual double logValue(RefArrayXd modelParameters);
 
     private:
 
-};
+}; // END class NormalLikelihood
 
 #endif
