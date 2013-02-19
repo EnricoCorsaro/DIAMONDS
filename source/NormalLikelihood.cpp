@@ -134,7 +134,7 @@ double NormalLikelihood::logValue(RefArrayXd modelParameters)
     model.predict(predictions, modelParameters);
     
     double term = -0.5 * observations.size() * log(2.0*MathExtra::PI); 
-    delta = -uncertainties - 0.5 * ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);
+    delta = -1.0 * uncertainties.log() - 0.5 * ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);
     return term + delta.sum();
 } // END NormalLikelihood::logValue()
 
