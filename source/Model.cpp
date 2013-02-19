@@ -1,36 +1,22 @@
 #include "Model.h"
 
+
 // Model::Model()
 //
 // PURPOSE: 
 //      Constructor. Initializes model computation.
 //
 // INPUT:
-/
-// OUTPUT:
+//      covariates: one-dimensional array containing the values
+//      of the independent variable.
+//
 
-Model::Model(const RefArrayXd x_obs, const RefArrayXd setOfParameters, const int modelID)
-  x(x_obs),
-  modelIdentifier(modelID)
+Model::Model(const RefArrayXd covariates)
+: covariates(covariates)
 {
-    parametersNumber = setOfParameters.size();
 
-    // Choose Model 1
-    if (modelIdentifier == 1)
-    {
-        buildModel1(y_theor, setOfParameters);
-    }
-    // Choose Model 2
-    else if (modelIdentifier == 2)
-    {
-        buildModel2(y_theor, setOfParameters);
-    }
-    // Choose Model 3
-    else if (modelIdentifier == 3)
-    {
-        buildModel3(y_theor, setOfParameters);
-    }
-}
+} // END Model::Model()
+
 
 
 
@@ -43,13 +29,11 @@ Model::Model(const RefArrayXd x_obs, const RefArrayXd setOfParameters, const int
 // PURPOSE: 
 //      Destructor.
 //
-// INPUT:
-/
-// OUTPUT:
 
 Model::~Model()
 {
-}
+
+} // END Model::~Model()
 
 
 
@@ -58,98 +42,19 @@ Model::~Model()
 
 
 
-// Model::getParametersNumber()
+// Model::getCovariates()
 //
 // PURPOSE: 
-//
-// INPUT:
-//
-// OUTPUT:
-
-int Model::getParametersNumber();
-{
-    return parametersNumber;
-}
-
-
-
-
-
-
-
-
-// Model::buildModel1()
-//
-// PURPOSE:
-//
-// INPUT:
+//      Get the protected data member covariates.
 //
 // OUTPUT:
+//      A one-dimensional array containing the values
+//      of the independent variable.
+//
 
-void buildModel1()
+ArrayXd Model::getCovariates();
 {
-    MathExtra::lorentzProfile(y_theor, x, setOfParameters(0), 2., 1.);
-    return;
-}
+    return covariates;
+} // END Model::getCovariates()
 
-
-
-
-
-
-
-
-
-// Model::buildModel2()
-//
-// PURPOSE: 
-//
-// INPUT:
-//
-// OUTPUT:
-
-void buildModel2()
-{
-    return;
-}
-
-
-
-
-
-
-
-
-
-// Model::buildModel3()
-//
-// PURPOSE: 
-//
-// INPUT:
-//
-// OUTPUT:
-
-void buildModel3()
-{
-    return;
-}
-
-
-
-
-
-
-
-// Model::getParametersNumber()
-//
-// PURPOSE: 
-//
-// INPUT:
-//
-// OUTPUT:
-
-ArrayXd Model::getYTheor();
-{
-    return y_theor;
-}
 
