@@ -103,7 +103,7 @@ double MeanLikelihood::logValue(RefArrayXd modelParameters)
     ArrayXd lambda0;
     ArrayXd lambda;
     ArrayXd argument;
-    double n = observations.size();
+    unsigned long n = observations.size();
 
     model.predict(predictions, modelParameters);
     argument = (observations - predictions)/normalizedUncertainties;
