@@ -28,6 +28,9 @@ NormalLikelihood::NormalLikelihood(const RefArrayXd covariates, const RefArrayXd
 
 
 
+
+
+
 // NormalLikelihood::~NormalLikelihood()
 //
 // PURPOSE: 
@@ -38,49 +41,6 @@ NormalLikelihood::~NormalLikelihood()
 {
 
 } // END NormalLikelihood::~NormalLikelihood()
-
-
-
-
-
-
-// NormalLikelihood::getCovariates();
-//
-// PURPOSE:
-//      Get protected data member covariates.
-//
-// OUTPUT:
-//      covariates: one-dimensional array containing the
-//      independent variable values.
-//
-
-ArrayXd getCovariates()
-{
-    return covariates;
-} // END NormalLikelihood::getCovariates()
-
-
-
-
-
-
-
-
-
-// NormalLikelihood::getObservations();
-//
-// PURPOSE:
-//      Get protected data member observations.
-//
-// OUTPUT:
-//      observations: one-dimensional array containing the
-//      dependent variable values.
-//
-
-ArrayXd getObservations()
-{
-    return observations;
-} // END NormalLikelihood::getObservations()
 
 
 

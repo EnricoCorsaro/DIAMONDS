@@ -25,6 +25,8 @@ class Likelihood
 
         Likelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
         ~Likelihood();
+        ArrayXd getCovariates();
+        ArrayXd getObservations();
 
         virtual double logValue(RefArrayXd modelParameters) = 0;
 

@@ -28,6 +28,10 @@ Likelihood::Likelihood(const RefArrayXd covariates, const RefArrayXd observation
 
 
 
+
+
+
+
 // Likelihood::~Likelihood()
 //
 // PURPOSE: 
@@ -38,4 +42,53 @@ Likelihood::~Likelihood()
 {
 
 } // END Likelihood::Likelihood()
+
+
+
+
+
+
+
+
+
+
+// Likelihood::getCovariates();
+//
+// PURPOSE:
+//      Get protected data member covariates.
+//
+// OUTPUT:
+//      covariates: one-dimensional array containing the
+//      independent variable values.
+//
+
+ArrayXd getCovariates()
+{
+    return covariates;
+} // END Likelihood::getCovariates()
+
+
+
+
+
+
+
+
+
+// Likelihood::getObservations();
+//
+// PURPOSE:
+//      Get protected data member observations.
+//
+// OUTPUT:
+//      observations: one-dimensional array containing the
+//      dependent variable values.
+//
+
+ArrayXd getObservations()
+{
+    return observations;
+} // END Likelihood::getObservations()
+
+
 

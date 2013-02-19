@@ -25,8 +25,6 @@ class NormalLikelihood : public Likelihood
 
         NormalLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
         ~NormalLikelihood();
-        ArrayXd getCovariates();
-        ArrayXd getObservations();
         ArrayXd getUncertainties();
 
         virtual double logValue(RefArrayXd modelParameters);
