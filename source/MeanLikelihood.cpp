@@ -85,8 +85,8 @@ ArrayXd getNormalizedUncertainties()
 //      Compute the natural logarithm of the mean likelihood for 
 //      a given set of observations, uncertainties and predictions.
 //      The mean likelihood is a normal likelihood whose uncertainties
-//      integrated over its uncertainties by means of a Jeffrey's prior.
-//      For more details cf. Froehlich H.-E. et al. 2009, A&A, 506, 263
+//      have been integrated away by means of a Jeffrey's prior.
+//      For more details cf. Froehlich H.-E. et al. 2009, A&A, 506, 263.
 //
 // INPUT:
 //      modelParameters: a one-dimensional array containing the actual
