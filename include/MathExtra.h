@@ -1,8 +1,9 @@
-// Class for implementing some extra functions useful for Peak Bagging fitting process
+// Class for implementing some extra functions useful 
+// computations of models and likelihoods.
 // Created by Enrico Corsaro @ IvS - 22 January 2013
 // e-mail: enrico.corsaro@ster.kuleuven.be
 // Header file "MathExtra.h"
-
+// Implementation contained in "MathExtra.cpp"
 
 
 #ifndef MATHEXTRA_H
@@ -20,9 +21,7 @@
 using namespace std;
 
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
-typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 using Eigen::ArrayXd;
-using Eigen::ArrayXXd;
 
 
 namespace MathExtra
@@ -43,5 +42,5 @@ namespace MathExtra
     inline double sum(const vector<double> &vec);
     double logExpSum(double x, double y);
 
-} // End namespace MathExtra
+} // END namespace MathExtra
 #endif

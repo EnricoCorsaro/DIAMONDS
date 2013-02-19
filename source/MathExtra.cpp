@@ -24,7 +24,6 @@ void MathExtra::lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, doub
     
         y = (amp*amp)/((x-x0)*(x-x0) + (gamma/2.)*(gamma/2.));
 
-    return;
 } // END MathExtra::lorentzProfile()
 
 
@@ -55,8 +54,7 @@ double MathExtra::logGaussProfile(double x, double mu, double sigma, double amp)
 {
     const double prefactor = log(amp) - 0.5 * log(2*MathExtra::PI) - log(sigma);
     return prefactor - 0.5 * (x - mu) * (x - mu) / (sigma * sigma);
-} 
-
+} // END MathExtra::logGaussProfile() 
 
 
 
@@ -69,7 +67,7 @@ double MathExtra::logGaussProfile(double x, double mu, double sigma, double amp)
 //
 // PURPOSE: 
 //      Computes the logarithm of a Gaussian profile given the centroid, 
-//      the standard deviation and the amplitude for a set of values.
+//      the standard deviation and the amplitude for a set of values (overloaded)
 //
 // INPUT:
 //      y : Eigen array containing the result
@@ -88,7 +86,7 @@ void MathExtra::logGaussProfile(RefArrayXd y, const RefArrayXd x, const double m
     y = prefactor - 0.5 * (x - mu) * (x - mu) / (sigma * sigma);
     
     return;
-} 
+} // END MathExra::logGaussProfile()
 
 
 
