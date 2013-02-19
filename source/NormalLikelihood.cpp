@@ -130,12 +130,15 @@ ArrayXd getUncertainties()
 double NormalLikelihood::logValue(RefArrayXd modelParameters)
 {
     ArrayXd predictions;
-    ArrayXd delta;
+    ArrayXd lambda;
+    double lambda0;
+    
     model.predict(predictions, modelParameters);
     
-    double term = -0.5 * observations.size() * log(2.0*MathExtra::PI); 
-    delta = -1.0 * uncertainties.log() - 0.5 * ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);
-    return term + delta.sum();
+    lambda0 = -0.5 * observations.size() * log(2.0*MathExtra::PI) -1.0 * uncertainties.log(); 
+    lambda = lambda0 - 0.5 * ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);
+    
+    return lambda.sum();
 } // END NormalLikelihood::logValue()
 
 
