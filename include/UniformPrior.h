@@ -42,6 +42,6 @@ class UniformPrior : public Prior
         ArrayXd maximum;
         double uniformFactor;
 
-}; 
+}; // END class UniformPrior
 
 #endif

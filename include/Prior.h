@@ -38,6 +38,6 @@ class Prior
 
     private:
     
-};
+}; // END class Prior
 
 #endif

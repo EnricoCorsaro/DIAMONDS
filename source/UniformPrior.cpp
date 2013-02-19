@@ -34,7 +34,7 @@ UniformPrior::UniformPrior(const RefArrayXd min, const RefArrayXd max, const int
     uniformFactor = MathExtra::product(1./(maximum - minimum));
 
     cerr << "Set parameter space of " << Ndimensions " dimensions." << endl;;
-}
+} // END UniformPrior::UniformPrior()
 
 
 
@@ -51,7 +51,7 @@ UniformPrior::UniformPrior(const RefArrayXd min, const RefArrayXd max, const int
 UniformPrior::~UniformPrior()
 {
 
-}
+} // END UniformPrior::~UniformPrior()
 
 
 
@@ -71,7 +71,7 @@ UniformPrior::~UniformPrior()
 ArrayXd UniformPrior::getMinimum()
 {
     return minimum;    
-}
+} // END UniformPrior::getMinimum()
 
 
 
@@ -91,7 +91,7 @@ ArrayXd UniformPrior::getMinimum()
 ArrayXd UniformPrior::getMaximum()
 {
     return maximum;    
-}
+} // END UniformPrior::getMaximum()
 
 
 
@@ -111,7 +111,7 @@ ArrayXd UniformPrior::getMaximum()
 double UniformPrior::getUniformFactor()
 {
     return uniformFactor;
-}
+} // END UniformPrior::getUniformPrior()
 
 
 
@@ -148,7 +148,7 @@ void UniformPrior::draw(RefArrayXXd nestedParameters)
         }
     }
 
-}
+} // END UniformPrior::draw()
 
 
 
@@ -190,7 +190,7 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedParameters, Likelihood &l
     }
     while (logLikelihood < logLikelihoodConstraint);
     
-}
+} // END UniformPrior::drawWithConstraint()
 
 
 
