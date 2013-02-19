@@ -9,19 +9,20 @@
 //      public data member.
 //
 // INPUT:
-//      y : vector containing the result
-//      x : vector containing independent variable values
-//      x0 : centroid of the Lorentzian profile
-//      gamma : width of the Lorentzian profile (mode linewidth)
-//      amp : maximum height of the Lorentzian profile
+//      predictions : vector containing the result
+//      covariates : vector containing independent variable values
+//      centroid : centroid of the Lorentzian profile (default = 0)
+//      amplitude : maximum height of the Lorentzian profile (default = 1)
+//      gamma : width of the Lorentzian profile (mode linewidth) (default = 1)
 //
 // OUTPUT:
 //      void
+//
 
-void MathExtra::lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, double amp, double gamma)
+void MathExtra::lorentzProfile(RefArrayXd predictions, const RefArrayXd covariates, double centroid, double amplitude, double gamma)
 {
     
-        y = (amp*amp)/((x-x0)*(x-x0) + (gamma/2.)*(gamma/2.));
+        predictions = (amplitude*amplitude)/((covariates-centroid)*(covariates-centroid) + (gamma/2.)*(gamma/2.));
 
 } // END MathExtra::lorentzProfile()
 
@@ -41,18 +42,21 @@ void MathExtra::lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, doub
 //      the standard deviation and the amplitude, for one given x-value
 //
 // INPUT:
-//      x : independent variable
-//      mu : mean value of the Gaussian profile
-//      sigma : standard deviation of the Gaussian profile
-//      amp : maximum amplitude of the Gaussian profile (default = 1)
+//      covariate : independent variable
+//      mu : mean value of the Gaussian profile (default = 0)
+//      sigma : standard deviation of the Gaussian profile (default = 1)
+//      amplitude : maximum amplitude of the Gaussian profile (default = 1)
 //
 // OUTPUT:
-//      logGaussian of the independent variable
+//      The natural logarithm of the Gaussian profile value of the independent variable.
+//
 
-double MathExtra::logGaussProfile(double x, double mu, double sigma, double amp)
+double MathExtra::logGaussProfile(const double covariate, const double mu, const double sigma, const double amplitude)
 {
-    const double prefactor = log(amp) - 0.5 * log(2*MathExtra::PI) - log(sigma);
-    return prefactor - 0.5 * (x - mu) * (x - mu) / (sigma * sigma);
+    const double prefactor = log(amplitude) - 0.5 * log(2*MathExtra::PI) - log(sigma);
+
+    return prefactor - 0.5 * (covariate - mu) * (covariate - mu) / (sigma * sigma);
+
 } // END MathExtra::logGaussProfile() 
 
 
@@ -69,24 +73,22 @@ double MathExtra::logGaussProfile(double x, double mu, double sigma, double amp)
 //      the standard deviation and the amplitude for a set of values (overloaded)
 //
 // INPUT:
-//      y : Eigen array containing the result
-//      x : Eigen array containing independent variable values
-//      mu : mean value of the Gaussian profile
-//      sigma : standard deviation of the Gaussian profile
-//      amp : maximum amplitude of the Gaussian profile (default = 1)
+//      predictions : Eigen array containing the result
+//      covariates : Eigen array containing independent variable values
+//      mu : mean value of the Gaussian profile (default = 0)
+//      sigma : standard deviation of the Gaussian profile (default = 1)
+//      amplitude : maximum amplitude of the Gaussian profile (default = 1)
 //
 // OUTPUT:
 //      void
 //
 
-void MathExtra::logGaussProfile(RefArrayXd y, const RefArrayXd x, const double mu, const double sigma, const double amp)
+void MathExtra::logGaussProfile(RefArrayXd predictions, const RefArrayXd covariates, const double mu, const double sigma, const double amplitude)
 {
-    const double prefactor = log(amp) - 0.5 * log(2*MathExtra::PI) - log(sigma);
-    y = prefactor - 0.5 * (x - mu) * (x - mu) / (sigma * sigma);
+    const double prefactor = log(amplitude) - 0.5 * log(2*MathExtra::PI) - log(sigma);
+    predictions = prefactor - 0.5 * (covariates - mu) * (covariates - mu) / (sigma * sigma);
     
-    return;
 } // END MathExra::logGaussProfile()
-
 
 
 
@@ -108,7 +110,7 @@ void MathExtra::logGaussProfile(RefArrayXd y, const RefArrayXd x, const double m
 //      uncertainties : array containing the uncertanties on the observed values
 //
 // OUTPUT:
-//      The resulting value of the log-Gaussian likelihood
+//      The resulting value of the log-Gaussian likelihood.
 //
 
 double MathExtra::logGaussLikelihood(const RefArrayXd observations, const RefArrayXd predictions, const RefArrayXd uncertainties)
@@ -139,12 +141,15 @@ double MathExtra::logGaussLikelihood(const RefArrayXd observations, const RefArr
 
 
 // MathExtra::product()
+//
 // PURPOSE: 
 //      Computes the product of the elements contained in a vector of doubles of class vector.
+//
 // INPUT:
 //      vec : vector of values to be multiplied
+//
 // OUTPUT:
-//      The productoria of the vector elements
+//      The productoria of the vector elements.
 //
 
 inline double MathExtra::product(const vector<double> &vec)
@@ -161,12 +166,15 @@ inline double MathExtra::product(const vector<double> &vec)
 
 
 // MathExtra::sum()
+//
 // PURPOSE: 
-//      Computes the sum of the elements contained in a vector of doubles of vector class
+//      Computes the sum of the elements contained in a vector of doubles of vector class.
+//
 // INPUT:
-//      vec = vector of values to be added
+//      vec : vector of values to be added.
+//
 // OUTPUT:
-//      The summation of the vector elements
+//      The summation of the vector elements.
 //
 
 inline double MathExtra::sum(const vector<double> &vec)
@@ -182,13 +190,16 @@ inline double MathExtra::sum(const vector<double> &vec)
 
 
 // MathExtra::logExpSum()
+//
 // PURPOSE: 
-//      Computes a logaritmic summation of exponentials in order to avoid overflow errors
+//      Computes a logaritmic summation of exponentials in order to avoid overflow errors.
+//
 // INPUT: 
-//      x = a first variable to be added
-//      y = a second variable to be added
+//      x : a first variable to be added
+//      y : a second variable to be added
+//
 // OUTPUT: 
-//        The logarithmic summation of the exponentials log(exp(x)+exp(y))
+//        The logarithmic summation of the exponentials log(exp(x)+exp(y)).
 //
 
 double MathExtra::logExpSum(double x, double y)

@@ -14,14 +14,12 @@
 #include <functional>
 #include <vector>
 #include <iostream>
-#include <sstream>
 #include <Eigen/Core>
 
 
 using namespace std;
-
-typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 using Eigen::ArrayXd;
+typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 
 
 namespace MathExtra
@@ -30,9 +28,9 @@ namespace MathExtra
     const double PI = 4.0 * atan(1.0);
 
     // Functional Profiles
-    void lorentzProfile(RefArrayXd y, const RefArrayXd x, double x0, double gamma, double amp);
-    double logGaussProfile(double x, double mu, double sigma, double amp = 1);
-    void logGaussProfile(RefArrayXd y, const RefArrayXd x, const double mu, const double sigma, const double amp = 1);
+    void lorentzProfile(RefArrayXd predictions, const RefArrayXd covariates, const double centroid = 0.0, const double amplitude = 1.0, const double gamma = 1.0);
+    double logGaussProfile(const double covariate, const double mu = 0.0, const double sigma = 1.0, const double amplitude = 1.0);
+    void logGaussProfile(RefArrayXd y, const RefArrayXd x, const double mu = 0.0, const double sigma = 1.0, const double amplitude = 1.0);
     
     // Likelihood functions
     double logGaussLikelihood(const RefArrayXd observations, const RefArrayXd predictions, const RefArrayXd uncertainties);
