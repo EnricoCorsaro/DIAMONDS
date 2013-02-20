@@ -9,32 +9,34 @@
 //      Derived class constructor.
 //
 // INPUT:
-//      minimum: array containing minimum values for setting 
-//      lower bounds of the free parameters. 
-//      maximum: array containing maximum values for setting 
-//      upper bounds of the free parameters.
+//      boundaries: array containing minimum and maximum values for setting 
+//      lower and upper bounds of the free parameters. 
 //      Nobjects: number of objects used for nested sampling.
 // 
+// NOTE:
+//      boundaries array is a (Ndimensions * 2) format matrix, where the first
+//      column contains the minimum values and the second column the corresponding
+//      maximum values for each free parameter.
+//
 
-UniformPrior::UniformPrior(const RefArrayXd min, const RefArrayXd max, const int Nobjects)
-: Prior(min.size(), Nobjects), 
-  minimum(minimum), 
-  maximum(maximum),
+UniformPrior::UniformPrior(const RefArrayXXd boundaries, const int Nobjects)
+: Prior(boundaries.size()/2, Nobjects), 
+  boundaries(boundaries),  
   uniform(0.0,1.0),
   engine(time(0))  
 {
-    assert (min.size() == max.size());
-
-    if (minimum >= maximum)
+    if (boundaries.col(0) >= boundaries.col(1))
     {
         cerr << "Invalid boundaries values. Quitting program." << endl;
         exit(1);
     }
     
-    uniformFactor = MathExtra::product(1./(maximum - minimum));
+    uniformFactor = (1./(boundaries.col(1) - boundaries.col(0))).prod();
 
     cerr << "Set parameter space of " << Ndimensions " dimensions." << endl;;
 } // END UniformPrior::UniformPrior()
+
+
 
 
 
@@ -59,39 +61,24 @@ UniformPrior::~UniformPrior()
 
 
 
-// UniformPrior::getMinimum()
+
+
+
+
+// UniformPrior::getBoundaries()
 //
 // PURPOSE:
-//      Get the private data member minimum.
+//      Get the private data member boundaries.
 //
 // OUTPUT:
-//      An array containing the minimum values of the free parameters.
+//      An array containing the minimum and maximum values of the free parameters.
 //
 
-ArrayXd UniformPrior::getMinimum()
+ArrayXXd UniformPrior::getBoundaries()
 {
-    return minimum;    
-} // END UniformPrior::getMinimum()
+    return boundaries;    
+} // END UniformPrior::getBoundaries()
 
-
-
-
-
-
-
-// UniformPrior::getMaximum()
-//
-// PURPOSE:
-//      Get the private data member maximum.
-//
-// OUTPUT:
-//      An array containing the maximum values of the free parameters.
-//
-
-ArrayXd UniformPrior::getMaximum()
-{
-    return maximum;    
-} // END UniformPrior::getMaximum()
 
 
 

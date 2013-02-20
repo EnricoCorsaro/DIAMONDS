@@ -8,13 +8,13 @@
 #ifndef UNIFORMPRIOR_H
 #define UNIFORMPRIOR_H
 
-#include <cassert>
 #include <iostream>
 #include "Prior.h"
 
 
 using namespace std;
 using Eigen:ArrayXd;
+using Eigen:ArrayXXd;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
@@ -24,11 +24,10 @@ class UniformPrior : public Prior
 
     public:
 
-        UniformPrior(const RefArrayXd minimum, const RefArrayXd maximum, const int Nobjects);
+        UniformPrior(const RefArrayXXd boundaries, const int Nobjects);
         ~UniformPrior();
 
-        ArrayXd getMinimum();
-        ArrayXd getMaximum();
+        ArrayXXd getBoundaries();
         double getUniformFactor();
 
         virtual void draw(RefArrayXXd nestedParameters);
@@ -38,8 +37,7 @@ class UniformPrior : public Prior
 
         uniform_real_distribution<> uniform;
         mt19937 engine;
-        ArrayXd minimum;
-        ArrayXd maximum;
+        ArrayXXd boundaries;
         double uniformFactor;
 
 }; // END class UniformPrior
