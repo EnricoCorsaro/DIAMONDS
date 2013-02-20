@@ -13,8 +13,8 @@
 
 
 using namespace std;
-using Eigen:ArrayXd;
-using Eigen:ArrayXXd;
+using Eigen::ArrayXd;
+using Eigen::ArrayXXd;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 

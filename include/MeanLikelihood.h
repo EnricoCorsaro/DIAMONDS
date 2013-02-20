@@ -31,7 +31,7 @@ class MeanLikelihood : public Likelihood
 
     private:
         
-        ArrayXd mormalizedUncertainties;
+        ArrayXd normalizedUncertainties;
 }; // END class MeanLikelihood
 
 #endif

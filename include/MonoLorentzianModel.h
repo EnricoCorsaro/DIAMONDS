@@ -17,7 +17,7 @@ using Eigen::ArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 
 
-class MonoLorentzianModel
+class MonoLorentzianModel : public Model
 {
     public:
     

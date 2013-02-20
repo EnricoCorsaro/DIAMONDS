@@ -41,14 +41,13 @@ class NestedSampler
         double informationGain;
         double logEvidence;
         double logEvidenceError;
-        static unsigned nestedCounter;           // Static index containing the number of Nested processes running
+        static unsigned nestedCounter;           // Static counter containing the number of Nested processes running
         int nestIteration;                       // Counter saving the number of nested loops used
         ArrayXXd nestedParameters;               // parameters values (the free parameters of the problem)
         ArrayXd logLikelihood;                   // log-likelihood values corresponding to parameter values
         ArrayXd logWeight;                       // log(prior mass * Likelihood), accumulating evidence
         Prior &prior;
         Likelihood &likelihood;
-        
 
 
 }; // END class NestedSampler
