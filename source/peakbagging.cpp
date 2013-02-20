@@ -11,10 +11,15 @@
 #include "File.h"
 #include "NestedSampler.h"
 
+#include "UniformPrior.h"
+#include "NormalLikelihood.h"
+#include "MonoLorentzianModel.h"
+
+
 int main(int argc, char *argv[])
 {
     unsigned long Nrows;
-    int Ncols
+    int Ncols;
     ArrayXXd data;
     
     if (argc != 2)
@@ -32,6 +37,11 @@ int main(int argc, char *argv[])
 
     File::snifFile(inputFile, Nrows, Ncols);
     data = File::arrayFromFile(inputFile, Nrows, Ncols);
+   
+    // Creating arrays for each data type
+    ArrayXd covariates = data.col(0);
+    ArrayXd observations = data.col(1);
+    ArrayXd uncertainties = data.col(2);
 
     ofstream outputFile(argv[2]);
     if (!outputFile.good())
@@ -39,23 +49,34 @@ int main(int argc, char *argv[])
         cerr << "Error opening output file" << endl;
         exit(EXIT_FAILURE);
     }
-       
+      
+    // Choose fundamental parameters for the nested inference process
     int Nobjects = 100;      // Number of objects per nested iteration (usually 100)
-    int Niter    = 1000;     // Number of nested iterations (usually 1000)
-    int Ndim     = 1;        // Number of free parameters (dimensions) of the problem
-    Prior prior(Ndim);
-    ArrayXd parametersMin(Ndim);
-    ArrayXd parameterspMax(Ndim);
+    int Ndimensions = 1;        // Number of free parameters (dimensions) of the problem
 
-    // Should give input values from file
-    parametersMin = 0.0;
-    parametersMax = 20.0;
+    // Define boundaries of the free parameters of the problem (should be done with separate routine)
+    ArrayXXd parametersBoundaries(Ndimensions,2);
+    parametersBoundaries(0,0) = 0.0;
+    parametersBoundaries(0,1) = 20.0;
 
-    prior.setBoundaries(parametersMin, parametersMax);
-    
-    NestedSampler nestedSampler(Ndim);
-    nestedSampler.run(Nobjects, Niter);
+    // First step - Setting Prior distribution and parameter space
+    UniformPrior prior;
+    prior(parametersBoundaries, Nobjects);
 
+    // Second step - Setting up a model for the inference problem
+    MonoLorentzianModel model;
+    model(covariates);
+
+    // Third step - Setting up the likelihood function to be used
+    NormalLikelihood likelihood;
+    likelihood(covariates, observations, uncertainties, model);
+
+    // Fourth step - Starting nested sampling process
+    NestedSampler nestedSampler;
+    nestedSampler(prior, likelihood);
+    nestedSampler.run();
+
+    // Save the results in an output file (should be done with separate routine)
     outputFile << "# Parameter value    logLikelihood" << endl;
     outputFile << setiosflags(ios::fixed) << setprecision(8);
     File::arrayToFile(outputFile, nestedSampler.posteriorSample.row(0), nestedSampler.logLikelihoodOfPosteriorSample);
