@@ -83,7 +83,7 @@ void MonoLorentzianModel::predict(RefArrayXd predictions, const RefArrayXd model
     }
     else
     {
-        cerr "Number of free parameters do not match model Mono Lorentzian. Quitting program." << endl;
+        cerr << "Number of free parameters do not match model Mono Lorentzian. Quitting program." << endl;
         exit(1);
     }
 } // END MonoLorentzianModel::predict()
@@ -105,7 +105,7 @@ void MonoLorentzianModel::predict(RefArrayXd predictions, const RefArrayXd model
 //      free parameters used in the model.
 //
 
-int MonoLorentzianModel::getParametersNumber();
+int MonoLorentzianModel::getParametersNumber()
 {
     return parametersNumber;
 } // END MonoLorentzianModel::getParametersNumber()

@@ -21,19 +21,13 @@
 
 UniformPrior::UniformPrior(const RefArrayXXd boundaries, const int Nobjects)
 : Prior(boundaries.size()/2, Nobjects), 
-  boundaries(boundaries),  
   uniform(0.0,1.0),
-  engine(time(0))  
+  engine(time(0)),  
+  boundaries(boundaries)  
 {
-    if (boundaries.col(0) >= boundaries.col(1))
-    {
-        cerr << "Invalid boundaries values. Quitting program." << endl;
-        exit(1);
-    }
-    
     uniformFactor = (1./(boundaries.col(1) - boundaries.col(0))).prod();
 
-    cerr << "Set parameter space of " << Ndimensions " dimensions." << endl;;
+    cerr << "Set parameter space of " << Ndimensions << " dimensions." << endl;
 } // END UniformPrior::UniformPrior()
 
 
@@ -131,7 +125,7 @@ void UniformPrior::draw(RefArrayXXd nestedParameters)
     {
         for (ptrdiff_t j = 0; j < Nobjects; j++)
         {
-            nestedParameters(i,j) = uniform(engine)*(maximum(i)-minimum(i)) + minimum(i);
+            nestedParameters(i,j) = uniform(engine)*(boundaries(i,1)-boundaries(i,0)) + boundaries(i,0);
         }
     }
 
@@ -172,7 +166,7 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedParameters, Likelihood &l
     {
         for (ptrdiff_t i = 0; i < Ndimensions; i++)
             {
-                nestedParameters(i) = uniform(engine)*(maximum(i) - minimum(i)) + minimum(i);
+                nestedParameters(i) = uniform(engine)*(boundaries(i,1) - boundaries(i,0)) + boundaries(i,0);
             }
     
         logLikelihood = likelihood.logValue(nestedParameters);

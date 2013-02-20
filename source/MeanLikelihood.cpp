@@ -19,7 +19,7 @@ MeanLikelihood::MeanLikelihood(const RefArrayXd covariates, const RefArrayXd obs
 {
     double normalizeFactor;
     
-    if (covariates.size() != observations.size || covariates.size() != uncertainties.size())
+    if (covariates.size() != observations.size() || covariates.size() != uncertainties.size())
     {
         cerr << "Array dimensions do not match. Quitting program." << endl;
         exit(1);
@@ -67,7 +67,7 @@ MeanLikelihood::~MeanLikelihood()
 //      uncertainties on the dependent variable values.
 //
 
-ArrayXd getNormalizedUncertainties()
+ArrayXd MeanLikelihood::getNormalizedUncertainties()
 {
     return normalizedUncertainties;
 } // END MeanLikelihood::getNormalizedUncertainties()
@@ -100,8 +100,8 @@ ArrayXd getNormalizedUncertainties()
 double MeanLikelihood::logValue(RefArrayXd modelParameters)
 {
     ArrayXd predictions;
-    ArrayXd lambda0;
-    ArrayXd lambda;
+    double lambda0;
+    double lambda;
     ArrayXd argument;
     unsigned long n = observations.size();
 

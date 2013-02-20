@@ -15,7 +15,7 @@
 //      model: object specifying the model to be used.
 // 
 
-Likelihood::Likelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
+Likelihood::Likelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
 : covariates(covariates), 
   observations(observations), 
   uncertainties(uncertainties), 
@@ -62,7 +62,7 @@ Likelihood::~Likelihood()
 //      independent variable values.
 //
 
-ArrayXd getCovariates()
+ArrayXd Likelihood::getCovariates()
 {
     return covariates;
 } // END Likelihood::getCovariates()
@@ -85,7 +85,7 @@ ArrayXd getCovariates()
 //      dependent variable values.
 //
 
-ArrayXd getObservations()
+ArrayXd Likelihood::getObservations()
 {
     return observations;
 } // END Likelihood::getObservations()

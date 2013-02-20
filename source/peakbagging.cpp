@@ -60,20 +60,16 @@ int main(int argc, char *argv[])
     parametersBoundaries(0,1) = 20.0;
 
     // First step - Setting Prior distribution and parameter space
-    UniformPrior prior;
-    prior(parametersBoundaries, Nobjects);
+    UniformPrior prior(parametersBoundaries, Nobjects);
 
     // Second step - Setting up a model for the inference problem
-    MonoLorentzianModel model;
-    model(covariates);
+    MonoLorentzianModel model(covariates);
 
     // Third step - Setting up the likelihood function to be used
-    NormalLikelihood likelihood;
-    likelihood(covariates, observations, uncertainties, model);
+    NormalLikelihood likelihood(covariates, observations, uncertainties, model);
 
     // Fourth step - Starting nested sampling process
-    NestedSampler nestedSampler;
-    nestedSampler(prior, likelihood);
+    NestedSampler nestedSampler(prior, likelihood);
     nestedSampler.run();
 
     // Save the results in an output file (should be done with separate routine)
@@ -83,7 +79,7 @@ int main(int argc, char *argv[])
     outputFile.close();
     
     cerr << " Evidence: logZ = " << nestedSampler.getLogEvidence() << " +/- " << nestedSampler.getLogEvidenceError() << endl;
-    cerr << " Information: H = " << nestedSampler.getInformationH() << endl;
+    cerr << " Information Gain = " << nestedSampler.getInformationGain() << endl;
     
     return EXIT_SUCCESS;
 }

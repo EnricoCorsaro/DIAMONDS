@@ -19,15 +19,15 @@
 //
 
 NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood)
-: informationH(0.0), 
+: informationGain(0.0), 
   logEvidence(-DBL_MAX),
+  nestIteration(0),
   prior(prior),
-  likelihood(likelihood),
-  nestIteration(0)
+  likelihood(likelihood)
 {
-    ++nestedCounter;
+    ++NestedSampler::nestedCounter;
     cerr << "Nested process initialized" << endl;
-    cerr << "Total number of active nested processes: " << nestedCounter << endl;
+    cerr << "Total number of active nested processes: " << NestedSampler::nestedCounter << endl;
    
 } // END NestedSampler::NestedSampler()
 
@@ -45,9 +45,9 @@ NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood)
 
 NestedSampler::~NestedSampler()
 {
-    --nestedCounter;
+    --NestedSampler::nestedCounter;
     cerr << "Nested process deleted" << endl;
-    cerr << "Total number of remaining active nested processes: " << nestedCounter << endl;
+    cerr << "Total number of remaining active nested processes: " << NestedSampler::nestedCounter << endl;
 } // END NestedSampler::~NestedSampler()
 
 
@@ -158,6 +158,7 @@ int NestedSampler::getNestIteration()
 //      Eigen Matrices are defaulted column-major. Hence the 
 //      nestedParameters and posteriorSample are resized as 
 //      (Ndim , ...), rather than (... , Ndim).
+//
 
 void NestedSampler::run()
 {
@@ -186,7 +187,7 @@ void NestedSampler::run()
     // Initialize corresponding likelihood values
     ArrayXd objectParameters;
     
-    for (i = 0; i < Nobjects; i++)
+    for (int i = 0; i < Nobjects; i++)
     {
         objectParameters = nestedParameters.col(i);
         logLikelihood(i) = likelihood.logValue(objectParameters);

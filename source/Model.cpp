@@ -52,7 +52,7 @@ Model::~Model()
 //      of the independent variable.
 //
 
-ArrayXd Model::getCovariates();
+ArrayXd Model::getCovariates()
 {
     return covariates;
 } // END Model::getCovariates()

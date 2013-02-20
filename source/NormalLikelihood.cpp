@@ -17,7 +17,7 @@
 NormalLikelihood::NormalLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
 : Likelihood(covariates, observations, uncertainties, model)
 {
-    if (covariates.size() != observations.size || covariates.size() != uncertainties.size())
+    if (covariates.size() != observations.size() || covariates.size() != uncertainties.size())
     {
         cerr << "Array dimensions do not match. Quitting program." << endl;
         exit(1);
@@ -60,7 +60,7 @@ NormalLikelihood::~NormalLikelihood()
 //      uncertainties on the dependent variable values.
 //
 
-ArrayXd getUncertainties()
+ArrayXd NormalLikelihood::getUncertainties()
 {
     return uncertainties;
 } // END NormalLikelihood::getUncertainties()
@@ -91,7 +91,7 @@ double NormalLikelihood::logValue(RefArrayXd modelParameters)
 {
     ArrayXd predictions;
     ArrayXd lambda;
-    double lambda0;
+    ArrayXd lambda0;
     
     model.predict(predictions, modelParameters);
     
