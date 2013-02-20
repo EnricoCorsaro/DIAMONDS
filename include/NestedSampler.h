@@ -11,7 +11,9 @@
 #include <random>
 #include <Eigen/Dense>
 #include "MathExtra.h"
-#include "RandomVariate.h"
+#include "Prior.h"
+#include "Likelihood.h"
+
 
 using Eigen::ArrayXd;
 using Eigen::ArrayXXd;
@@ -19,26 +21,35 @@ using Eigen::ArrayXXd;
 
 class NestedSampler
 {
+
     public:
         
-        NestedSampler(RandomVariate &variate); 
+        NestedSampler(Prior &prior, Likelihood &likelihood); 
         ~NestedSampler();
-        void run(int Nobjects, int Niter);
         double getLogEvidence();
         double getLogEvidenceError();
-        double getInformationH();
-        ArrayXd parameterObjects;               // parameter values (the free parameters of the problem)
-        ArrayXd posteriorSample;                // parameter values sampled from the posterior
-        ArrayXd logLikelihoodOfPosteriorSample; // logLikelihood values corresponding to the posterior sample 
+        double getInformationGain();
+        double getNestIteration();
+        void run();
+
 
 	private:
         
-        double informationH;
+        double informationGain;
         double logEvidence;
         double logEvidenceError;
-        ArrayXd logLikelihood;                  // log-likelihood values corresponding to parameter values
-        ArrayXd logWeight;                      // sum(weight) = Evidence Z
-        static long nestedCounter;              // Static index containing the number of Nested processes running
+        static unsigned nestedCounter;           // Static index containing the number of Nested processes running
+        int nestIteration;                       // Counter saving the number of nested loops used
+        ArrayXXd nestedParameters;               // parameters values (the free parameters of the problem)
+        ArrayXd logLikelihood;                   // log-likelihood values corresponding to parameter values
+        ArrayXXd posteriorSample;                // parameter values sampled from the posterior
+        ArrayXd logLikelihoodOfPosteriorSample;  // logLikelihood values corresponding to the posterior sample 
+        ArrayXd logWeight;                       // log(prior mass * Likelihood), accumulating evidence
+        Prior &prior;
+        Likelihood &likelihood;
+        
+
+
 }; // END class NestedSampler
 
 #endif
