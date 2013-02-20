@@ -1,7 +1,7 @@
 # Synthetic Lorentzian Profile
 # centroid = 12.5
-# gam = 2.
-# amp = 1.
+# gamma = 2.
+# amplitude = 1.
 # sigmas = 5%
 # COLUMN 1 - Abscissa
 # COLUMN 2 - Ordinate
