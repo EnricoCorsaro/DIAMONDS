@@ -170,27 +170,28 @@ void UniformPrior::draw(RefArrayXXd nestedParameters)
 // OUTPUT:
 //      void
 //
+// NOTE:
+//      nestedParameters refers to the worst object identified in the nested
+//      sampling loop. Thus, the array contains Ndimensions elements.
+//
 
 void UniformPrior::drawWithConstraint(RefArrayXd nestedParameters, Likelihood &likelihood)
 {
-    double logLikelihoodConstraint;
-
-    logLikelihoodConstraint = likelihood.logValue(nestedParameters);
-
+    double logLikelihood;
+    double logLikelihoodConstraint = likelihood.logValue(nestedParameters);
+    
     // Uniform sampling to find new parameter with logLikelihood > logLikelihoodConstraint
     do
     {
+        for (ptrdiff_t i = 0; i < Ndimensions; i++)
+            {
+                nestedParameters(i) = uniform(engine)*(maximum(i) - minimum(i)) + minimum(i);
+            }
     
-    for (ptrdiff_t i = 0; i < Ndimensions; i++)
-        {
-            nestedParameters(i) = uniform(engine)*(maximum(i) - minimum(i)) + minimum(i);
-        }
-    
-    logLikelihood = likelihood.logValue(nestedParameters);
+        logLikelihood = likelihood.logValue(nestedParameters);
     }
     while (logLikelihood < logLikelihoodConstraint);
     
 } // END UniformPrior::drawWithConstraint()
-
 
 

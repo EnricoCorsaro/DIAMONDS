@@ -24,7 +24,7 @@ class UniformPrior : public Prior
 
     public:
 
-        UniformPrior(const RefArrayXd minimum, const RefArrayXd maximum), const int Nobjects;
+        UniformPrior(const RefArrayXd minimum, const RefArrayXd maximum, const int Nobjects);
         ~UniformPrior();
 
         ArrayXd getMinimum();

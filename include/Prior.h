@@ -10,7 +10,7 @@
 
 #include <random>
 #include <Eigen/Core>
-
+#include "Likelihood.h"
 
 using namespace std;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
@@ -29,7 +29,7 @@ class Prior
 
         // Pure virtual functions implemented in derived classes
         virtual void draw(RefArrayXXd nestedParameters) = 0;
-        virtual void drawWithConstraint(RefArrayXd worstNestedParameter, Likelihood &likelihood) = 0;
+        virtual void drawWithConstraint(RefArrayXd nestedParameters, Likelihood &likelihood) = 0;
 
     protected:
         
