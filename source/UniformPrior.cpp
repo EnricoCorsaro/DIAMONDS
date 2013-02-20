@@ -118,8 +118,6 @@ double UniformPrior::getUniformFactor()
 
 void UniformPrior::draw(RefArrayXXd nestedParameters)
 {
-    nestedParameters.resize(Ndimensions, Nobjects);
-   
     // Uniform sampling over parameters intervals
     for (ptrdiff_t i = 0; i < Ndimensions; i++)
     {
@@ -164,11 +162,12 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedParameters, Likelihood &l
     // Uniform sampling to find new parameter with logLikelihood > logLikelihoodConstraint
     do
     {
-        for (ptrdiff_t i = 0; i < Ndimensions; i++)
-            {
-                nestedParameters(i) = uniform(engine)*(boundaries(i,1) - boundaries(i,0)) + boundaries(i,0);
-            }
+        //for (ptrdiff_t i = 0; i < Ndimensions; i++)
+        //    {
+        //        nestedParameters(i) = uniform(engine)*(boundaries(i,1) - boundaries(i,0)) + boundaries(i,0);
+        //    }
     
+        nestedParameters = uniform(engine)*(boundaries.col(1) - boundaries.col(0)) + boundaries.col(0);
         logLikelihood = likelihood.logValue(nestedParameters);
     }
     while (logLikelihood < logLikelihoodConstraint);

@@ -21,7 +21,7 @@ using Eigen::ArrayXd;
 
 namespace File
 {
-    ArrayXXd arrayFromFile(ifstream &inputFile, unsigned long Nrows, int Ncols, char separator = ' ', char commentChar = '#');
+    ArrayXXd arrayFromFile(ifstream &inputFile, const unsigned long Nrows, const int Ncols, char separator = ' ', char commentChar = '#');
     void arrayToFile(ofstream &outputFile, ArrayXXd array, string separator = "  ", string terminator = "\n");
     void arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, string separator = "  ", string terminator = "\n");
     void snifFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char separator = ' ', char commentChar = '#');

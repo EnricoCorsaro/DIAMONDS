@@ -68,19 +68,21 @@ MonoLorentzianModel::~MonoLorentzianModel()
 void MonoLorentzianModel::predict(RefArrayXd predictions, const RefArrayXd modelParameters)
 {
     parametersNumber = modelParameters.size();
-    
-    if (modelParameters.size() == 1)
+
+    if (parametersNumber == 1)
     {
-    MathExtra::lorentzProfile(predictions, covariates, modelParameters(0));
+        MathExtra::lorentzProfile(predictions, covariates, modelParameters(0));
     }
-    else if (modelParameters.size() == 2)
-    {
-    MathExtra::lorentzProfile(predictions, covariates, modelParameters(0), modelParameters(1));
-    }
-    else if (modelParameters.size() == 3)
-    {
-    MathExtra::lorentzProfile(predictions, covariates, modelParameters(0), modelParameters(1), modelParameters(2));
-    }
+    else 
+        if (parametersNumber == 2)
+        {
+            MathExtra::lorentzProfile(predictions, covariates, modelParameters(0), modelParameters(1));
+        }
+    else 
+        if (parametersNumber == 3)
+        {
+            MathExtra::lorentzProfile(predictions, covariates, modelParameters(0), modelParameters(1), modelParameters(2));
+        }
     else
     {
         cerr << "Number of free parameters do not match model Mono Lorentzian. Quitting program." << endl;

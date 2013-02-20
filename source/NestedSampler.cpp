@@ -25,9 +25,10 @@ NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood)
   prior(prior),
   likelihood(likelihood)
 {
-    ++NestedSampler::nestedCounter;
-    cerr << "Nested process initialized" << endl;
-    cerr << "Total number of active nested processes: " << NestedSampler::nestedCounter << endl;
+    // ??? Not working
+//    NestedSampler::nestedCounter++;
+//    cerr << "Nested process initialized" << endl;
+//    cerr << "Total number of active nested processes: " << NestedSampler::nestedCounter << endl;
    
 } // END NestedSampler::NestedSampler()
 
@@ -45,9 +46,10 @@ NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood)
 
 NestedSampler::~NestedSampler()
 {
-    --NestedSampler::nestedCounter;
-    cerr << "Nested process deleted" << endl;
-    cerr << "Total number of remaining active nested processes: " << NestedSampler::nestedCounter << endl;
+    // ??? Not working
+//    NestedSampler::nestedCounter--;
+//    cerr << "Nested process deleted" << endl;
+//    cerr << "Total number of remaining active nested processes: " << NestedSampler::nestedCounter << endl;
 } // END NestedSampler::~NestedSampler()
 
 
@@ -165,7 +167,8 @@ void NestedSampler::run()
     double logWidthInPriorMass;
     double logLikelihoodConstraint;
     double logEvidenceNew;
-    double exceedFactor = 10.;                  // Defines the termination condition for the nested sampling loop
+    double logWeight = 0;
+    double exceedFactor = 1.2;                  // Defines the termination condition for the nested sampling loop !!! Very critical !!!
     int Nobjects = prior.getNobjects();
     int Ndimensions = prior.getNdimensions();
     int copy = 0;
@@ -178,14 +181,15 @@ void NestedSampler::run()
     mt19937 engine(time(0));
     auto uniform = bind(uniform_distribution, engine);              // Binding uniform distribution to seed value
 
-    // Set the sizes of the Eigen Arrays logLikelihood and posterioSample
+    // Set the sizes of the Eigen Arrays logLikelihood and nestedParameters
     logLikelihood.resize(Nobjects);
+    nestedParameters.resize(Ndimensions, Nobjects);
 
     // Initialize the objects
     prior.draw(nestedParameters);           // nestedParameters will then contain the sample of parameters for nested sampling
     
     // Initialize corresponding likelihood values
-    ArrayXd objectParameters;
+    ArrayXd objectParameters(Ndimensions);
     
     for (int i = 0; i < Nobjects; i++)
     {
@@ -197,23 +201,21 @@ void NestedSampler::run()
     logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));
 
     // Nested sampling loop
-    
     do 
     {
         // Resizing array dimensions to the actual number of nested iterations
         // conservativeResize allows dinamic resizing of Eigen Arrays, while keeping the previous values untouched
-        logWeight.conservativeResize(nestIteration + 1);           
         posteriorSample.conservativeResize(Ndimensions, nestIteration + 1);        // conservative resize to column number only
         logLikelihoodOfPosteriorSample.conservativeResize(nestIteration + 1);
         
         // Find worst object in the collection. The likelihood of this object
         // defines the constraint when drawing new objects later on.
         logLikelihoodConstraint = logLikelihood.minCoeff(&worst);
-        logWeight(worst) = logWidthInPriorMass + logLikelihoodConstraint;                
+        logWeight = logWidthInPriorMass + logLikelihoodConstraint;                
         
         // Update the evidence Z and the information Gain
-        logEvidenceNew = MathExtra::logExpSum(logEvidence, logWeight(worst));
-        informationGain = exp(logWeight(worst) - logEvidenceNew) * logLikelihoodConstraint
+        logEvidenceNew = MathExtra::logExpSum(logEvidence, logWeight);
+        informationGain = exp(logWeight - logEvidenceNew) * logLikelihoodConstraint
                        + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
                        - logEvidenceNew;
         logEvidence = logEvidenceNew;
@@ -247,6 +249,8 @@ void NestedSampler::run()
 
         // Increase nested loop counter
         nestIteration++;
+        cout << "nestIteration: " << nestIteration << endl;
+        cout << "Information Gain * Nobjects : " << informationGain * Nobjects << endl;
     }
     while (nestIteration <= (exceedFactor * informationGain * Nobjects));   // Termination condition suggested by Skilling 2004
                                                                             // Run till nestIteration >> Nobjects * informationGain

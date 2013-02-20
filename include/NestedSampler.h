@@ -45,7 +45,6 @@ class NestedSampler
         int nestIteration;                       // Counter saving the number of nested loops used
         ArrayXXd nestedParameters;               // parameters values (the free parameters of the problem)
         ArrayXd logLikelihood;                   // log-likelihood values corresponding to parameter values
-        ArrayXd logWeight;                       // log(prior mass * Likelihood), accumulating evidence
         Prior &prior;
         Likelihood &likelihood;
 

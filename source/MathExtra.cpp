@@ -21,7 +21,6 @@
 
 void MathExtra::lorentzProfile(RefArrayXd predictions, const RefArrayXd covariates, double centroid, double amplitude, double gamma)
 {
-    
         predictions = (amplitude*amplitude)/((covariates-centroid)*(covariates-centroid) + (gamma/2.)*(gamma/2.));
 
 } // END MathExtra::lorentzProfile()

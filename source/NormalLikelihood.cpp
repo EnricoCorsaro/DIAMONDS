@@ -93,6 +93,7 @@ double NormalLikelihood::logValue(RefArrayXd modelParameters)
     ArrayXd lambda;
     ArrayXd lambda0;
     
+    predictions.resize(covariates.size());
     model.predict(predictions, modelParameters);
     
     lambda0 = -0.5 * observations.size() * log(2.0*MathExtra::PI) -1.0 * uncertainties.log(); 

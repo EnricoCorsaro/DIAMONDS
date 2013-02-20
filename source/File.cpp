@@ -21,13 +21,13 @@
 //      - the stream is not closed afterwards.
 //
 
-Eigen::ArrayXXd File::arrayFromFile(ifstream &inputFile, unsigned long Nrows, int Ncols, char separator, char commentChar)
+ArrayXXd File::arrayFromFile(ifstream &inputFile, const unsigned long Nrows, const int Ncols, char separator, char commentChar)
 {
     string line;
     unsigned long iRow = 0;
     int iCol = 0;
-    Eigen::ArrayXXd array(Nrows, Ncols);
-    
+    ArrayXXd array(Nrows, Ncols);
+  
     while(!inputFile.eof())
     {
         getline(inputFile, line);
@@ -209,7 +209,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, str
 void File::snifFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char separator, char commentChar)
 {
     string line;
-    int iRow=0;
+    int iRow = 0;
     
     while(!inputFile.eof())
     {
