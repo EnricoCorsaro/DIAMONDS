@@ -1,15 +1,16 @@
 // Derived class for mean likelihood computations
 // Created by Enrico Corsaro @ IvS - 19 February 2013
 // e-mail: enrico.corsaro@ster.kuleuven.be
-// Header file "MeanLikelihood.h"
-// Implementations contained in "MeanLikelihood.cpp"
+// Header file "MeanNormalLikelihood.h"
+// Implementations contained in "MeanNormalLikelihood.cpp"
 
 
-#ifndef MEANLIKELIHOOD_H
-#define MEANLIKELIHOOD_H
+#ifndef MEANNORMALLIKELIHOOD_H
+#define MEANNORMALLIKELIHOOD_H
 
 #include <cmath>
 #include <iostream>
+#include <cstdlib>
 #include "Likelihood.h"
 
 
@@ -18,13 +19,13 @@ using Eigen::ArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 
 
-class MeanLikelihood : public Likelihood
+class MeanNormalLikelihood : public Likelihood
 {
 
     public:
 
-        MeanLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
-        ~MeanLikelihood();
+        MeanNormalLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
+        ~MeanNormalLikelihood();
         ArrayXd getNormalizedUncertainties();
 
         virtual double logValue(RefArrayXd modelParameters);
@@ -32,6 +33,6 @@ class MeanLikelihood : public Likelihood
     private:
         
         ArrayXd normalizedUncertainties;
-}; // END class MeanLikelihood
+}; // END class MeanNormalLikelihood
 
 #endif
