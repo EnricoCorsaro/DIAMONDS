@@ -1,12 +1,12 @@
 // Derived class for building mono lorentzian profile models
 // Created by Enrico Corsaro @ IvS - 19 February 2013
 // e-mail: enrico.corsaro@ster.kuleuven.be
-// Header file "MonoLorentzianModel.h"
-// Implementations contained in "MonoLorentzianModel.cpp"
+// Header file "LorentzianModel.h"
+// Implementations contained in "LorentzianModel.cpp"
 
 
-#ifndef MONOLORENTZIANMODEL_H
-#define MONOLORENTZIANMODEL_H
+#ifndef LORENTZIANMODEL_H
+#define LORENTZIANMODEL_H
 
 #include <iostream>
 #include "Model.h"
@@ -17,12 +17,12 @@ using Eigen::ArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 
 
-class MonoLorentzianModel : public Model
+class LorentzianModel : public Model
 {
     public:
     
-        MonoLorentzianModel(const RefArrayXd covariates);
-        ~MonoLorentzianModel();
+        LorentzianModel(const RefArrayXd covariates);
+        ~LorentzianModel();
 
         virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
         int getParametersNumber();
@@ -34,7 +34,7 @@ class MonoLorentzianModel : public Model
 
         int parametersNumber;
     
-}; // END class MonoLorentzianModel
+}; // END class LorentzianModel
 
 
 #endif

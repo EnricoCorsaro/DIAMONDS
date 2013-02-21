@@ -1,7 +1,7 @@
-#include "MonoLorentzianModel.h"
+#include "LorentzianModel.h"
 
 
-// MonoLorentzianModel::MonoLorentzianModel()
+// LorentzianModel::LorentzianModel()
 //
 // PURPOSE: 
 //      Constructor. Initializes model computation.
@@ -11,11 +11,11 @@
 //      of the independent variable.
 //
 
-MonoLorentzianModel::MonoLorentzianModel(const RefArrayXd covariates)
+LorentzianModel::LorentzianModel(const RefArrayXd covariates)
 : Model(covariates)
 {
 
-} // END MonoLorentzianModel::MonoLorentzianModel
+} // END LorentzianModel::LorentzianModel
 
 
 
@@ -24,16 +24,16 @@ MonoLorentzianModel::MonoLorentzianModel(const RefArrayXd covariates)
 
 
 
-// MonoLorentzianModel::MonoLorentzianModel()
+// LorentzianModel::LorentzianModel()
 //
 // PURPOSE: 
 //      Destructor.
 //
 
-MonoLorentzianModel::~MonoLorentzianModel()
+LorentzianModel::~LorentzianModel()
 {
 
-} // END MonoLorentzianModel::~MonoLorentzianModel
+} // END LorentzianModel::~LorentzianModel
 
 
 
@@ -44,7 +44,7 @@ MonoLorentzianModel::~MonoLorentzianModel()
 
 
 
-// MonoLorentzianModel::buildMonoLorentzianModel1()
+// LorentzianModel::buildLorentzianModel1()
 //
 // PURPOSE:
 //      Builds the predictions from a single Lorentzian model.
@@ -65,7 +65,7 @@ MonoLorentzianModel::~MonoLorentzianModel()
 //      (3) mode linewidth (related to the lifetime of the mode)
 //
 
-void MonoLorentzianModel::predict(RefArrayXd predictions, const RefArrayXd modelParameters)
+void LorentzianModel::predict(RefArrayXd predictions, const RefArrayXd modelParameters)
 {
     parametersNumber = modelParameters.size();
 
@@ -85,10 +85,10 @@ void MonoLorentzianModel::predict(RefArrayXd predictions, const RefArrayXd model
         }
     else
     {
-        cerr << "Number of free parameters do not match model Mono Lorentzian. Quitting program." << endl;
-        exit(1);
+        cerr << "Number of free parameters does not match model Lorentzian. Quitting program." << endl;
+        exit(EXIT_FAILURE);
     }
-} // END MonoLorentzianModel::predict()
+} // END LorentzianModel::predict()
 
 
 
@@ -97,7 +97,7 @@ void MonoLorentzianModel::predict(RefArrayXd predictions, const RefArrayXd model
 
 
 
-// MonoLorentzianModel::getParametersNumber()
+// LorentzianModel::getParametersNumber()
 //
 // PURPOSE: 
 //      Get the private data member parametersNumber;
@@ -107,7 +107,7 @@ void MonoLorentzianModel::predict(RefArrayXd predictions, const RefArrayXd model
 //      free parameters used in the model.
 //
 
-int MonoLorentzianModel::getParametersNumber()
+int LorentzianModel::getParametersNumber()
 {
     return parametersNumber;
-} // END MonoLorentzianModel::getParametersNumber()
+} // END LorentzianModel::getParametersNumber()
