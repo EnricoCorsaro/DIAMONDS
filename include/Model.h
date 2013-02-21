@@ -8,6 +8,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include <cstdlib>
 #include <Eigen/Core>
 #include <MathExtra.h>
 
