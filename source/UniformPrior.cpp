@@ -9,24 +9,21 @@
 //      Derived class constructor.
 //
 // INPUT:
-//      boundaries: array containing minimum and maximum values for setting 
-//      lower and upper bounds of the free parameters. 
-//      Nobjects: number of objects used for nested sampling.
-// 
-// NOTE:
-//      boundaries array is a (Ndimensions * 2) format matrix, where the first
-//      column contains the minimum values and the second column the corresponding
-//      maximum values for each free parameter.
+//      minima: array containing minimum values for setting 
+//      lower bounds of the free parameters. 
+//      maxima: array containing maximum values for setting
+//      upper bounds of the free parameters.
 //
 
-UniformPrior::UniformPrior(const RefArrayXXd boundaries, const int Nobjects)
-: Prior(boundaries.size()/2, Nobjects), 
+UniformPrior::UniformPrior(const RefArrayXd minima, const RefArrayXd maxima)
+: Prior(minima.size()), 
   uniform(0.0,1.0),
   engine(time(0)),  
-  boundaries(boundaries)  
+  minima(minima),
+  maxima(maxima)
 {
-    uniformFactor = (1./(boundaries.col(1) - boundaries.col(0))).prod();
-
+    assert (minima.size() == maxima.size());
+    uniformFactor = (1./(maxima - minima)).prod();
     cerr << "Set parameter space of " << Ndimensions << " dimensions." << endl;
 } // END UniformPrior::UniformPrior()
 
@@ -59,19 +56,44 @@ UniformPrior::~UniformPrior()
 
 
 
-// UniformPrior::getBoundaries()
+// UniformPrior::getMinima()
 //
 // PURPOSE:
-//      Get the private data member boundaries.
+//      Get the private data member minima.
 //
 // OUTPUT:
-//      An array containing the minimum and maximum values of the free parameters.
+//      An array containing the minimum values of the free parameters.
 //
 
-ArrayXXd UniformPrior::getBoundaries()
+ArrayXd UniformPrior::getMinima()
 {
-    return boundaries;    
-} // END UniformPrior::getBoundaries()
+    return minima;    
+} // END UniformPrior::getMinima()
+
+
+
+
+
+
+
+
+
+
+
+// UniformPrior::getMaxima()
+//
+// PURPOSE:
+//      Get the private data member maxima.
+//
+// OUTPUT:
+//      An array containing the maximum values of the free parameters.
+//
+
+ArrayXd UniformPrior::getMaxima()
+{
+    return maxima;    
+} // END UniformPrior::getMaxima()
+
 
 
 
@@ -111,19 +133,22 @@ double UniformPrior::getUniformFactor()
 // INPUT:
 //      nestedParameters: two-dimensional array to contain 
 //      the resulting parameters values.
+//      Nobjects: integer containing the number of objects used 
+//      in the nested sampling process.
 //
 // OUTPUT:
 //      void
 //
 
-void UniformPrior::draw(RefArrayXXd nestedParameters)
+void UniformPrior::draw(RefArrayXXd nestedParameters, const int Nobjects)
 {
     // Uniform sampling over parameters intervals
-    for (ptrdiff_t i = 0; i < Ndimensions; i++)
+    
+    for (int i = 0; i < Ndimensions; i++)
     {
-        for (ptrdiff_t j = 0; j < Nobjects; j++)
+        for (int j = 0; j < Nobjects; j++)
         {
-            nestedParameters(i,j) = uniform(engine)*(boundaries(i,1)-boundaries(i,0)) + boundaries(i,0);
+            nestedParameters(i,j) = uniform(engine)*(maxima(i)-minima(i)) + minima(i);
         }
     }
 
@@ -160,14 +185,16 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedParameters, Likelihood &l
     double logLikelihoodConstraint = likelihood.logValue(nestedParameters);
     
     // Uniform sampling to find new parameter with logLikelihood > logLikelihoodConstraint
+    
     do
     {
-        //for (ptrdiff_t i = 0; i < Ndimensions; i++)
-        //    {
-        //        nestedParameters(i) = uniform(engine)*(boundaries(i,1) - boundaries(i,0)) + boundaries(i,0);
-        //    }
+        for (int i = 0; i < Ndimensions; i++)
+            {
+                nestedParameters(i) = uniform(engine)*(maxima(i) - minima(i)) + minima(i);
+            }
     
-        nestedParameters = uniform(engine)*(boundaries.col(1) - boundaries.col(0)) + boundaries.col(0);
+        // nestedParameters = uniform(engine)*(maxima - minima) + minima;
+        
         logLikelihood = likelihood.logValue(nestedParameters);
     }
     while (logLikelihood < logLikelihoodConstraint);

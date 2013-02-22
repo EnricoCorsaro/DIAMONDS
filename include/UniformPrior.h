@@ -24,20 +24,22 @@ class UniformPrior : public Prior
 
     public:
 
-        UniformPrior(const RefArrayXXd boundaries, const int Nobjects);
+        UniformPrior(const RefArrayXd minima, const RefArrayXd maxima);
         ~UniformPrior();
 
-        ArrayXXd getBoundaries();
+        ArrayXd getMinima();
+        ArrayXd getMaxima();
         double getUniformFactor();
 
-        virtual void draw(RefArrayXXd nestedParameters);
+        virtual void draw(RefArrayXXd nestedParameters, const int Nobjects);
         virtual void drawWithConstraint(RefArrayXd nestedParameters, Likelihood &likelihood);
 
     private:
 
         uniform_real_distribution<> uniform;
         mt19937 engine;
-        ArrayXXd boundaries;
+        ArrayXd minima;
+        ArrayXd maxima;
         double uniformFactor;
 
 }; // END class UniformPrior
