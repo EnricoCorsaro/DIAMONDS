@@ -140,7 +140,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXXd array, string separator, s
         }
         outputFile << array(i,array.cols()-1) << terminator;
     }
-}
+} // END File::arrayToFile()
 
 
 
@@ -177,7 +177,42 @@ void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, str
     {
         outputFile << array1(i) << separator << array2(i) << terminator;
     }
-}
+} // END File::arrayToFile()
+
+
+
+
+
+
+
+
+
+
+
+// File::OneArrayToFile()
+//
+// PURPOSE: writes onw Eigen::ArrayXd arrays as a column to an ascii file
+//
+// INPUT:
+//      outputFile: output stream, assumed to be already opened and checked for sanity.
+//      array: array which will appear as a column in the file
+//      terminator: line terminator, e.g. "\n"
+// 
+// OUTPUT:
+//      - file contents is changed
+// 
+// REMARKS:
+//      - the stream is not closed afterwards
+//      - this function can equally well be used to append to an existing file
+//
+
+void File::OneArrayToFile(ofstream &outputFile, ArrayXd array, string terminator)
+{
+    for (ptrdiff_t i = 0; i < array.size(); ++i)
+    {
+        outputFile << array(i) << terminator;
+    }
+} // END File::OneArrayToFile()
 
 
 
