@@ -14,6 +14,7 @@
 #include "UniformPrior.h"
 #include "NormalLikelihood.h"
 #include "LorentzianModel.h"
+#include "Results.h"
 
 
 int main(int argc, char *argv[])
@@ -27,7 +28,7 @@ int main(int argc, char *argv[])
     
     if (argc != 3)
     {
-        cerr << "Usage: peakbagging <inputFile> <outputFile>" << endl;
+        cerr << "Usage: peakbagging <input data file> <output directory>" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -54,13 +55,6 @@ int main(int argc, char *argv[])
     ArrayXd observations = data.col(1);
     ArrayXd uncertainties = data.col(2);
     
-    ofstream outputFile(argv[2]);
-    if (!outputFile.good())
-    {
-        cerr << "Error opening output file" << endl;
-        exit(EXIT_FAILURE);
-    }
-
 
     // Choose fundamental parameters for the nested inference process
 
@@ -75,7 +69,7 @@ int main(int argc, char *argv[])
     parametersMinima(0) = 0.0;
     parametersMaxima(0) = 20.0;
     parametersMinima(1) = 0.8;
-    parametersMaxima(1) = 1.2;
+    parametersMaxima(1) = 1.5;
     parametersMinima(2) = 1.0;
     parametersMaxima(2) = 3.0;
 
@@ -101,13 +95,12 @@ int main(int argc, char *argv[])
     nestedSampler.run(Nobjects);
 
 
-    // Save the results in an output file (should be done with separate routine)
+    // Save the results in an output file
 
-    outputFile << "# Parameter value    logLikelihood" << endl;
-    outputFile << setiosflags(ios::fixed) << setprecision(12);
-    File::arrayToFile(outputFile, nestedSampler.posteriorSample.row(2), nestedSampler.logLikelihoodOfPosteriorSample);
-    outputFile.close();
-    
+    Results results(nestedSampler, argv[2]);
+    results.printParameters();
+    results.printLogLikelihood();
+
     cerr << " Evidence: logZ = " << nestedSampler.getLogEvidence() << " +/- " << nestedSampler.getLogEvidenceError() << endl;
     cerr << " Information Gain = " << nestedSampler.getInformationGain() << endl;
     
