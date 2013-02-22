@@ -116,8 +116,8 @@ double MathExtra::logGaussLikelihood(const RefArrayXd observations, const RefArr
 {
     if ((observations.size() != predictions.size()) || (observations.size() != uncertainties.size()))
     {
-        cout << "Array dimensions do not match. Quitting program." << endl;
-        exit(1);
+        cerr << "Array dimensions do not match. Quitting program." << endl;
+        exit(EXIT_FAILURE);
     }
     
     ArrayXd delta;

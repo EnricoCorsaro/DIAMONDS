@@ -1,8 +1,8 @@
 
-#include "MeanLikelihood.h"
+#include "MeanNormalLikelihood.h"
 
 
-// MeanLikelihood::MeanLikelihood()
+// MeanNormalLikelihood::MeanNormalLikelihood()
 //
 // PURPOSE: 
 //      Derived class onstructor.
@@ -14,7 +14,7 @@
 //      model: object specifying the model to be used.
 // 
 
-MeanLikelihood::MeanLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
+MeanNormalLikelihood::MeanNormalLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
 : Likelihood(covariates, observations, uncertainties, model)
 {
     double normalizeFactor;
@@ -22,13 +22,13 @@ MeanLikelihood::MeanLikelihood(const RefArrayXd covariates, const RefArrayXd obs
     if (covariates.size() != observations.size() || covariates.size() != uncertainties.size())
     {
         cerr << "Array dimensions do not match. Quitting program." << endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 
     normalizeFactor = sqrt(observations.size()/uncertainties.pow(-2).sum());
     normalizedUncertainties = uncertainties/normalizeFactor; 
 
-} // END MeanLikelihood::MeanLikelihood()
+} // END MeanNormalLikelihood::MeanNormalLikelihood()
 
 
 
@@ -37,16 +37,16 @@ MeanLikelihood::MeanLikelihood(const RefArrayXd covariates, const RefArrayXd obs
 
 
 
-// MeanLikelihood::~MeanLikelihood()
+// MeanNormalLikelihood::~MeanNormalLikelihood()
 //
 // PURPOSE: 
 //      Derived class destructor.
 //
 
-MeanLikelihood::~MeanLikelihood()
+MeanNormalLikelihood::~MeanNormalLikelihood()
 {
 
-} // END MeanLikelihood::~MeanLikelihood()
+} // END MeanNormalLikelihood::~MeanNormalLikelihood()
 
 
 
@@ -57,7 +57,7 @@ MeanLikelihood::~MeanLikelihood()
 
 
 
-// MeanLikelihood::getNormalizedUncertainties();
+// MeanNormalLikelihood::getNormalizedUncertainties();
 //
 // PURPOSE:
 //      Get private data member normalizedUncertainties.
@@ -67,10 +67,10 @@ MeanLikelihood::~MeanLikelihood()
 //      uncertainties on the dependent variable values.
 //
 
-ArrayXd MeanLikelihood::getNormalizedUncertainties()
+ArrayXd MeanNormalLikelihood::getNormalizedUncertainties()
 {
     return normalizedUncertainties;
-} // END MeanLikelihood::getNormalizedUncertainties()
+} // END MeanNormalLikelihood::getNormalizedUncertainties()
 
 
 
@@ -79,12 +79,12 @@ ArrayXd MeanLikelihood::getNormalizedUncertainties()
 
 
 
-// MeanLikelihood::logValue()
+// MeanNormalLikelihood::logValue()
 //
 // PURPOSE:
-//      Compute the natural logarithm of the mean likelihood for 
+//      Compute the natural logarithm of the mean normal likelihood for 
 //      a given set of observations, uncertainties and predictions.
-//      The mean likelihood is a normal likelihood whose uncertainties
+//      The mean normal likelihood is a normal likelihood whose uncertainties
 //      have been integrated away by means of a Jeffrey's prior.
 //      For more details cf. Froehlich H.-E. et al. 2009, A&A, 506, 263.
 //
@@ -97,7 +97,7 @@ ArrayXd MeanLikelihood::getNormalizedUncertainties()
 //      mean likelihood
 //
 
-double MeanLikelihood::logValue(RefArrayXd modelParameters)
+double MeanNormalLikelihood::logValue(RefArrayXd modelParameters)
 {
     ArrayXd predictions;
     double lambda0;
@@ -105,6 +105,7 @@ double MeanLikelihood::logValue(RefArrayXd modelParameters)
     ArrayXd argument;
     unsigned long n = observations.size();
 
+    predictions.resize(n);
     model.predict(predictions, modelParameters);
     argument = (observations - predictions)/normalizedUncertainties;
     argument = argument*argument;
@@ -113,7 +114,7 @@ double MeanLikelihood::logValue(RefArrayXd modelParameters)
     lambda = lambda0 - (n/2.) * log (argument.sum());
 
     return lambda;
-} // END MeanLikelihood::logValue()
+} // END MeanNormalLikelihood::logValue()
 
 
 

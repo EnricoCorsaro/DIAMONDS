@@ -20,7 +20,7 @@ NormalLikelihood::NormalLikelihood(const RefArrayXd covariates, const RefArrayXd
     if (covariates.size() != observations.size() || covariates.size() != uncertainties.size())
     {
         cerr << "Array dimensions do not match. Quitting program." << endl;
-        exit(1);
+        exit(EXIT_FAILURE);
     }
 } // END NormalLikelihood::NormalLikelihood()
 

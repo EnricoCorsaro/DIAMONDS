@@ -10,6 +10,7 @@
 
 #include <cmath>
 #include <iostream>
+#include <cstdlib>
 #include "Likelihood.h"
 
 

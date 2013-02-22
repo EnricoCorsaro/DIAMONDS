@@ -7,13 +7,12 @@
 //      of the parameter space.
 //
 // INPUT:
-//      Ndim : integer containing the number of dimensions, i.e.
+//      Ndimensions : integer containing the number of dimensions, i.e.
 //      the number of free parameters of the problem.
 //
 
-Prior::Prior(const int Ndimensions, const int Nobjects)
-: Ndimensions(Ndimensions), 
-  Nobjects(Nobjects)
+Prior::Prior(const int Ndimensions)
+: Ndimensions(Ndimensions)
 {
 
 } // END Prior::Prior()
@@ -56,22 +55,3 @@ int Prior::getNdimensions()
 } // END Prior::getNdimensions()
 
 
-
-
-
-
-
-// Prior::getNobjects()
-//
-// PURPOSE: 
-//      Get function to obtained the protected data member Nobjects.
-//
-// OUTPUT:
-//      An integer containing the number of nested objects used (i.e.
-//      the number of allowed values for each free parameter).
-//
-
-int Prior::getNobjects()
-{
-    return Nobjects;
-} // END Prior::getNobjects()

@@ -9,6 +9,7 @@
 #define PRIOR_H
 
 #include <random>
+#include <cstdlib>
 #include <Eigen/Core>
 #include "Likelihood.h"
 
@@ -22,19 +23,19 @@ class Prior
 
     public:
 
-        Prior(const int Ndimensions, const int Nobjects);
+        Prior(const int Ndimensions);
         ~Prior();
         int getNdimensions();
-        int getNobjects();
+
 
         // Pure virtual functions implemented in derived classes
-        virtual void draw(RefArrayXXd nestedParameters) = 0;
+        
+        virtual void draw(RefArrayXXd nestedParameters, const int Nobjects) = 0;
         virtual void drawWithConstraint(RefArrayXd nestedParameters, Likelihood &likelihood) = 0;
 
     protected:
         
         int Ndimensions;
-        int Nobjects;
 
     private:
     

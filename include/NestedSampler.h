@@ -33,7 +33,7 @@ class NestedSampler
         double getLogEvidenceError();
         double getInformationGain();
         int getNestIteration();
-        void run();
+        void run(const int Nobjects);
 
 
 	private:
