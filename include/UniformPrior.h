@@ -31,8 +31,8 @@ class UniformPrior : public Prior
         ArrayXd getMaxima();
         double getUniformFactor();
 
-        virtual void draw(RefArrayXXd nestedParameters, const int Nobjects);
-        virtual void drawWithConstraint(RefArrayXd nestedParameters, Likelihood &likelihood);
+        virtual void draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects);
+        virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood);
 
     private:
 

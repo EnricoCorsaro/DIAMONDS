@@ -1,4 +1,3 @@
-
 #include "NormalLikelihood.h"
 
 
@@ -23,6 +22,7 @@ NormalLikelihood::NormalLikelihood(const RefArrayXd covariates, const RefArrayXd
         exit(EXIT_FAILURE);
     }
 } // END NormalLikelihood::NormalLikelihood()
+
 
 
 
@@ -79,7 +79,7 @@ ArrayXd NormalLikelihood::getUncertainties()
 //      a given set of observations, uncertainties and predictions.
 //
 // INPUT:
-//      modelParameters: a one-dimensional array containing the actual
+//      nestedSampleOfParameters: a one-dimensional array containing the actual
 //      values of the free parameters that describe the model.
 //
 // OUTPUT:
@@ -87,14 +87,14 @@ ArrayXd NormalLikelihood::getUncertainties()
 //      normal likelihood
 //
 
-double NormalLikelihood::logValue(RefArrayXd modelParameters)
+double NormalLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
 {
     ArrayXd predictions;
     ArrayXd lambda;
     ArrayXd lambda0;
     
     predictions.resize(covariates.size());
-    model.predict(predictions, modelParameters);
+    model.predict(predictions, nestedSampleOfParameters);
     
     lambda0 = -0.5 * observations.size() * log(2.0*MathExtra::PI) -1.0 * uncertainties.log(); 
     lambda = lambda0 - 0.5 * ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);

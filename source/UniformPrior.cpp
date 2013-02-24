@@ -131,7 +131,7 @@ double UniformPrior::getUniformFactor()
 //      and contain Nobjects values each.
 //
 // INPUT:
-//      nestedParameters: two-dimensional array to contain 
+//      nestedSampleOfParameters: two-dimensional array to contain 
 //      the resulting parameters values.
 //      Nobjects: integer containing the number of objects used 
 //      in the nested sampling process.
@@ -140,7 +140,7 @@ double UniformPrior::getUniformFactor()
 //      void
 //
 
-void UniformPrior::draw(RefArrayXXd nestedParameters, const int Nobjects)
+void UniformPrior::draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects)
 {
     // Uniform sampling over parameters intervals
     
@@ -148,7 +148,7 @@ void UniformPrior::draw(RefArrayXXd nestedParameters, const int Nobjects)
     {
         for (int j = 0; j < Nobjects; j++)
         {
-            nestedParameters(i,j) = uniform(engine)*(maxima(i)-minima(i)) + minima(i);
+            nestedSampleOfParameters(i,j) = uniform(engine)*(maxima(i)-minima(i)) + minima(i);
         }
     }
 
@@ -167,7 +167,7 @@ void UniformPrior::draw(RefArrayXXd nestedParameters, const int Nobjects)
 //      having higher likelihood value.
 //
 // INPUT:
-//      nestedParameters: one-dimensional array containing the set of 
+//      nestedSampleOfParameters: one-dimensional array containing the set of 
 //      parameters values to be updated.
 //      likelihood: an object to compute the corresponding likelihood value.
 //
@@ -175,14 +175,15 @@ void UniformPrior::draw(RefArrayXXd nestedParameters, const int Nobjects)
 //      void
 //
 // NOTE:
-//      nestedParameters refers to the worst object identified in the nested
+//      nestedSampleOfParameters refers to the worst object identified in the nested
 //      sampling loop. Thus, the array contains Ndimensions elements.
 //
 
-void UniformPrior::drawWithConstraint(RefArrayXd nestedParameters, Likelihood &likelihood)
+void UniformPrior::drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood)
 {
     double logLikelihood;
-    double logLikelihoodConstraint = likelihood.logValue(nestedParameters);
+    double logLikelihoodConstraint = likelihood.logValue(nestedSampleOfParameters);
+    
     
     // Uniform sampling to find new parameter with logLikelihood > logLikelihoodConstraint
     
@@ -190,12 +191,11 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedParameters, Likelihood &l
     {
         for (int i = 0; i < Ndimensions; i++)
             {
-                nestedParameters(i) = uniform(engine)*(maxima(i) - minima(i)) + minima(i);
+                nestedSampleOfParameters(i) = uniform(engine)*(maxima(i) - minima(i)) + minima(i);
             }
     
-        // nestedParameters = uniform(engine)*(maxima - minima) + minima;
-        
-        logLikelihood = likelihood.logValue(nestedParameters);
+        // nestedSampleOfParameters = uniform(engine)*(maxima - minima) + minima;
+        logLikelihood = likelihood.logValue(nestedSampleOfParameters);
     }
     while (logLikelihood <= logLikelihoodConstraint);
     

@@ -24,9 +24,10 @@ class LorentzianModel : public Model
         LorentzianModel(const RefArrayXd covariates);
         ~LorentzianModel();
 
-        virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
+        virtual void predict(RefArrayXd predictions, const RefArrayXd nestedSampleOfParameters);
         int getParametersNumber();
-        
+       
+
     protected:
 
 
