@@ -18,6 +18,7 @@
 #include "MathExtra.h"
 #include "File.h"
 #include "NestedSampler.h"
+#include "Prior.h"
 
 
 using namespace std;
@@ -32,20 +33,21 @@ class Results
 
     public:
  
-        Results(const NestedSampler &nestedSampler, const char *outputDirectory);
+        Results(NestedSampler &nestedSampler, const char *outputDirectory);
         ~Results();
 
         void printParameters();
         void printLogLikelihood();
-        void printScaledLikelihood();
-        void printExpectations(double credibleLevel);
         void printEvidence();
+        void printPosterior();
+        void printExpectations(const double credibleLevel = 68.27);
 
 
     private:
 
         const char *outputDirectory;
-        const NestedSampler &nestedSampler;
-        
+        NestedSampler &nestedSampler;
+        ArrayXd posteriorOfPosteriorSample;
+
 }; // END class Results
 #endif
