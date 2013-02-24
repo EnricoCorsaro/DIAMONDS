@@ -189,7 +189,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, str
 
 
 
-// File::OneArrayToFile()
+// File::oneArrayToFile()
 //
 // PURPOSE: writes onw Eigen::ArrayXd arrays as a column to an ascii file
 //
@@ -206,13 +206,13 @@ void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, str
 //      - this function can equally well be used to append to an existing file
 //
 
-void File::OneArrayToFile(ofstream &outputFile, ArrayXd array, string terminator)
+void File::oneArrayToFile(ofstream &outputFile, ArrayXd array, string terminator)
 {
     for (ptrdiff_t i = 0; i < array.size(); ++i)
     {
         outputFile << array(i) << terminator;
     }
-} // END File::OneArrayToFile()
+} // END File::oneArrayToFile()
 
 
 
