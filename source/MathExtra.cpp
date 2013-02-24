@@ -188,6 +188,8 @@ inline double MathExtra::sum(const vector<double> &vec)
 
 
 
+
+
 // MathExtra::logExpSum()
 //
 // PURPOSE: 
@@ -198,7 +200,7 @@ inline double MathExtra::sum(const vector<double> &vec)
 //      y : a second variable to be added
 //
 // OUTPUT: 
-//        The logarithmic summation of the exponentials log(exp(x)+exp(y)).
+//      The logarithmic summation of the exponentials log(exp(x)+exp(y)).
 //
 
 double MathExtra::logExpSum(double x, double y)
@@ -206,3 +208,42 @@ double MathExtra::logExpSum(double x, double y)
     return (x >= y ? x+log(1.+exp(y-x)) : y + log(1.+exp(x-y)));
 } // END MathExtra::logExpSum()
 
+
+
+
+
+
+
+
+
+
+// MathExtra::sortElements()
+//
+// PURPOSE: 
+//      Sorts the element of the first input array in increasing order 
+//      and the elements of the second input array according to the 
+//      sorting of the first array.
+//
+// INPUT: 
+//      array1: a first Eigen Array to be sorted in increasing order 
+//      array2: a second Eigen Array to be sorted according to array1
+//
+// OUTPUT: 
+//      void
+//
+
+void MathExtra::sortElements(RefArrayXd array1, RefArrayXd array2)
+{
+    for (int i = 0; i < array1.size(); i++)
+    {
+        for (int j = 1; j < (array1.size()-i); j++)
+        {
+            if (array1(j-1) > array1(j))
+            {
+                SWAP(array1(j),array1(j-1));
+                SWAP(array2(j),array2(j-1));
+            }
+        }
+    }
+    
+} // END MathExtra::sortElements()
