@@ -54,7 +54,7 @@ int main(int argc, char *argv[])
     ArrayXd covariates = data.col(0);
     ArrayXd observations = data.col(1);
     ArrayXd uncertainties = data.col(2);
-    
+   
 
     // Choose fundamental parameters for the nested inference process
 
@@ -100,9 +100,9 @@ int main(int argc, char *argv[])
     Results results(nestedSampler, argv[2]);
     results.printParameters();
     results.printLogLikelihood();
-
-    cerr << " Evidence: logZ = " << nestedSampler.getLogEvidence() << " +/- " << nestedSampler.getLogEvidenceError() << endl;
-    cerr << " Information Gain = " << nestedSampler.getInformationGain() << endl;
+    results.printEvidence();
+    results.printPosterior();
+    results.printExpectations();
     
     return EXIT_SUCCESS;
 }
