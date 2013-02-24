@@ -21,7 +21,7 @@
 NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood)
 : informationGain(0.0), 
   logEvidence(-DBL_MAX),
-  nestIteration(0),
+  Niterations(0),
   prior(prior),
   likelihood(likelihood)
 {
@@ -100,6 +100,7 @@ double NestedSampler::getLogEvidenceError()
 
 
 
+
 // NestedSampler::getInformationGain()
 //
 // PURPOSE:
@@ -123,20 +124,19 @@ double NestedSampler::getInformationGain()
 
 
 
-// NestedSampler::getNestIteration()
+// NestedSampler::getNiterations()
 //
 // PURPOSE:
-//      Get private data member nestIteration.
+//      Get private data member Niterations.
 //
 // OUTPUT:
 //      An integer containing the final number of
 //      nested loop iterations.
 //
-int NestedSampler::getNestIteration()
+int NestedSampler::getNiterations()
 {
-    return nestIteration;
-} // END NestedSampler::getNestIteration()
-
+    return Niterations;
+} // END NestedSampler::getNiterations()
 
 
 
@@ -150,8 +150,9 @@ int NestedSampler::getNestIteration()
 // NestedSampler::run()
 //
 // PURPOSE:
-//      Start nested sampling computation. Save results in 
-//      arrays "logLikelihoodOfPosteriorSample", "posteriorSample".
+//      Start nested sampling computation. Save results in Eigen
+//      Arrays logLikelihoodOfPosteriorSample, posteriorSample,
+//      logWeightOfPosteriorSample.
 //
 // INPUT:
 //      Nobjects: an integer containing the number of objects to be
@@ -162,7 +163,7 @@ int NestedSampler::getNestIteration()
 //
 // REMARKS: 
 //      Eigen Matrices are defaulted column-major. Hence the 
-//      nestedParameters and posteriorSample are resized as 
+//      nestedSampleOfParameters and posteriorSample are resized as 
 //      (Ndim , ...), rather than (... , Ndim).
 //
 
@@ -172,7 +173,8 @@ void NestedSampler::run(const int Nobjects)
     double logLikelihoodConstraint;
     double logEvidenceNew;
     double logWeight = 0.0;
-    double exceedFactor = 1.2;                  // Defines the termination condition for the nested sampling loop !!! Very critical !!!
+    double exceedFactor = 1.2;                  // Defines the termination condition for the nested sampling loop 
+                                                // !!! Very critical !!!
     int Ndimensions = prior.getNdimensions();
     int copy = 0;
     int worst;
@@ -187,26 +189,26 @@ void NestedSampler::run(const int Nobjects)
     auto uniform = bind(uniform_distribution, engine);              // Binding uniform distribution to seed value
 
 
-    // Set the sizes of the Eigen Arrays logLikelihood and nestedParameters
+    // Set the sizes of the Eigen Arrays logLikelihood and nestedSampleOfParameters
 
     logLikelihood.resize(Nobjects);
-    nestedParameters.resize(Ndimensions, Nobjects);
+    nestedSampleOfParameters.resize(Ndimensions, Nobjects);
 
 
     // Initialize the objects
-    // nestedParameters will then contain the sample of parameters for nested sampling
+    // nestedSampleOfParameters will then contain the sample of parameters for nested sampling
 
-    prior.draw(nestedParameters, Nobjects);         
+    prior.draw(nestedSampleOfParameters, Nobjects);         
 
 
     // Initialize corresponding likelihood values
     
-    ArrayXd objectParameters(Ndimensions);
+    ArrayXd nestedSamplePerObject(Ndimensions);
     
     for (int i = 0; i < Nobjects; i++)
     {
-        objectParameters = nestedParameters.col(i);
-        logLikelihood(i) = likelihood.logValue(objectParameters);
+        nestedSamplePerObject = nestedSampleOfParameters.col(i);
+        logLikelihood(i) = likelihood.logValue(nestedSamplePerObject);
     }
 
 
@@ -222,8 +224,9 @@ void NestedSampler::run(const int Nobjects)
         // Resizing array dimensions to the actual number of nested iterations
         // conservativeResize allows dinamic resizing of Eigen Arrays, while keeping the previous values untouched
     
-        posteriorSample.conservativeResize(Ndimensions, nestIteration + 1);        // conservative resize to column number only
-        logLikelihoodOfPosteriorSample.conservativeResize(nestIteration + 1);
+        posteriorSample.conservativeResize(Ndimensions, Niterations + 1);        // conservative resize to column number only
+        logLikelihoodOfPosteriorSample.conservativeResize(Niterations + 1);
+        logWeightOfPosteriorSample.conservativeResize(Niterations + 1);
         
 
         // Find worst object in the collection. The likelihood of this object
@@ -231,7 +234,7 @@ void NestedSampler::run(const int Nobjects)
         
         logLikelihoodConstraint = logLikelihood.minCoeff(&worst);
         logWeight = logWidthInPriorMass + logLikelihoodConstraint;                
-        
+
 
         // Update the evidence Z and the information Gain
         
@@ -242,11 +245,12 @@ void NestedSampler::run(const int Nobjects)
         logEvidence = logEvidenceNew;
 
         
-        // Set actual array size and save the posterior sample and its corresponding likelihood
+        // Save the actual posterior sample and its corresponding likelihood and weights
         
-        posteriorSample.col(nestIteration) = nestedParameters.col(worst);              // save parameter value
-        logLikelihoodOfPosteriorSample(nestIteration) = logLikelihoodConstraint;       // save corresponding likelihood
-
+        posteriorSample.col(Niterations) = nestedSampleOfParameters.col(worst);              // save parameter value
+        logLikelihoodOfPosteriorSample(Niterations) = logLikelihoodConstraint;       // save corresponding likelihood
+        logWeightOfPosteriorSample(Niterations) = logWeight;                         // save corresponding weight ->
+                                                                                     // proportional to posterior probability density
 
         // Replace worst object in favour of a copy of different survivor
         // No replacement if Nobjects == 1. Fundamental step to preserve
@@ -261,15 +265,15 @@ void NestedSampler::run(const int Nobjects)
             while (copy == worst);
         }
 
-        nestedParameters.col(worst) = nestedParameters.col(copy);
+        nestedSampleOfParameters.col(worst) = nestedSampleOfParameters.col(copy);
         logLikelihood(worst) = logLikelihood(copy);
         
 
         // Evolve the replaced object with the new constraint logLikelihood > logLikelihoodConstraint
         
-        objectParameters = nestedParameters.col(worst);
-        prior.drawWithConstraint(objectParameters, likelihood);     // Array objectParameters is updated after call to function
-        nestedParameters.col(worst) = objectParameters;             // Update new set of parameters in nestedParameters array
+        nestedSamplePerObject = nestedSampleOfParameters.col(worst);
+        prior.drawWithConstraint(nestedSamplePerObject, likelihood);     // Array nestedSamplePerObject is updated after call to function
+        nestedSampleOfParameters.col(worst) = nestedSamplePerObject;     // Update new set of parameters in nestedSampleOfParameters array
         
 
         // Shrink interval
@@ -279,13 +283,14 @@ void NestedSampler::run(const int Nobjects)
         
         // Increase nested loop counter
         
-        nestIteration++;
-        cout << "nestIteration: " << nestIteration << endl;
-        cout << "Information Gain * Nobjects : " << informationGain * Nobjects << endl;
+        Niterations++;
     }
-    while (nestIteration <= 400);   // Termination condition suggested by Skilling 2004
-    // while (nestIteration <= (exceedFactor * informationGain * Nobjects));   // Termination condition suggested by Skilling 2004
-                                                                            // Run till nestIteration >> Nobjects * informationGain
+    while (Niterations <= 300);   // Termination condition suggested by Skilling 2004
+    // while (Niterations <= (exceedFactor * informationGain * Nobjects));   // Termination condition suggested by Skilling 2004
+                                                                            // Run till Niterations >> Nobjects * informationGain
+    
+    cout << "Niterations: " << Niterations << endl;
+    cout << "Information Gain * Nobjects : " << informationGain * Nobjects << endl;
  
     // Compute uncertainty on the log of the Evidence Z
     
