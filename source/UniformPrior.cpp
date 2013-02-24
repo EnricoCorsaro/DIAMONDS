@@ -197,7 +197,7 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedParameters, Likelihood &l
         
         logLikelihood = likelihood.logValue(nestedParameters);
     }
-    while (logLikelihood < logLikelihoodConstraint);
+    while (logLikelihood <= logLikelihoodConstraint);
     
 } // END UniformPrior::drawWithConstraint()
 
