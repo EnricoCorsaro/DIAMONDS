@@ -52,7 +52,7 @@ LorentzianModel::~LorentzianModel()
 // INPUT:
 //      predictions: one-dimensional array to contain the predictions
 //      from the model
-//      modelParameters: one-dimensional array where each element
+//      nestedSampleOfParameters: one-dimensional array where each element
 //      contains the value of one free parameter of the model
 //
 // OUTPUT:
@@ -65,23 +65,23 @@ LorentzianModel::~LorentzianModel()
 //      (3) mode linewidth (related to the lifetime of the mode)
 //
 
-void LorentzianModel::predict(RefArrayXd predictions, const RefArrayXd modelParameters)
+void LorentzianModel::predict(RefArrayXd predictions, const RefArrayXd nestedSampleOfParameters)
 {
-    parametersNumber = modelParameters.size();
+    parametersNumber = nestedSampleOfParameters.size();
 
     if (parametersNumber == 1)
     {
-        MathExtra::lorentzProfile(predictions, covariates, modelParameters(0));
+        MathExtra::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0));
     }
     else 
         if (parametersNumber == 2)
         {
-            MathExtra::lorentzProfile(predictions, covariates, modelParameters(0), modelParameters(1));
+            MathExtra::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0), nestedSampleOfParameters(1));
         }
     else 
         if (parametersNumber == 3)
         {
-            MathExtra::lorentzProfile(predictions, covariates, modelParameters(0), modelParameters(1), modelParameters(2));
+            MathExtra::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0), nestedSampleOfParameters(1), nestedSampleOfParameters(2));
         }
     else
     {

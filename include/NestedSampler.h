@@ -24,15 +24,16 @@ class NestedSampler
 
     public:
         
-        ArrayXXd posteriorSample;                // parameter values sampled from the posterior
+        ArrayXXd posteriorSample;                // parameter values sampling the posterior
         ArrayXd logLikelihoodOfPosteriorSample;  // logLikelihood values corresponding to the posterior sample 
-        
+        ArrayXd logWeightOfPosteriorSample;      // logWeights corresponding to the posterior sample
+
         NestedSampler(Prior &prior, Likelihood &likelihood); 
         ~NestedSampler();
         double getLogEvidence();
         double getLogEvidenceError();
         double getInformationGain();
-        int getNestIteration();
+        int getNiterations();
         void run(const int Nobjects);
 
 
@@ -42,8 +43,8 @@ class NestedSampler
         double logEvidence;
         double logEvidenceError;
         static unsigned nestedCounter;           // Static counter containing the number of Nested processes running
-        int nestIteration;                       // Counter saving the number of nested loops used
-        ArrayXXd nestedParameters;               // parameters values (the free parameters of the problem)
+        int Niterations;                         // Counter saving the number of nested loops used
+        ArrayXXd nestedSampleOfParameters;       // parameters values (the free parameters of the problem)
         ArrayXd logLikelihood;                   // log-likelihood values corresponding to parameter values
         Prior &prior;
         Likelihood &likelihood;

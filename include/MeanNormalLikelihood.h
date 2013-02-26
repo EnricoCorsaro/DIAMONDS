@@ -28,7 +28,7 @@ class MeanNormalLikelihood : public Likelihood
         ~MeanNormalLikelihood();
         ArrayXd getNormalizedUncertainties();
 
-        virtual double logValue(RefArrayXd modelParameters);
+        virtual double logValue(RefArrayXd nestedSampleOfParameters);
 
     private:
         

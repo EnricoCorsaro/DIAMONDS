@@ -30,8 +30,8 @@ class Prior
 
         // Pure virtual functions implemented in derived classes
         
-        virtual void draw(RefArrayXXd nestedParameters, const int Nobjects) = 0;
-        virtual void drawWithConstraint(RefArrayXd nestedParameters, Likelihood &likelihood) = 0;
+        virtual void draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects) = 0;
+        virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood) = 0;
 
     protected:
         

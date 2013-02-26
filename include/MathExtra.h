@@ -17,6 +17,8 @@
 #include <cstdlib>
 #include <Eigen/Core>
 
+#define SWAP(a,b) {int copy; copy = a, a = b, b = copy;}
+
 
 using namespace std;
 using Eigen::ArrayXd;
@@ -40,6 +42,7 @@ namespace MathExtra
     inline double product(const vector<double> &vec);
     inline double sum(const vector<double> &vec);
     double logExpSum(double x, double y);
+    void sortElements(RefArrayXd array1, RefArrayXd array2);
 
 } // END namespace MathExtra
 #endif

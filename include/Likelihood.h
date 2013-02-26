@@ -28,7 +28,7 @@ class Likelihood
         ArrayXd getCovariates();
         ArrayXd getObservations();
 
-        virtual double logValue(RefArrayXd modelParameters) = 0;
+        virtual double logValue(RefArrayXd nestedSampleOfParameters) = 0;
 
     protected:
         

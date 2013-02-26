@@ -26,7 +26,7 @@ class Model
         ~Model();
         ArrayXd getCovariates();
         
-        virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters) = 0;
+        virtual void predict(RefArrayXd predictions, const RefArrayXd nestedSampleOfParameters) = 0;
         
 
     protected:
