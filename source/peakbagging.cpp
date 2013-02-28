@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
     results.printParameters();
     results.printLogLikelihood();
     results.printEvidence();
-    results.printPosterior();
-    results.printExpectations();
+    results.printPosteriorDensity();
+    results.printInference();
     
     return EXIT_SUCCESS;
 }
