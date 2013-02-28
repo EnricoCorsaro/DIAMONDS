@@ -18,7 +18,6 @@
 #include "MathExtra.h"
 #include "File.h"
 #include "NestedSampler.h"
-#include "Prior.h"
 
 
 using namespace std;
@@ -40,7 +39,7 @@ class Results
         void printLogLikelihood();
         void printEvidence();
         void printPosterior();
-        void printExpectations(const double credibleLevel = 68.27);
+        void printInference(const double credibleLevel = 68.27);
 
 
     private:

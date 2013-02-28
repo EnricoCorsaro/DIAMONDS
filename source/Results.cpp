@@ -289,7 +289,7 @@ void Results::printPosterior()
 
 
 
-// Results::printExpectations()
+// Results::printInference()
 //
 // PURPOSE:
 //      Prints the expectation values from the marginalized posterior 
@@ -307,9 +307,9 @@ void Results::printPosterior()
 //      void
 // 
 
-void Results::printExpectations(const double credibleLevel)
+void Results::printInference(const double credibleLevel)
 {
-    string name = "expectations.txt";
+    string name = "inference.txt";
     string filenameString;
     int Ndimensions;
     double meanValue;
@@ -377,4 +377,4 @@ void Results::printExpectations(const double credibleLevel)
     File::arrayToFile(outputFile, expectations);
     outputFile.close();
 
-} // END Results::printExpectations()
+} // END Results::printInference()
