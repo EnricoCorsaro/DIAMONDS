@@ -17,7 +17,7 @@
 #include <cstdlib>
 #include <Eigen/Core>
 
-#define SWAP(a,b) {int copy; copy = a, a = b, b = copy;}
+#define SWAP(a,b) {double copy; copy = a, a = b, b = copy;}
 
 
 using namespace std;

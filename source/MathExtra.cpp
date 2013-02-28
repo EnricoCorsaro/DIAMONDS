@@ -240,9 +240,12 @@ void MathExtra::sortElements(RefArrayXd array1, RefArrayXd array2)
         {
             if (array1(j-1) > array1(j))
             {
-                SWAP(array1(j),array1(j-1));
-                SWAP(array2(j),array2(j-1));
+                SWAP(array1(j-1),array1(j));        // SWAP array1 elements in increasing order
+                SWAP(array2(j-1),array2(j));        // SWAP array2 elements accordingly
             }
+            else
+                if (array1(j-1) == array1(j))
+                    continue;
         }
     }
     
