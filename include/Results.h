@@ -11,6 +11,7 @@
 
 #include <cstdlib>
 #include <string>
+#include <cfloat>
 #include <iostream>
 #include <iomanip>
 #include <cassert>
@@ -38,15 +39,18 @@ class Results
         void printParameters();
         void printLogLikelihood();
         void printEvidence();
-        void printPosterior();
+        void printPosteriorDensity();
         void printInference(const double credibleLevel = 68.27);
+        ArrayXd getPosteriorDensity();
+        ArrayXXd getInference();
 
 
     private:
 
         const char *outputDirectory;
         NestedSampler &nestedSampler;
-        ArrayXd posteriorOfPosteriorSample;
+        ArrayXd posteriorDensity;
+        ArrayXXd inference;
 
 }; // END class Results
 #endif
