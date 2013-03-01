@@ -7,7 +7,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include "MathExtra.h"
+#include "Functions.h"
 #include "File.h"
 #include "NestedSampler.h"
 
@@ -26,16 +26,24 @@ int main(int argc, char *argv[])
 
     // Check number of arguments for main function
     
-    if (argc != 3)
+    if (argc != 4)
     {
-        cerr << "Usage: peakbagging <input data file> <output directory>" << endl;
+        cerr << "Usage: peakbagging <input directory> <input data filename> <output directory>" << endl;
         exit(EXIT_FAILURE);
     }
 
 
     // Read data from input file specified
-    
-    ifstream inputFile(argv[1]);
+
+    const char *filename = 0;
+    string inputFilename;
+    string inputDirectory;
+
+    inputFilename = argv[1];
+    inputDirectory = argv[2];
+    filename = (inputFilename + inputDirectory).data();
+
+    ifstream inputFile(filename);
     if (!inputFile.good())
     {
         cerr << "Error opening input file" << endl;
@@ -97,11 +105,11 @@ int main(int argc, char *argv[])
 
     // Save the results in an output file
 
-    Results results(nestedSampler, argv[2]);
+    Results results(nestedSampler, argv[1], argv[2], argv[3]);
     results.printParameters();
     results.printLogLikelihood();
     results.printEvidence();
-    results.printPosteriorDensity();
+    results.printPosterior();
     results.printInference();
     
     return EXIT_SUCCESS;
