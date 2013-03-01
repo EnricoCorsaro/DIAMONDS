@@ -2,12 +2,12 @@
 // computations of models and likelihoods.
 // Created by Enrico Corsaro @ IvS - 22 January 2013
 // e-mail: enrico.corsaro@ster.kuleuven.be
-// Header file "MathExtra.h"
-// Implementation contained in "MathExtra.cpp"
+// Header file "Functions.h"
+// Implementation contained in "Functions.cpp"
 
 
-#ifndef MATHEXTRA_H
-#define MATHEXTRA_H
+#ifndef FUNCTIONS_H
+#define FUNCTIONS_H
 
 #include <cmath>
 #include <numeric>
@@ -25,12 +25,12 @@ using Eigen::ArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 
 
-namespace MathExtra
+namespace Functions
 {
 
     const double PI = 4.0 * atan(1.0);
 
-    // Functional Profiles
+    // Profile functions
     void lorentzProfile(RefArrayXd predictions, const RefArrayXd covariates, const double centroid = 0.0, const double amplitude = 1.0, const double gamma = 1.0);
     double logGaussProfile(const double covariate, const double mu = 0.0, const double sigma = 1.0, const double amplitude = 1.0);
     void logGaussProfile(RefArrayXd y, const RefArrayXd x, const double mu = 0.0, const double sigma = 1.0, const double amplitude = 1.0);
@@ -44,5 +44,5 @@ namespace MathExtra
     double logExpSum(double x, double y);
     void sortElements(RefArrayXd array1, RefArrayXd array2);
 
-} // END namespace MathExtra
+} // END namespace Functions
 #endif
