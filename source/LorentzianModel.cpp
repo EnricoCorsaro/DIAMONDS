@@ -71,17 +71,17 @@ void LorentzianModel::predict(RefArrayXd predictions, const RefArrayXd nestedSam
 
     if (parametersNumber == 1)
     {
-        MathExtra::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0));
+        Functions::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0));
     }
     else 
         if (parametersNumber == 2)
         {
-            MathExtra::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0), nestedSampleOfParameters(1));
+            Functions::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0), nestedSampleOfParameters(1));
         }
     else 
         if (parametersNumber == 3)
         {
-            MathExtra::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0), nestedSampleOfParameters(1), nestedSampleOfParameters(2));
+            Functions::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0), nestedSampleOfParameters(1), nestedSampleOfParameters(2));
         }
     else
     {

@@ -10,7 +10,7 @@
 
 #include <cstdlib>
 #include <Eigen/Core>
-#include <MathExtra.h>
+#include "Functions.h"
 
 
 using namespace std;

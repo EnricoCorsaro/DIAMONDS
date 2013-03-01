@@ -8,7 +8,7 @@
 #define LIKELIHOOD_H
 
 #include <Eigen/Core>
-#include "MathExtra.h"
+#include "Functions.h"
 #include "Model.h"
 
 
