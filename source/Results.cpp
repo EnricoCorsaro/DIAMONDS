@@ -13,10 +13,15 @@
 //      path name where output files are to be printed
 //
 
-Results::Results(NestedSampler &nestedSampler, const char *outputDirectory)
+Results::Results(NestedSampler &nestedSampler, const char *inputDirectory, const char *inputFilename, const char *outputDirectory)
 : outputDirectory(outputDirectory),
   nestedSampler(nestedSampler)
 {
+    int length;
+
+    dataFilename = inputFilename;
+    length = dataFilename.length();
+    dataFilename = dataFilename.substr(0, length-4) + "-";
 
 } // END Results::Results()
 
@@ -76,7 +81,7 @@ void Results::printParameters()
     {
         for (int i = 0; i < Ndimensions; i++)
         {
-            filenameString = outputDirectory + prefix1 + to_string(i) + postfix;
+            filenameString = outputDirectory + dataFilename + prefix1 + to_string(i) + postfix;
             filename = filenameString.data();
             outputFile.open(filename);
             
@@ -98,7 +103,7 @@ void Results::printParameters()
         {
             for (int i = 0; i < Ndimensions; i++)
             {
-                filenameString = outputDirectory + prefix2 + to_string(i) + postfix;
+                filenameString = outputDirectory + dataFilename + prefix2 + to_string(i) + postfix;
                 filename = filenameString.data();
                 outputFile.open(filename);
 
@@ -120,7 +125,7 @@ void Results::printParameters()
         {
             for (int i = 0; i < Ndimensions; i++)
             {
-                filenameString = outputDirectory + prefix3 + to_string(i) + postfix;
+                filenameString = outputDirectory + dataFilename + prefix3 + to_string(i) + postfix;
                 filename = filenameString.data();
                 outputFile.open(filename);
                 
@@ -160,11 +165,11 @@ void Results::printParameters()
 
 void Results::printLogLikelihood()
 {
-    string name = "log-likelihood.txt";
+    string name = "loglikelihood.txt";
     string filenameString;
     const char *filename = 0;
 
-    filenameString = outputDirectory + name;
+    filenameString = outputDirectory + dataFilename + name;
     filename = filenameString.data();
     ofstream outputFile(filename);
             
@@ -208,7 +213,7 @@ void Results::printEvidence()
     string filenameString;
     const char *filename = 0;
 
-    filenameString = outputDirectory + name;
+    filenameString = outputDirectory + dataFilename + name;
     filename = filenameString.data();
     ofstream outputFile(filename);
             
@@ -240,30 +245,30 @@ void Results::printEvidence()
 
 
 
-// Results::printPosteriorDensity()
+// Results::printPosterior()
 //
 // PURPOSE:
-//      Prints the posterior probability density for the sample 
+//      Prints the posterior probability for the sample 
 //      obtained from the nested sampling into an ASCII file of one column format. 
 //      The values are also stored into the one dimensional Eigen Array
-//      PosteriorOfPosteriorSample.
+//      posteriorDistribution.
 //
 // OUTPUT:
 //      void
 // 
 
-void Results::printPosteriorDensity()
+void Results::printPosterior()
 {
-    ArrayXd logPosteriorDensity;
-    string name = "posterior-density.txt";
+    ArrayXd logPosterior;
+    string name = "posterior.txt";
     string filenameString;
     const char *filename = 0;
 
-    logPosteriorDensity = nestedSampler.logWeightOfPosteriorSample 
+    logPosterior = nestedSampler.logWeightOfPosteriorSample 
     - nestedSampler.getLogEvidence();
-    posteriorDensity = logPosteriorDensity.exp();
+    posteriorDistribution = logPosterior.exp();
 
-    filenameString = outputDirectory + name;
+    filenameString = outputDirectory + dataFilename + name;
     filename = filenameString.data();
     ofstream outputFile(filename);
 
@@ -273,12 +278,12 @@ void Results::printPosteriorDensity()
         exit(EXIT_FAILURE);
     }
             
-    outputFile << "# Posterior probability density from nested algorithm" << endl;
+    outputFile << "# Posterior probability distribution from nested algorithm" << endl;
     outputFile << scientific << setprecision(12);
-    File::oneArrayToFile(outputFile, posteriorDensity);
+    File::oneArrayToFile(outputFile, posteriorDistribution);
     outputFile.close();
 
-} // END Results::printPosteriorDensity()
+} // END Results::printPosterior()
 
 
 
@@ -293,9 +298,9 @@ void Results::printPosteriorDensity()
 //
 // PURPOSE:
 //      Prints the expectation, median and mode values from the 
-//      marginalized posterior probability density into an ASCII file. 
+//      marginalized posterior probability into an ASCII file. 
 //      Shortest Bayesian credible intervals (CI) are also computed.
-//      All the values are stored in to the Eigen Array inference.
+//      All the values are stored in to the Eigen Array inferenceResults.
 
 // INPUT:
 //      credibleLevel: a double number providing the desired credible 
@@ -308,20 +313,18 @@ void Results::printPosteriorDensity()
 
 void Results::printInference(const double credibleLevel)
 {
-    string prefix = "inference_";
+    string prefix = "inference-";
     string postfix = "CL.txt";
     string filenameString;
     int Ndimensions;
     int Niterations;
-    double meanValue;
     const char *filename = 0;
     ArrayXd marginalParameter;
-    ArrayXd marginalDensity;
+    ArrayXd marginalDistribution;
 
     Ndimensions = nestedSampler.posteriorSample.rows();
     Niterations = nestedSampler.posteriorSample.cols();
-    inference.resize(Ndimensions, 5);
-    
+    inferenceResults.resize(Ndimensions, 5);
 
 
     // Now loop over all free parameters
@@ -329,17 +332,17 @@ void Results::printInference(const double credibleLevel)
     for (int i = 0; i < Ndimensions; i++)
     {
         marginalParameter = nestedSampler.posteriorSample.row(i);
-        marginalDensity = posteriorDensity;
+        marginalDistribution = posteriorDistribution;
 
 
         // Sort elements of array marginalParameter in increasing
-        // order and those of array marginalDensity accordingly
+        // order and sort elements of array marginalDistribution accordingly
         
-        MathExtra::sortElements(marginalParameter, marginalDensity); 
+        Functions::sortElements(marginalParameter, marginalDistribution); 
         
 
-        // Marginalize over parameter by merging posterior densities of 
-        // equal parameter values
+        // Marginalize over parameter by merging posterior values 
+        // corresponding to equal parameter values
 
         int same = 0;
 
@@ -355,10 +358,10 @@ void Results::printInference(const double credibleLevel)
                         continue;
                     else
                         if (marginalParameter(j) == marginalParameter(k))
-                        {
+                        {   
                             marginalParameter(k) = -DBL_MAX;        // Set duplicate to bad value (flag)
-                            marginalDensity(j) = marginalDensity(j)+marginalDensity(k); // Merge probability densities
-                            marginalDensity(k) = 0.0;
+                            marginalDistribution(j) = marginalDistribution(j) + marginalDistribution(k); // Merge probability values
+                            marginalDistribution(k) = 0.0;
                             same++;
                         }
                 }
@@ -368,80 +371,137 @@ void Results::printInference(const double credibleLevel)
 
         // Remove bad points and store final values in array copies
 
-        ArrayXd marginalParameterCopy(Niterations - same);
-        ArrayXd marginalDensityCopy(Niterations - same);
-        
-        int n = 0;
-
-        for (int m = 0; (m < Niterations) && (n < (Niterations - same)); m++)
+        if (same > 0) // Check if bad points are present otherwise skip block
         {
-            if (marginalParameter(m) == -DBL_MAX)
-                continue;
-            else
-                if (marginalParameter(m) != - DBL_MAX)
-                    {
-                        marginalParameterCopy(n) = marginalParameter(m);
-                        marginalDensityCopy(n) = marginalDensity(m);
-                        n++;
-                    }
+            ArrayXd marginalParameterCopy(Niterations - same);
+            ArrayXd marginalDistributionCopy(Niterations - same);
+        
+            int n = 0;
+
+            for (int m = 0; (m < Niterations) && (n < (Niterations - same)); m++)
+            {
+                if (marginalParameter(m) == -DBL_MAX)
+                    continue;
+                else
+                    if (marginalParameter(m) != -DBL_MAX)
+                        {
+                            marginalParameterCopy(n) = marginalParameter(m);
+                            marginalDistributionCopy(n) = marginalDistribution(m);
+                            n++;
+                        }
+            }
+
+
+            // Replace original marginal arrays with array copies
+
+            marginalParameter = marginalParameterCopy;
+            marginalDistribution = marginalDistributionCopy;
         }
 
 
-        // Replace original marginal arrays with array copies
+        /* // BEGIN TEST
+        marginalParameter.resize(500);
+        marginalDistribution.resize(500);
+    
+        for (int jj = 0; jj < 500; jj++)
+        {
+            marginalParameter(jj) = jj/static_cast<double>(marginalParameter.size()) * 30.;
+            marginalDistribution(jj) = exp(Functions::logGaussProfile(marginalParameter(jj), 10, 1.5, 1));
+        }
+        marginalDistribution = marginalDistribution/marginalDistribution.sum();
+        // END TEST */ 
 
-        marginalParameter = marginalParameterCopy;
-        marginalDensity = marginalDensityCopy;
-        
 
         // Compute the mean value (expectation value)
        
-        meanValue = (marginalParameter.cwiseProduct(marginalDensity)).sum();
-        inference(i,0) = meanValue;
+        double meanParameter;
+        
+        meanParameter = (marginalParameter.cwiseProduct(marginalDistribution)).sum();
+        inferenceResults(i,0) = meanParameter;
 
 
         // Compute the median value (value corresponding to 50% of probability)
 
-        double medianValue;
+        double medianParameter;
         double totalProbability = 0.0;
         int k = 0;
         
         while (totalProbability < 0.5)
         {
-            medianValue = marginalParameter(k);
-            totalProbability += marginalDensity(k);
+            medianParameter = marginalParameter(k);
+            totalProbability += marginalDistribution(k);
             k++;
         }
         
-        inference(i,1) = medianValue;
+        inferenceResults(i,1) = medianParameter;
 
 
-        // Find the mode value (parameter corresponding to maximum probability density value)
+        // Find the mode value (parameter corresponding to maximum probability value)
 
-        int max = 0;
+        int max = 0;                                    // Subscript corresponding to mode value
         double maximumMarginal;
+        double maximumParameter;
 
-        maximumMarginal = marginalDensity.maxCoeff(&max);
-        inference(i,2) = marginalParameter(max);
+        maximumMarginal = marginalDistribution.maxCoeff(&max);
+        maximumParameter = marginalParameter(max);
+        inferenceResults(i,2) = maximumParameter;
 
         
-        /*// Compute the credible intervals
+        // Compute the "shortest" credible intervals (CI)
 
-        int step = 0;
-
-        totalProbability = 0.0;
-
-        do
+        int stepRight = 1;
+        double limitProbabilityRight;
+        double limitProbabilityLeft;
+        double limitParameterLeft;
+        double limitParameterRight;
+        ArrayXd marginalDistributionLeft(max + 1);       // Marginal distribution up to mode value
+        ArrayXd marginalParameterLeft(max + 1);          // Parameter range up to mode value
+        ArrayXd marginalDifferenceLeft;                  // Difference distribution to find point in 
+                                                         // in the left-hand distribution having equal
+                                                         // probability to that identified in the right-hand part
+        for (int nn = 0; nn <= max; nn++)
         {
-            
-            ++step;    
+            marginalDistributionLeft(nn) = marginalDistribution(nn);          // Consider left-hand distribution (up to mode value)
+            marginalParameterLeft(nn) = marginalParameter(nn);
         }
-        while (probability < 0.01*credibleLevel); // Stop when probability is >= credibleLevel */
+
+
+        while (totalProbability < (credibleLevel/100.))     // Stop when probability >= credibleLevel 
+        {
+            totalProbability = 0.0;
+            limitProbabilityRight = marginalDistribution(max + stepRight);
+            limitParameterRight = marginalParameter(max + stepRight);
+            marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();
+
+            int min = 0;
+
+            limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);
+            limitProbabilityLeft = marginalDistribution(min);
+            limitParameterLeft = marginalParameter(min);
+
+            for (int t = min; t <= (max + stepRight); t++)
+            {
+                totalProbability += marginalDistribution(t);        // Evaluate total probability within the range
+            }
+
+            stepRight++;
+        }
+
+        double lowerCredibleInterval;
+        double upperCredibleInterval;
+
+        lowerCredibleInterval = maximumParameter - limitParameterLeft;
+        upperCredibleInterval = limitParameterRight - maximumParameter;
+           
+        inferenceResults(i,3) = lowerCredibleInterval;
+        inferenceResults(i,4) = upperCredibleInterval;
+
     }
 
 
     // Write output ASCII file
 
-    filenameString = outputDirectory + prefix + to_string(static_cast<int>(credibleLevel)) + postfix;
+    filenameString = outputDirectory + dataFilename + prefix + to_string(static_cast<int>(credibleLevel)) + postfix;
     filename = filenameString.data();
     ofstream outputFile(filename);
 
@@ -452,7 +512,8 @@ void Results::printInference(const double credibleLevel)
     }
             
     outputFile << "# Inference results from nested algorithm" << endl;
-    outputFile << "# Credible intervals are shortest credible intervals according to usual definition" << endl;
+    outputFile << "# Credible intervals are the shortest credible intervals" << endl; 
+    outputFile << "# according to the usual definition" << endl;
     outputFile << "# Credible level: " << fixed << setprecision(2) << credibleLevel << " %" << endl;
     outputFile << "# Column #1: Expectation" << endl;
     outputFile << "# Column #2: Median" << endl;
@@ -460,7 +521,7 @@ void Results::printInference(const double credibleLevel)
     outputFile << "# Column #4: Lower Credible Interval (CI)" << endl;
     outputFile << "# Column #5: Upper Credible Interval (CI)" << endl;
     outputFile << fixed << setprecision(12);
-    File::arrayToFile(outputFile, inference);
+    File::arrayToFile(outputFile, inferenceResults);
     outputFile.close();
 
 } // END Results::printInference()
@@ -474,23 +535,21 @@ void Results::printInference(const double credibleLevel)
 
 
 
-// Results::getPosteriorDensity()
+// Results::getPosteriorDistribution()
 //
 // PURPOSE:
-//      Gets private data member posteriorDensity.
+//      Gets private data member posteriorDistribution.
 //
 // OUTPUT:
 //      An Eigen Array containing the values of the posterior
-//      density distribution.
+//      distribution.
 // 
 
-ArrayXd Results::getPosteriorDensity()
+ArrayXd Results::getPosteriorDistribution()
 {
-    return posteriorDensity;
+    return posteriorDistribution;
 
-} // END Results::getPosteriorDensity()
-
-
+} // END Results::getPosteriorDistribution()
 
 
 
@@ -500,18 +559,21 @@ ArrayXd Results::getPosteriorDensity()
 
 
 
-// Results::getInference()
+
+
+// Results::getInferenceResults()
 //
 // PURPOSE:
-//      Gets private data member inference.
+//      Gets private data member inferenceResults.
 //
 // OUTPUT:
 //      An Eigen Array containing all the values obtained
-//      from the inference analysis of the posterior density.
+//      from the inference analysis of the posterior probability
+//      distribution.
 // 
 
-ArrayXXd Results::getInference()
+ArrayXXd Results::getInferenceResults()
 {
-    return inference;
+    return inferenceResults;
 
-} // END Results::getInference()
+} // END Results::getInferenceResults()

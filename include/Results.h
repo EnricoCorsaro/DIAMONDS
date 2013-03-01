@@ -16,7 +16,7 @@
 #include <iomanip>
 #include <cassert>
 #include <Eigen/Core>
-#include "MathExtra.h"
+#include "Functions.h"
 #include "File.h"
 #include "NestedSampler.h"
 
@@ -33,24 +33,25 @@ class Results
 
     public:
  
-        Results(NestedSampler &nestedSampler, const char *outputDirectory);
+        Results(NestedSampler &nestedSampler, const char *inputDirectory, const char *inputFilename, const char *outputDirectory);
         ~Results();
 
         void printParameters();
         void printLogLikelihood();
         void printEvidence();
-        void printPosteriorDensity();
+        void printPosterior();
         void printInference(const double credibleLevel = 68.27);
-        ArrayXd getPosteriorDensity();
-        ArrayXXd getInference();
+        ArrayXd getPosteriorDistribution();
+        ArrayXXd getInferenceResults();
 
 
     private:
 
         const char *outputDirectory;
+        string dataFilename;
         NestedSampler &nestedSampler;
-        ArrayXd posteriorDensity;
-        ArrayXXd inference;
+        ArrayXd posteriorDistribution;
+        ArrayXXd inferenceResults;
 
 }; // END class Results
 #endif
