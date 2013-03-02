@@ -6,6 +6,7 @@ source/.*swo
 source/.*swp
 include/.*swo
 include/.*swp
+results/
 
 
 # Compiled source 

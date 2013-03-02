@@ -10,7 +10,7 @@
 #include <cfloat>
 #include <random>
 #include <Eigen/Dense>
-#include "MathExtra.h"
+#include "Functions.h"
 #include "Prior.h"
 #include "Likelihood.h"
 

@@ -11,14 +11,14 @@
 
 #include <cstdlib>
 #include <string>
+#include <cfloat>
 #include <iostream>
 #include <iomanip>
 #include <cassert>
 #include <Eigen/Core>
-#include "MathExtra.h"
+#include "Functions.h"
 #include "File.h"
 #include "NestedSampler.h"
-#include "Prior.h"
 
 
 using namespace std;
@@ -33,21 +33,25 @@ class Results
 
     public:
  
-        Results(NestedSampler &nestedSampler, const char *outputDirectory);
+        Results(NestedSampler &nestedSampler, const char *inputDirectory, const char *inputFilename, const char *outputDirectory);
         ~Results();
 
         void printParameters();
         void printLogLikelihood();
         void printEvidence();
         void printPosterior();
-        void printExpectations(const double credibleLevel = 68.27);
+        void printInference(const double credibleLevel = 68.27);
+        ArrayXd getPosteriorDistribution();
+        ArrayXXd getInferenceResults();
 
 
     private:
 
         const char *outputDirectory;
+        string dataFilename;
         NestedSampler &nestedSampler;
-        ArrayXd posteriorOfPosteriorSample;
+        ArrayXd posteriorDistribution;
+        ArrayXXd inferenceResults;
 
 }; // END class Results
 #endif

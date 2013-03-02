@@ -238,7 +238,7 @@ void NestedSampler::run(const int Nobjects)
 
         // Update the evidence Z and the information Gain
         
-        logEvidenceNew = MathExtra::logExpSum(logEvidence, logWeight);
+        logEvidenceNew = Functions::logExpSum(logEvidence, logWeight);
         informationGain = exp(logWeight - logEvidenceNew) * logLikelihoodConstraint
                        + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
                        - logEvidenceNew;
@@ -284,13 +284,13 @@ void NestedSampler::run(const int Nobjects)
         // Increase nested loop counter
         
         Niterations++;
+        cout << "Niterations: " << Niterations << endl;
+        cout << "Information Gain * Nobjects : " << informationGain * Nobjects << endl;
     }
-    while (Niterations <= 300);   // Termination condition suggested by Skilling 2004
+    while (Niterations <= 400);   // Termination condition suggested by Skilling 2004
     // while (Niterations <= (exceedFactor * informationGain * Nobjects));   // Termination condition suggested by Skilling 2004
                                                                             // Run till Niterations >> Nobjects * informationGain
     
-    cout << "Niterations: " << Niterations << endl;
-    cout << "Information Gain * Nobjects : " << informationGain * Nobjects << endl;
  
     // Compute uncertainty on the log of the Evidence Z
     

@@ -110,7 +110,7 @@ double MeanNormalLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
     argument = (observations - predictions)/normalizedUncertainties;
     argument = argument*argument;
 
-    lambda0 = lgammal(n/2.) - log(2) - (n/2.)*log(MathExtra::PI * n - 1./n) - normalizedUncertainties.log().sum();
+    lambda0 = lgammal(n/2.) - log(2) - (n/2.)*log(Functions::PI * n - 1./n) - normalizedUncertainties.log().sum();
     lambda = lambda0 - (n/2.) * log (argument.sum());
 
     return lambda;

@@ -96,7 +96,7 @@ double NormalLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
     predictions.resize(covariates.size());
     model.predict(predictions, nestedSampleOfParameters);
     
-    lambda0 = -0.5 * observations.size() * log(2.0*MathExtra::PI) -1.0 * uncertainties.log(); 
+    lambda0 = -0.5 * observations.size() * log(2.0*Functions::PI) -1.0 * uncertainties.log(); 
     lambda = lambda0 - 0.5 * ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);
     
     return lambda.sum();
