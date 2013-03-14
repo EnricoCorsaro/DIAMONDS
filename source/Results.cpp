@@ -8,21 +8,12 @@
 //
 // INPUT:
 //      nestedSampler: a NestedSampler class object used as the container of
-//      information to print from.
-//      outputDirectory: a pointer to an array of chars containing the desidered
-//      path name where output files are to be printed
+//      information to write from.
 //
 
-Results::Results(NestedSampler &nestedSampler, const char *inputDirectory, const char *inputFilename, const char *outputDirectory)
-: outputDirectory(outputDirectory),
-  nestedSampler(nestedSampler)
+Results::Results(NestedSampler &nestedSampler)
+: nestedSampler(nestedSampler)
 {
-    int length;
-
-    dataFilename = inputFilename;
-    length = dataFilename.length();
-    dataFilename = dataFilename.substr(0, length-4) + "-";
-
 } // END Results::Results()
 
 
@@ -53,96 +44,58 @@ Results::~Results()
 
 
 
-// Results::printParameters()
+// Results::writeParametersToFile()
 //
 // PURPOSE: 
-//      Prints the parameters values from the nested sampling
+//      writes the parameters values from the nested sampling
 //      in separate ASCII files having one column format each.
 //      
 // OUTPUT:
 //      void
 // 
 
-void Results::printParameters()
+void Results::writeParametersToFile(string pathPrefix, string outputFileExtension)
 {
-    string prefix1 = "parameter00";
-    string prefix2 = "parameter0";
-    string prefix3 = "parameter";
-    string postfix = ".txt";
-    string filenameString;
-    const char *filename = 0;
-    int Ndimensions;
-    ofstream outputFile;
-
-    Ndimensions = nestedSampler.posteriorSample.rows();
+    int Ndimensions = nestedSampler.posteriorSample.rows();
     assert(Ndimensions > 0);
 
-    if (Ndimensions < 10)
+    // Find out the number of decimal digits that the number of dimensions has
+    
+    int Ndigits = int(floor(log10(double(Ndimensions)))); 
+    
+    // Write everything to the output file
+
+    for (int i = 0; i < Ndimensions; i++)
     {
-        for (int i = 0; i < Ndimensions; i++)
+        // Include the dimension serial number with preceding zeros
+        
+        ostringstream numberString;
+        numberString << setfill('0') << setw(Ndigits) << i;
+        string fullPath = pathPrefix + numberString.str() + outputFileExtension;
+        
+        // Open the output file and check for sanity
+        
+        ofstream outputFile(fullPath.c_str());
+        
+        if (!outputFile.good())
         {
-            filenameString = outputDirectory + dataFilename + prefix1 + to_string(i) + postfix;
-            filename = filenameString.data();
-            outputFile.open(filename);
-            
-            if (!outputFile.good())
-            {
-                    cerr << "Error opening output file" << endl;
-                    exit(EXIT_FAILURE);
-            }
-            
-            outputFile << "# Posterior sample from nested algorithm" << endl;
-            outputFile << "# Parameter 00"+to_string(i) << endl;
-            outputFile << setiosflags(ios::fixed) << setprecision(12);
-            File::oneArrayToFile(outputFile, nestedSampler.posteriorSample.row(i));
-            outputFile.close();
+                cerr << "Error opening output file " << fullPath << endl;
+                exit(EXIT_FAILURE);
         }
+    
+        // Write a header to the output file
+        
+        outputFile << "# Posterior sample from nested algorithm" << endl;
+        outputFile << "# Parameter " + numberString.str() << endl;
+        
+        // Write all values of this particular parameter in our sample to the output file
+        
+        outputFile << setiosflags(ios::scientific) << setprecision(9);
+        File::oneArrayToFile(outputFile, nestedSampler.posteriorSample.row(i));
+        outputFile.close();
     }
-    else
-        if ((Ndimensions >= 10) && (Ndimensions < 100))
-        {
-            for (int i = 0; i < Ndimensions; i++)
-            {
-                filenameString = outputDirectory + dataFilename + prefix2 + to_string(i) + postfix;
-                filename = filenameString.data();
-                outputFile.open(filename);
 
-                if (!outputFile.good())
-                {
-                    cerr << "Error opening output file" << endl;
-                    exit(EXIT_FAILURE);
-                }
-
-                outputFile << "# Posterior sample from nested algorithm" << endl;
-                outputFile << "# Parameter 0"+to_string(i) << endl;
-                outputFile << setiosflags(ios::fixed) << setprecision(12);
-                File::oneArrayToFile(outputFile, nestedSampler.posteriorSample.row(i));
-                outputFile.close();
-            } 
-        }
-    else
-        if (Ndimensions >= 100)
-        {
-            for (int i = 0; i < Ndimensions; i++)
-            {
-                filenameString = outputDirectory + dataFilename + prefix3 + to_string(i) + postfix;
-                filename = filenameString.data();
-                outputFile.open(filename);
-                
-                if (!outputFile.good())
-                {
-                    cerr << "Error opening output file" << endl;
-                    exit(EXIT_FAILURE);
-                }
-                
-                outputFile << "# Posterior sample from nested algorithm" << endl;
-                outputFile << "# Parameter "+to_string(i) << endl;
-                outputFile << setiosflags(ios::fixed) << setprecision(12);
-                File::oneArrayToFile(outputFile, nestedSampler.posteriorSample.row(i));
-                outputFile.close();
-            }
-        }
-} // END Results::printParameters()
+} // END Results::writeParametersToFile()
 
 
 
@@ -152,10 +105,10 @@ void Results::printParameters()
 
 
 
-// Results::printLogLikelihood()
+// Results::writeLogLikelihoodToFile()
 //
 // PURPOSE:
-//      Prints the log likelihood values from the nested sampling
+//      writes the log likelihood values from the nested sampling
 //      into an ASCII file of one column format. The values are
 //      sorted in increasing order.
 //
@@ -163,29 +116,23 @@ void Results::printParameters()
 //      void
 // 
 
-void Results::printLogLikelihood()
+void Results::writeLogLikelihoodToFile(string fullPath)
 {
-    string name = "loglikelihood.txt";
-    string filenameString;
-    const char *filename = 0;
-
-    filenameString = outputDirectory + dataFilename + name;
-    filename = filenameString.data();
-    ofstream outputFile(filename);
+    ofstream outputFile(fullPath.c_str());
             
     if (!outputFile.good())
     {
-        cerr << "Error opening output file" << endl;
+        cerr << "Error opening output file " << fullPath << endl;
         exit(EXIT_FAILURE);
     }
             
     outputFile << "# Posterior sample from nested algorithm" << endl;
     outputFile << "# log Likelihood" << endl;
-    outputFile << setiosflags(ios::fixed) << setprecision(12);
+    outputFile << setiosflags(ios::scientific) << setprecision(9);
     File::oneArrayToFile(outputFile, nestedSampler.logLikelihoodOfPosteriorSample);
     outputFile.close();
 
-} // END Results::printLogLikelihood()
+} // END Results::writeLogLikelihoodToFile()
 
 
 
@@ -196,46 +143,37 @@ void Results::printLogLikelihood()
 
 
 
-// Results::printEvidence()
+// Results::writeEvidenceToFile()
 //
 // PURPOSE:
-//      Prints the evidence from the nested sampling
-//      into an ASCII file. Evidence error
-//      and information Gain are also included.
+//      writes the evidence from the nested sampling into an ASCII file. 
+//      Evidence error and information Gain are also included.
 //
 // OUTPUT:
 //      void
+//
+// TODO: rename this function. Current name doesn't cover what it does.
 // 
 
-void Results::printEvidence()
+void Results::writeEvidenceToFile(string fullPath)
 {
-    string name = "evidence.txt";
-    string filenameString;
-    const char *filename = 0;
-
-    filenameString = outputDirectory + dataFilename + name;
-    filename = filenameString.data();
-    ofstream outputFile(filename);
+    ofstream outputFile(fullPath.c_str());
             
     if (!outputFile.good())
     {
-        cerr << "Error opening output file" << endl;
+        cerr << "Error opening output file"  << fullPath << endl;
         exit(EXIT_FAILURE);
     }
             
     outputFile << "# Evidence results from nested algorithm" << endl;
-    outputFile << "# log Evidence" << endl;
-    outputFile << setiosflags(ios::fixed) << setprecision(12);
-    outputFile << nestedSampler.getLogEvidence() << endl;
-    outputFile << "# ------------------------ #" << endl;
-    outputFile << "# log Evidence Error" << endl;
-    outputFile << nestedSampler.getLogEvidenceError() << endl;
-    outputFile << "# ------------------------ #" << endl;
-    outputFile << "# Information Gain" << endl;
+    outputFile << "# log(Evidence)    Error of log(Evidence)    Information Gain" << endl;
+    outputFile << setiosflags(ios::scientific) << setprecision(9);
+    outputFile << nestedSampler.getLogEvidence() << "    ";
+    outputFile << nestedSampler.getLogEvidenceError() << "    ";
     outputFile << nestedSampler.getInformationGain() << endl;
     outputFile.close();
 
-} // END Results::printEvidence()
+} // END Results::writeEvidenceToFile()
 
 
 
@@ -245,11 +183,11 @@ void Results::printEvidence()
 
 
 
-// Results::printPosterior()
+// Results::writePosteriorToFile()
 //
 // PURPOSE:
-//      Prints the posterior probability for the sample 
-//      obtained from the nested sampling into an ASCII file of one column format. 
+//      writes the posterior probability for the sample obtained from the 
+//      nested sampling into an ASCII file of one column format. 
 //      The values are also stored into the one dimensional Eigen Array
 //      posteriorDistribution.
 //
@@ -257,33 +195,25 @@ void Results::printEvidence()
 //      void
 // 
 
-void Results::printPosterior()
+void Results::writePosteriorToFile(string fullPath)
 {
-    ArrayXd logPosterior;
-    string name = "posterior.txt";
-    string filenameString;
-    const char *filename = 0;
-
-    logPosterior = nestedSampler.logWeightOfPosteriorSample 
-    - nestedSampler.getLogEvidence();
+    ArrayXd logPosterior = nestedSampler.logWeightOfPosteriorSample - nestedSampler.getLogEvidence();
     posteriorDistribution = logPosterior.exp();
 
-    filenameString = outputDirectory + dataFilename + name;
-    filename = filenameString.data();
-    ofstream outputFile(filename);
+    ofstream outputFile(fullPath.c_str());
 
     if (!outputFile.good())
     {
-        cerr << "Error opening output file" << endl;
+        cerr << "Error opening output file"  << fullPath << endl;
         exit(EXIT_FAILURE);
     }
             
     outputFile << "# Posterior probability distribution from nested algorithm" << endl;
-    outputFile << scientific << setprecision(12);
+    outputFile << scientific << setprecision(9);
     File::oneArrayToFile(outputFile, posteriorDistribution);
     outputFile.close();
 
-} // END Results::printPosterior()
+} // END Results::writePosteriorToFile()
 
 
 
@@ -293,76 +223,71 @@ void Results::printPosterior()
 
 
 
-
-// Results::printInference()
+// Results:writeSummaryStatisticsToFile()
 //
 // PURPOSE:
-//      Prints the expectation, median and mode values from the 
+//      computes the expectation, median and mode values from the 
 //      marginalized posterior probability into an ASCII file. 
 //      Shortest Bayesian credible intervals (CI) are also computed.
-//      All the values are stored in to the Eigen Array inferenceResults.
-
+//      All the values are stored in to the Eigen Array summaryStatistics.
+//
 // INPUT:
 //      credibleLevel: a double number providing the desired credible 
 //      level to be computed. Default value correspond to most 
 //      used credible level of 68.27 %.
 //      
 // OUTPUT:
-//      void
+//
+// TODO: - Separate the computing of the summary statistics from the writing to the file.
+//      
 // 
 
-void Results::printInference(const double credibleLevel)
+void Results::writeSummaryStatisticsToFile(string fullPath, const double credibleLevel)
 {
-    string prefix = "inference-";
-    string postfix = "CL.txt";
-    string filenameString;
-    int Ndimensions;
-    int Niterations;
-    const char *filename = 0;
-    ArrayXd marginalParameter;
+    int Ndimensions = nestedSampler.posteriorSample.rows();
+    int Niterations = nestedSampler.posteriorSample.cols();
+    ArrayXd parameterComponent;
     ArrayXd marginalDistribution;
 
-    Ndimensions = nestedSampler.posteriorSample.rows();
-    Niterations = nestedSampler.posteriorSample.cols();
-    inferenceResults.resize(Ndimensions, 5);
+    summaryStatistics.resize(Ndimensions, 5);
 
 
-    // Now loop over all free parameters
+    // Loop over all free parameters
 
     for (int i = 0; i < Ndimensions; i++)
     {
-        marginalParameter = nestedSampler.posteriorSample.row(i);
+        parameterComponent = nestedSampler.posteriorSample.row(i);
         marginalDistribution = posteriorDistribution;
 
 
-        // Sort elements of array marginalParameter in increasing
+        // Sort elements of array parameterComponent in increasing
         // order and sort elements of array marginalDistribution accordingly
         
-        Functions::sortElements(marginalParameter, marginalDistribution); 
+        Functions::sortElements(parameterComponent, marginalDistribution); 
         
 
         // Marginalize over parameter by merging posterior values 
         // corresponding to equal parameter values
 
-        int same = 0;
+        int NduplicateParameterComponents = 0;
 
         for (int j = 0; j < Niterations - 1; j++)
         {  
-            if (marginalParameter(j) == -DBL_MAX)
+            if (parameterComponent(j) == -DBL_MAX)
                 continue;
             else
             {
                 for (int k = j + 1; k < Niterations; k++)
                 {
-                    if (marginalParameter(k) == -DBL_MAX)
+                    if (parameterComponent(k) == -DBL_MAX)
                         continue;
                     else
-                        if (marginalParameter(j) == marginalParameter(k))
+                        if (parameterComponent(j) == parameterComponent(k))
                         {   
-                            marginalParameter(k) = -DBL_MAX;        // Set duplicate to bad value (flag)
+                            parameterComponent(k) = -DBL_MAX;        // Set duplicate to bad value (flag)
                             marginalDistribution(j) = marginalDistribution(j) + marginalDistribution(k); // Merge probability values
                             marginalDistribution(k) = 0.0;
-                            same++;
+                            NduplicateParameterComponents++;
                         }
                 }
             }
@@ -371,21 +296,21 @@ void Results::printInference(const double credibleLevel)
 
         // Remove bad points and store final values in array copies
 
-        if (same > 0) // Check if bad points are present otherwise skip block
+        if (NduplicateParameterComponents > 0) // Check if bad points are present otherwise skip block
         {
-            ArrayXd marginalParameterCopy(Niterations - same);
-            ArrayXd marginalDistributionCopy(Niterations - same);
+            ArrayXd parameterComponentCopy(Niterations - NduplicateParameterComponents);
+            ArrayXd marginalDistributionCopy(Niterations - NduplicateParameterComponents);
         
             int n = 0;
 
-            for (int m = 0; (m < Niterations) && (n < (Niterations - same)); m++)
+            for (int m = 0; (m < Niterations) && (n < (Niterations - NduplicateParameterComponents)); m++)
             {
-                if (marginalParameter(m) == -DBL_MAX)
+                if (parameterComponent(m) == -DBL_MAX)
                     continue;
                 else
-                    if (marginalParameter(m) != -DBL_MAX)
+                    if (parameterComponent(m) != -DBL_MAX)
                         {
-                            marginalParameterCopy(n) = marginalParameter(m);
+                            parameterComponentCopy(n) = parameterComponent(m);
                             marginalDistributionCopy(n) = marginalDistribution(m);
                             n++;
                         }
@@ -394,30 +319,16 @@ void Results::printInference(const double credibleLevel)
 
             // Replace original marginal arrays with array copies
 
-            marginalParameter = marginalParameterCopy;
+            parameterComponent = parameterComponentCopy;
             marginalDistribution = marginalDistributionCopy;
         }
-
-
-        /* // BEGIN TEST
-        marginalParameter.resize(500);
-        marginalDistribution.resize(500);
-    
-        for (int jj = 0; jj < 500; jj++)
-        {
-            marginalParameter(jj) = jj/static_cast<double>(marginalParameter.size()) * 30.;
-            marginalDistribution(jj) = exp(Functions::logGaussProfile(marginalParameter(jj), 10, 1.5, 1));
-        }
-        marginalDistribution = marginalDistribution/marginalDistribution.sum();
-        // END TEST */ 
-
 
         // Compute the mean value (expectation value)
        
         double meanParameter;
         
-        meanParameter = (marginalParameter.cwiseProduct(marginalDistribution)).sum();
-        inferenceResults(i,0) = meanParameter;
+        meanParameter = (parameterComponent.cwiseProduct(marginalDistribution)).sum();
+        summaryStatistics(i,0) = meanParameter;
 
 
         // Compute the median value (value corresponding to 50% of probability)
@@ -428,12 +339,12 @@ void Results::printInference(const double credibleLevel)
         
         while (totalProbability < 0.5)
         {
-            medianParameter = marginalParameter(k);
+            medianParameter = parameterComponent(k);
             totalProbability += marginalDistribution(k);
             k++;
         }
         
-        inferenceResults(i,1) = medianParameter;
+        summaryStatistics(i,1) = medianParameter;
 
 
         // Find the mode value (parameter corresponding to maximum probability value)
@@ -443,8 +354,8 @@ void Results::printInference(const double credibleLevel)
         double maximumParameter;
 
         maximumMarginal = marginalDistribution.maxCoeff(&max);
-        maximumParameter = marginalParameter(max);
-        inferenceResults(i,2) = maximumParameter;
+        maximumParameter = parameterComponent(max);
+        summaryStatistics(i,2) = maximumParameter;
 
         
         // Compute the "shortest" credible intervals (CI)
@@ -455,14 +366,14 @@ void Results::printInference(const double credibleLevel)
         double limitParameterLeft;
         double limitParameterRight;
         ArrayXd marginalDistributionLeft(max + 1);       // Marginal distribution up to mode value
-        ArrayXd marginalParameterLeft(max + 1);          // Parameter range up to mode value
+        ArrayXd parameterComponentLeft(max + 1);          // Parameter range up to mode value
         ArrayXd marginalDifferenceLeft;                  // Difference distribution to find point in 
                                                          // in the left-hand distribution having equal
                                                          // probability to that identified in the right-hand part
         for (int nn = 0; nn <= max; nn++)
         {
             marginalDistributionLeft(nn) = marginalDistribution(nn);          // Consider left-hand distribution (up to mode value)
-            marginalParameterLeft(nn) = marginalParameter(nn);
+            parameterComponentLeft(nn) = parameterComponent(nn);
         }
 
 
@@ -470,14 +381,14 @@ void Results::printInference(const double credibleLevel)
         {
             totalProbability = 0.0;
             limitProbabilityRight = marginalDistribution(max + stepRight);
-            limitParameterRight = marginalParameter(max + stepRight);
+            limitParameterRight = parameterComponent(max + stepRight);
             marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();
 
             int min = 0;
 
             limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);
             limitProbabilityLeft = marginalDistribution(min);
-            limitParameterLeft = marginalParameter(min);
+            limitParameterLeft = parameterComponent(min);
 
             for (int t = min; t <= (max + stepRight); t++)
             {
@@ -493,17 +404,15 @@ void Results::printInference(const double credibleLevel)
         lowerCredibleInterval = maximumParameter - limitParameterLeft;
         upperCredibleInterval = limitParameterRight - maximumParameter;
            
-        inferenceResults(i,3) = lowerCredibleInterval;
-        inferenceResults(i,4) = upperCredibleInterval;
+        summaryStatistics(i,3) = lowerCredibleInterval;
+        summaryStatistics(i,4) = upperCredibleInterval;
 
     }
 
 
     // Write output ASCII file
 
-    filenameString = outputDirectory + dataFilename + prefix + to_string(static_cast<int>(credibleLevel)) + postfix;
-    filename = filenameString.data();
-    ofstream outputFile(filename);
+    ofstream outputFile(fullPath.c_str());
 
     if (!outputFile.good())
     {
@@ -511,7 +420,7 @@ void Results::printInference(const double credibleLevel)
         exit(EXIT_FAILURE);
     }
             
-    outputFile << "# Inference results from nested algorithm" << endl;
+    outputFile << "# Summary statistics from MultiNest algorithm" << endl;
     outputFile << "# Credible intervals are the shortest credible intervals" << endl; 
     outputFile << "# according to the usual definition" << endl;
     outputFile << "# Credible level: " << fixed << setprecision(2) << credibleLevel << " %" << endl;
@@ -521,10 +430,18 @@ void Results::printInference(const double credibleLevel)
     outputFile << "# Column #4: Lower Credible Interval (CI)" << endl;
     outputFile << "# Column #5: Upper Credible Interval (CI)" << endl;
     outputFile << fixed << setprecision(12);
-    File::arrayToFile(outputFile, inferenceResults);
+    File::arrayToFile(outputFile, summaryStatistics);
     outputFile.close();
 
-} // END Results::printInference()
+} // END Results::writeSummaryStatisticsToFile()
+
+
+
+
+
+
+
+
 
 
 
@@ -543,6 +460,9 @@ void Results::printInference(const double credibleLevel)
 // OUTPUT:
 //      An Eigen Array containing the values of the posterior
 //      distribution.
+//
+// TODO: fixme: when this member function is called before any other member function,
+//              the result is undefined
 // 
 
 ArrayXd Results::getPosteriorDistribution()
@@ -561,19 +481,28 @@ ArrayXd Results::getPosteriorDistribution()
 
 
 
-// Results::getInferenceResults()
+// Results::getSummaryStatistics()
 //
 // PURPOSE:
-//      Gets private data member inferenceResults.
+//      Gets private data member summaryStatistics.
 //
 // OUTPUT:
 //      An Eigen Array containing all the values obtained
 //      from the inference analysis of the posterior probability
 //      distribution.
+//
+// TODO: - fixme: when this member function is called before any other member function,
+//                the result is undefined
+//       - fixme: returning an array for which the user has to decipher what quantity is 
+//                located in which array element is not the best practice. Find a better
+//                solution
+//       
 // 
 
-ArrayXXd Results::getInferenceResults()
+ArrayXXd Results::getSummaryStatistics()
 {
-    return inferenceResults;
+    return summaryStatistics;
 
-} // END Results::getInferenceResults()
+} // END Results::getSummaryStatistics()
+
+

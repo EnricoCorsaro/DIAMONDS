@@ -26,24 +26,16 @@ int main(int argc, char *argv[])
 
     // Check number of arguments for main function
     
-    if (argc != 4)
+    if (argc != 3)
     {
-        cerr << "Usage: peakbagging <input directory> <input data filename> <output directory>" << endl;
+        cerr << "Usage: peakbagging <input file> <output directory>" << endl;
         exit(EXIT_FAILURE);
     }
 
 
     // Read data from input file specified
 
-    const char *filename = 0;
-    string inputFilename;
-    string inputDirectory;
-
-    inputFilename = argv[1];
-    inputDirectory = argv[2];
-    filename = (inputFilename + inputDirectory).data();
-
-    ifstream inputFile(filename);
+    ifstream inputFile(argv[1]);
     if (!inputFile.good())
     {
         cerr << "Error opening input file" << endl;
@@ -51,8 +43,6 @@ int main(int argc, char *argv[])
     }
 
     File::snifFile(inputFile, Nrows, Ncols);
-    inputFile.clear();
-    inputFile.seekg(ios::beg);
     data = File::arrayFromFile(inputFile, Nrows, Ncols);
     inputFile.close();
 
@@ -74,14 +64,10 @@ int main(int argc, char *argv[])
 
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
-    parametersMinima(0) = 0.0;
-    parametersMaxima(0) = 20.0;
-    parametersMinima(1) = 0.8;
-    parametersMaxima(1) = 1.5;
-    parametersMinima(2) = 1.0;
-    parametersMaxima(2) = 3.0;
-
-
+    parametersMinima <<  0.0, 0.8, 1.0;
+    parametersMaxima << 20.0, 1.5, 3.0;
+    
+    
     // First step - Setting Prior distribution and parameter space
 
     UniformPrior prior(parametersMinima, parametersMaxima);
@@ -105,12 +91,13 @@ int main(int argc, char *argv[])
 
     // Save the results in an output file
 
-    Results results(nestedSampler, argv[1], argv[2], argv[3]);
-    results.printParameters();
-    results.printLogLikelihood();
-    results.printEvidence();
-    results.printPosterior();
-    results.printInference();
+    Results results(nestedSampler);
+    string outputDirName(argv[2]);
+    results.writeParametersToFile(outputDirName + "/parameter");
+    results.writeLogLikelihoodToFile(outputDirName + "/likelihood.txt");
+    results.writeEvidenceToFile(outputDirName + "evidence.txt");
+    results.writePosteriorToFile(outputDirName + "posterior.txt");
+    results.writeSummaryStatisticsToFile(outputDirName + "summarystatistics.txt");
     
     return EXIT_SUCCESS;
 }

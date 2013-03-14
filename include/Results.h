@@ -10,8 +10,9 @@
 
 
 #include <cstdlib>
-#include <string>
 #include <cfloat>
+#include <cmath>
+#include <string>
 #include <iostream>
 #include <iomanip>
 #include <cassert>
@@ -33,25 +34,24 @@ class Results
 
     public:
  
-        Results(NestedSampler &nestedSampler, const char *inputDirectory, const char *inputFilename, const char *outputDirectory);
+        Results(NestedSampler &nestedSampler);
         ~Results();
 
-        void printParameters();
-        void printLogLikelihood();
-        void printEvidence();
-        void printPosterior();
-        void printInference(const double credibleLevel = 68.27);
+        void writeParametersToFile(string pathPrefix, string outputFileExtension = ".txt");
+        void writeLogLikelihoodToFile(string fullPath);
+        void writeEvidenceToFile(string fullPath);
+        void writePosteriorToFile(string fullPath);
+        void writeSummaryStatisticsToFile(string fullPath, const double credibleLevel = 68.27);
+
         ArrayXd getPosteriorDistribution();
-        ArrayXXd getInferenceResults();
+        ArrayXXd getSummaryStatistics();
 
 
     private:
 
-        const char *outputDirectory;
-        string dataFilename;
         NestedSampler &nestedSampler;
         ArrayXd posteriorDistribution;
-        ArrayXXd inferenceResults;
+        ArrayXXd summaryStatistics;
 
 }; // END class Results
 #endif
