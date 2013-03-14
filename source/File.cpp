@@ -238,7 +238,7 @@ void File::oneArrayToFile(ofstream &outputFile, ArrayXd array, string terminator
 //      - Ncols will constina the number of columns
 //
 // REMARKS:
-//      - the stream is not closed afterwards.
+//      - the stream is not closed afterwards, but it is rewinded.
 //
 
 void File::snifFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char separator, char commentChar)
@@ -282,6 +282,11 @@ void File::snifFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char 
     }
     
     Nrows = iRow;
+    
+    // Rewind the input stream to the beginning
+    
+    inputFile.clear();
+    inputFile.seekg(ios::beg);
 }
 
 
