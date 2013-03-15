@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
     }
 
     File::snifFile(inputFile, Nrows, Ncols);
-    data = File::arrayFromFile(inputFile, Nrows, Ncols);
+    data = File::arrayXXdFromFile(inputFile, Nrows, Ncols);
     inputFile.close();
 
    

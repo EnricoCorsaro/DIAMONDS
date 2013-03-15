@@ -3,7 +3,69 @@
 
 
 
-// File::arrayFromFile()
+// File::openInputFile()
+//
+// PURPOSE: opens a file to read from and check its sanity
+//
+// INPUT:
+//      inputFile: clean input stream
+//      inputFileName: full path of the input file.
+// 
+// OUTPUT:
+//      void
+//
+
+void File::openInputFile(ifstream &inputFile, string inputFileName)
+{
+    inputFile.open(inputFileName.c_str());
+    if (!inputFile.good())
+    {
+        cerr << "Error opening input file " << inputFileName << endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+
+
+
+
+
+
+
+// File::openOutputFile()
+//
+// PURPOSE: opens a file to write and check its sanity
+//
+// INPUT:
+//      outputFile: clean output stream
+//      outputFileName: full path of the output file.
+// 
+// OUTPUT:
+//      void
+//
+
+void File::openOutputFile(ofstream &outputFile, string outputFileName)
+{
+    outputFile.open(outputFileName.c_str());
+    if (!outputFile.good())
+    {
+        cerr << "Error opening input file " << outputFileName << endl;
+        exit(EXIT_FAILURE);
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+// File::arrayXXdFromFile()
 //
 // PURPOSE: reads an ascii file into an Eigen ArrayXXd
 //
@@ -21,7 +83,7 @@
 //      - the stream is not closed afterwards.
 //
 
-ArrayXXd File::arrayFromFile(ifstream &inputFile, const unsigned long Nrows, const int Ncols, char separator, char commentChar)
+ArrayXXd File::arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, const int Ncols, char separator, char commentChar)
 {
     string line;
     unsigned long iRow = 0;
@@ -106,13 +168,16 @@ ArrayXXd File::arrayFromFile(ifstream &inputFile, const unsigned long Nrows, con
 }
 
 
+    
 
 
 
 
 
 
-// File::arrayToFile()
+
+
+// File::arrayXXdToFile()
 //
 // PURPOSE: writes an Eigen ArrayXXd to an ascii file
 //
@@ -130,7 +195,7 @@ ArrayXXd File::arrayFromFile(ifstream &inputFile, const unsigned long Nrows, con
 //      - this function can equally well be used to append to an existing file
 //
 
-void File::arrayToFile(ofstream &outputFile, ArrayXXd array, string separator, string terminator)
+void File::arrayXXdToFile(ofstream &outputFile, ArrayXXd array, string separator, string terminator)
 {
     for (ptrdiff_t i = 0; i < array.rows(); ++i)
     {
@@ -140,7 +205,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXXd array, string separator, s
         }
         outputFile << array(i,array.cols()-1) << terminator;
     }
-} // END File::arrayToFile()
+} 
 
 
 
@@ -149,7 +214,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXXd array, string separator, s
 
 
 
-// File::arrayToFile()
+// File::twoArrayXdToFile()
 //
 // PURPOSE: writes two Eigen::ArrayXd arrays as columns to an ascii file
 //
@@ -169,7 +234,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXXd array, string separator, s
 //      - this function can equally well be used to append to an existing file
 //
 
-void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, string separator, string terminator)
+void File::twoArrayXdToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, string separator, string terminator)
 {
     assert(array1.size() == array2.size());
     
@@ -177,7 +242,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, str
     {
         outputFile << array1(i) << separator << array2(i) << terminator;
     }
-} // END File::arrayToFile()
+}
 
 
 
@@ -189,7 +254,7 @@ void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, str
 
 
 
-// File::oneArrayToFile()
+// File::arrayXdToFile()
 //
 // PURPOSE: writes onw Eigen::ArrayXd arrays as a column to an ascii file
 //
@@ -206,13 +271,56 @@ void File::arrayToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, str
 //      - this function can equally well be used to append to an existing file
 //
 
-void File::oneArrayToFile(ofstream &outputFile, ArrayXd array, string terminator)
+void File::arrayXdToFile(ofstream &outputFile, ArrayXd array, string terminator)
 {
     for (ptrdiff_t i = 0; i < array.size(); ++i)
     {
         outputFile << array(i) << terminator;
     }
-} // END File::oneArrayToFile()
+} 
+
+
+
+
+
+
+
+
+
+
+
+void File::arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fileExtension, string terminator)
+{
+    int Nrows = array.rows();
+    assert(Nrows > 0);
+
+    // Find out the number of decimal digits that the number of dimensions has
+    
+    int Ndigits = int(floor(log10(double(Nrows)))); 
+    
+    // Write everything to the output files
+
+    for (int i = 0; i < Nrows; i++)
+    {
+        // Include the row number with preceding zeros in the filename
+        
+        ostringstream numberString;
+        numberString << setfill('0') << setw(Ndigits) << i;
+        string fullPath = fullPathPrefix + numberString.str() + fileExtension;
+        
+        // Open the output file and check for sanity
+        
+        ofstream outputFile;
+        File::openOutputFile(outputFile, fullPath);
+                
+        // Write all values of this particular parameter in our sample to the output file
+        
+        outputFile << setiosflags(ios::scientific) << setprecision(9);
+        File::arrayXdToFile(outputFile, array.row(i), terminator);
+        outputFile.close();
+    }
+}
+
 
 
 

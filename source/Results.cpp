@@ -14,7 +14,8 @@
 Results::Results(NestedSampler &nestedSampler)
 : nestedSampler(nestedSampler)
 {
-} // END Results::Results()
+} 
+
 
 
 
@@ -33,7 +34,10 @@ Results::Results(NestedSampler &nestedSampler)
 Results::~Results()
 {
 
-} // END Results::~Results()
+}
+
+
+
 
 
 
@@ -56,46 +60,12 @@ Results::~Results()
 
 void Results::writeParametersToFile(string pathPrefix, string outputFileExtension)
 {
-    int Ndimensions = nestedSampler.posteriorSample.rows();
-    assert(Ndimensions > 0);
+    File::arrayXXdRowsToFiles(nestedSampler.posteriorSample, pathPrefix, outputFileExtension);
+}
 
-    // Find out the number of decimal digits that the number of dimensions has
-    
-    int Ndigits = int(floor(log10(double(Ndimensions)))); 
-    
-    // Write everything to the output file
 
-    for (int i = 0; i < Ndimensions; i++)
-    {
-        // Include the dimension serial number with preceding zeros
-        
-        ostringstream numberString;
-        numberString << setfill('0') << setw(Ndigits) << i;
-        string fullPath = pathPrefix + numberString.str() + outputFileExtension;
-        
-        // Open the output file and check for sanity
-        
-        ofstream outputFile(fullPath.c_str());
-        
-        if (!outputFile.good())
-        {
-                cerr << "Error opening output file " << fullPath << endl;
-                exit(EXIT_FAILURE);
-        }
-    
-        // Write a header to the output file
-        
-        outputFile << "# Posterior sample from nested algorithm" << endl;
-        outputFile << "# Parameter " + numberString.str() << endl;
-        
-        // Write all values of this particular parameter in our sample to the output file
-        
-        outputFile << setiosflags(ios::scientific) << setprecision(9);
-        File::oneArrayToFile(outputFile, nestedSampler.posteriorSample.row(i));
-        outputFile.close();
-    }
 
-} // END Results::writeParametersToFile()
+
 
 
 
@@ -118,21 +88,17 @@ void Results::writeParametersToFile(string pathPrefix, string outputFileExtensio
 
 void Results::writeLogLikelihoodToFile(string fullPath)
 {
-    ofstream outputFile(fullPath.c_str());
-            
-    if (!outputFile.good())
-    {
-        cerr << "Error opening output file " << fullPath << endl;
-        exit(EXIT_FAILURE);
-    }
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
             
     outputFile << "# Posterior sample from nested algorithm" << endl;
     outputFile << "# log Likelihood" << endl;
     outputFile << setiosflags(ios::scientific) << setprecision(9);
-    File::oneArrayToFile(outputFile, nestedSampler.logLikelihoodOfPosteriorSample);
+    File::arrayXdToFile(outputFile, nestedSampler.logLikelihoodOfPosteriorSample);
     outputFile.close();
 
-} // END Results::writeLogLikelihoodToFile()
+}
+
 
 
 
@@ -157,13 +123,8 @@ void Results::writeLogLikelihoodToFile(string fullPath)
 
 void Results::writeEvidenceToFile(string fullPath)
 {
-    ofstream outputFile(fullPath.c_str());
-            
-    if (!outputFile.good())
-    {
-        cerr << "Error opening output file"  << fullPath << endl;
-        exit(EXIT_FAILURE);
-    }
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
             
     outputFile << "# Evidence results from nested algorithm" << endl;
     outputFile << "# log(Evidence)    Error of log(Evidence)    Information Gain" << endl;
@@ -173,7 +134,10 @@ void Results::writeEvidenceToFile(string fullPath)
     outputFile << nestedSampler.getInformationGain() << endl;
     outputFile.close();
 
-} // END Results::writeEvidenceToFile()
+} 
+
+
+
 
 
 
@@ -200,20 +164,15 @@ void Results::writePosteriorToFile(string fullPath)
     ArrayXd logPosterior = nestedSampler.logWeightOfPosteriorSample - nestedSampler.getLogEvidence();
     posteriorDistribution = logPosterior.exp();
 
-    ofstream outputFile(fullPath.c_str());
-
-    if (!outputFile.good())
-    {
-        cerr << "Error opening output file"  << fullPath << endl;
-        exit(EXIT_FAILURE);
-    }
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
             
     outputFile << "# Posterior probability distribution from nested algorithm" << endl;
     outputFile << scientific << setprecision(9);
-    File::oneArrayToFile(outputFile, posteriorDistribution);
+    File::arrayXdToFile(outputFile, posteriorDistribution);
     outputFile.close();
 
-} // END Results::writePosteriorToFile()
+} 
 
 
 
@@ -412,13 +371,8 @@ void Results::writeSummaryStatisticsToFile(string fullPath, const double credibl
 
     // Write output ASCII file
 
-    ofstream outputFile(fullPath.c_str());
-
-    if (!outputFile.good())
-    {
-        cerr << "Error opening output file" << endl;
-        exit(EXIT_FAILURE);
-    }
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
             
     outputFile << "# Summary statistics from MultiNest algorithm" << endl;
     outputFile << "# Credible intervals are the shortest credible intervals" << endl; 
@@ -430,10 +384,10 @@ void Results::writeSummaryStatisticsToFile(string fullPath, const double credibl
     outputFile << "# Column #4: Lower Credible Interval (CI)" << endl;
     outputFile << "# Column #5: Upper Credible Interval (CI)" << endl;
     outputFile << fixed << setprecision(12);
-    File::arrayToFile(outputFile, summaryStatistics);
+    File::arrayXXdToFile(outputFile, summaryStatistics);
     outputFile.close();
 
-} // END Results::writeSummaryStatisticsToFile()
+} 
 
 
 
@@ -468,8 +422,7 @@ void Results::writeSummaryStatisticsToFile(string fullPath, const double credibl
 ArrayXd Results::getPosteriorDistribution()
 {
     return posteriorDistribution;
-
-} // END Results::getPosteriorDistribution()
+}
 
 
 
@@ -502,7 +455,6 @@ ArrayXd Results::getPosteriorDistribution()
 ArrayXXd Results::getSummaryStatistics()
 {
     return summaryStatistics;
-
-} // END Results::getSummaryStatistics()
+}
 
 
