@@ -64,7 +64,7 @@ int main(int argc, char *argv[])
 
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
-    parametersMinima <<  0.0, 0.8, 1.0;
+    parametersMinima <<  0.0, 0.8, 1.0;         // Centroid, Amplitude, Gamma
     parametersMaxima << 20.0, 1.5, 3.0;
     
     
@@ -95,9 +95,9 @@ int main(int argc, char *argv[])
     string outputDirName(argv[2]);
     results.writeParametersToFile(outputDirName + "/parameter");
     results.writeLogLikelihoodToFile(outputDirName + "/likelihood.txt");
-    results.writeEvidenceToFile(outputDirName + "evidence.txt");
-    results.writePosteriorToFile(outputDirName + "posterior.txt");
-    results.writeSummaryStatisticsToFile(outputDirName + "summarystatistics.txt");
+    results.writeEvidenceInformationToFile(outputDirName + "evidence.txt");
+    results.writePosteriorProbabilityToFile(outputDirName + "posterior.txt");
+    results.writeParameterEstimationToFile(outputDirName + "summarystatistics.txt");
     
     return EXIT_SUCCESS;
 }

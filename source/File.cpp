@@ -5,7 +5,8 @@
 
 // File::openInputFile()
 //
-// PURPOSE: opens a file to read from and check its sanity
+// PURPOSE: 
+//      Opens a file to read from and check its sanity
 //
 // INPUT:
 //      inputFile: clean input stream
@@ -35,7 +36,8 @@ void File::openInputFile(ifstream &inputFile, string inputFileName)
 
 // File::openOutputFile()
 //
-// PURPOSE: opens a file to write and check its sanity
+// PURPOSE: 
+//      Opens a file to write and check its sanity
 //
 // INPUT:
 //      outputFile: clean output stream
@@ -67,7 +69,8 @@ void File::openOutputFile(ofstream &outputFile, string outputFileName)
 
 // File::arrayXXdFromFile()
 //
-// PURPOSE: reads an ascii file into an Eigen ArrayXXd
+// PURPOSE: 
+//      Reads an ascii file into an Eigen ArrayXXd
 //
 // INPUT:
 //      inputFile: input stream. Supposed to be already opened, and checked for sanity.
@@ -93,17 +96,20 @@ ArrayXXd File::arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, 
     while(!inputFile.eof())
     {
         getline(inputFile, line);
-        
+    
+
         // Skip those lines that start with the comment character
         
         if (line[0] == commentChar) continue; 
-        
+    
+
         // Skip those lines with only whitespace
         
         const std::string whitespace = " \t";
         const auto strBegin = line.find_first_not_of(whitespace);
         if (strBegin == string::npos) continue;
-        
+    
+
         // Check if the line number doesn't exceed the expected number of lines
         
         if (iRow > Nrows-1)
@@ -111,7 +117,8 @@ ArrayXXd File::arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, 
             cerr << "Error: numbers of rows in file exceeds " << Nrows << endl;
             exit(EXIT_FAILURE);
         }
-        
+    
+
         // Tokenize the line into chuncks delimited by separator
         
         vector<string> tokens;
@@ -123,7 +130,8 @@ ArrayXXd File::arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, 
             begin = line.find_first_not_of(separator, end);
             end = line.find_first_of(separator, begin);
         }
-        
+    
+
         // Check if the number of numbers on the line matches the expected
         // number of columns
         
@@ -133,7 +141,8 @@ ArrayXXd File::arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, 
                  << Ncols << endl;
             exit(EXIT_FAILURE);
         }
-        
+    
+
         // Convert the strings to numbers, and store them in the array
         
         iCol = 0;
@@ -157,6 +166,7 @@ ArrayXXd File::arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, 
         iRow++;
     }
     
+
     // Check if the current line number is less than the expected number of lines
     
     if (iRow < Nrows)
@@ -216,7 +226,8 @@ void File::arrayXXdToFile(ofstream &outputFile, ArrayXXd array, string separator
 
 // File::twoArrayXdToFile()
 //
-// PURPOSE: writes two Eigen::ArrayXd arrays as columns to an ascii file
+// PURPOSE: 
+//      Writes two Eigen::ArrayXd arrays as columns to an ascii file
 //
 // INPUT:
 //      outputFile: output stream, assumed to be already opened and checked for sanity.
@@ -256,7 +267,8 @@ void File::twoArrayXdToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2
 
 // File::arrayXdToFile()
 //
-// PURPOSE: writes onw Eigen::ArrayXd arrays as a column to an ascii file
+// PURPOSE: 
+//      Writes onw Eigen::ArrayXd arrays as a column to an ascii file
 //
 // INPUT:
 //      outputFile: output stream, assumed to be already opened and checked for sanity.
@@ -294,10 +306,12 @@ void File::arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fil
     int Nrows = array.rows();
     assert(Nrows > 0);
 
+
     // Find out the number of decimal digits that the number of dimensions has
     
     int Ndigits = int(floor(log10(double(Nrows)))); 
     
+
     // Write everything to the output files
 
     for (int i = 0; i < Nrows; i++)
@@ -307,12 +321,14 @@ void File::arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fil
         ostringstream numberString;
         numberString << setfill('0') << setw(Ndigits) << i;
         string fullPath = fullPathPrefix + numberString.str() + fileExtension;
-        
+       
+
         // Open the output file and check for sanity
         
         ofstream outputFile;
         File::openOutputFile(outputFile, fullPath);
-                
+       
+
         // Write all values of this particular parameter in our sample to the output file
         
         outputFile << setiosflags(ios::scientific) << setprecision(9);
@@ -333,7 +349,8 @@ void File::arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fil
 
 // File::snifFile()
 //
-// PURPOSE: checks a file and derives the number of rows and columns
+// PURPOSE: 
+//      Checks a file and derives the number of rows and columns
 //
 // INPUT:
 //      inputFile: input stream, assumed to be already opened and checked for sanity.
@@ -357,11 +374,13 @@ void File::snifFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char 
     while(!inputFile.eof())
     {
         getline(inputFile, line);
-        
+    
+
         // Skip those lines that start with the comment character
         
         if (line[0] == commentChar) continue; 
-        
+    
+
         // Skip those lines with only whitespace
         
         const std::string whitespace = " \t";
@@ -391,6 +410,7 @@ void File::snifFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char 
     
     Nrows = iRow;
     
+
     // Rewind the input stream to the beginning
     
     inputFile.clear();

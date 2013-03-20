@@ -36,22 +36,26 @@ class Results
  
         Results(NestedSampler &nestedSampler);
         ~Results();
+        
+        
+        // Save results to output Egein Arrays
 
+        ArrayXd posteriorProbability();
+        ArrayXXd parameterEstimation(const double credibleLevel = 68.27);
+        
+
+        // Write to output files
+        
         void writeParametersToFile(string pathPrefix, string outputFileExtension = ".txt");
         void writeLogLikelihoodToFile(string fullPath);
-        void writeEvidenceToFile(string fullPath);
-        void writePosteriorToFile(string fullPath);
-        void writeSummaryStatisticsToFile(string fullPath, const double credibleLevel = 68.27);
-
-        ArrayXd getPosteriorDistribution();
-        ArrayXXd getSummaryStatistics();
+        void writeEvidenceInformationToFile(string fullPath);
+        void writePosteriorProbabilityToFile(string fullPath);
+        void writeParameterEstimationToFile(string fullPath, const double credibleLevel = 68.27);
 
 
     private:
 
         NestedSampler &nestedSampler;
-        ArrayXd posteriorDistribution;
-        ArrayXXd summaryStatistics;
 
 }; // END class Results
 #endif

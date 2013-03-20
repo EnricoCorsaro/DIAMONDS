@@ -47,20 +47,26 @@ Results::~Results()
 
 
 
-
-// Results::writeParametersToFile()
+// Results::posteriorProbability()
 //
-// PURPOSE: 
-//      writes the parameters values from the nested sampling
-//      in separate ASCII files having one column format each.
-//      
+// PURPOSE:
+//      Saves the posterior probability for the sample obtained from the 
+//      nested sampling into a one dimensional Eigen Array. 
+//
 // OUTPUT:
-//      void
+//      An Eigen Array containing the values of the posterior probability
+//      sorted according to the nesting algorithm process.
 // 
+// REMARK:
+//      Values are real probabilities (and not probability densities).
+//
 
-void Results::writeParametersToFile(string pathPrefix, string outputFileExtension)
+ArrayXd Results::posteriorProbability()
 {
-    File::arrayXXdRowsToFiles(nestedSampler.posteriorSample, pathPrefix, outputFileExtension);
+    ArrayXd logPosteriorDistribution = nestedSampler.logWeightOfPosteriorSample - nestedSampler.getLogEvidence();
+    ArrayXd posteriorDistribution = logPosteriorDistribution.exp();
+    
+    return posteriorDistribution;
 }
 
 
@@ -71,144 +77,35 @@ void Results::writeParametersToFile(string pathPrefix, string outputFileExtensio
 
 
 
-
-
-
-
-// Results::writeLogLikelihoodToFile()
-//
-// PURPOSE:
-//      writes the log likelihood values from the nested sampling
-//      into an ASCII file of one column format. The values are
-//      sorted in increasing order.
-//
-// OUTPUT:
-//      void
-// 
-
-void Results::writeLogLikelihoodToFile(string fullPath)
-{
-    ofstream outputFile;
-    File::openOutputFile(outputFile, fullPath);
-            
-    outputFile << "# Posterior sample from nested algorithm" << endl;
-    outputFile << "# log Likelihood" << endl;
-    outputFile << setiosflags(ios::scientific) << setprecision(9);
-    File::arrayXdToFile(outputFile, nestedSampler.logLikelihoodOfPosteriorSample);
-    outputFile.close();
-
-}
-
-
-
-
-
-
-
-
-
-
-
-// Results::writeEvidenceToFile()
-//
-// PURPOSE:
-//      writes the evidence from the nested sampling into an ASCII file. 
-//      Evidence error and information Gain are also included.
-//
-// OUTPUT:
-//      void
-//
-// TODO: rename this function. Current name doesn't cover what it does.
-// 
-
-void Results::writeEvidenceToFile(string fullPath)
-{
-    ofstream outputFile;
-    File::openOutputFile(outputFile, fullPath);
-            
-    outputFile << "# Evidence results from nested algorithm" << endl;
-    outputFile << "# log(Evidence)    Error of log(Evidence)    Information Gain" << endl;
-    outputFile << setiosflags(ios::scientific) << setprecision(9);
-    outputFile << nestedSampler.getLogEvidence() << "    ";
-    outputFile << nestedSampler.getLogEvidenceError() << "    ";
-    outputFile << nestedSampler.getInformationGain() << endl;
-    outputFile.close();
-
-} 
-
-
-
-
-
-
-
-
-
-
-
-
-// Results::writePosteriorToFile()
-//
-// PURPOSE:
-//      writes the posterior probability for the sample obtained from the 
-//      nested sampling into an ASCII file of one column format. 
-//      The values are also stored into the one dimensional Eigen Array
-//      posteriorDistribution.
-//
-// OUTPUT:
-//      void
-// 
-
-void Results::writePosteriorToFile(string fullPath)
-{
-    ArrayXd logPosterior = nestedSampler.logWeightOfPosteriorSample - nestedSampler.getLogEvidence();
-    posteriorDistribution = logPosterior.exp();
-
-    ofstream outputFile;
-    File::openOutputFile(outputFile, fullPath);
-            
-    outputFile << "# Posterior probability distribution from nested algorithm" << endl;
-    outputFile << scientific << setprecision(9);
-    File::arrayXdToFile(outputFile, posteriorDistribution);
-    outputFile.close();
-
-} 
-
-
-
-
-
-
-
-
-
-// Results:writeSummaryStatisticsToFile()
+// Results:writeParameterEstimationToFile()
 //
 // PURPOSE:
 //      computes the expectation, median and mode values from the 
-//      marginalized posterior probability into an ASCII file. 
+//      marginalized posterior probability. 
 //      Shortest Bayesian credible intervals (CI) are also computed.
-//      All the values are stored in to the Eigen Array summaryStatistics.
+//      All the values are stored in to a bidimensional nEigen Array.
 //
 // INPUT:
 //      credibleLevel: a double number providing the desired credible 
-//      level to be computed. Default value correspond to most 
+//      level to be computed. Default value corresponds to most 
 //      used credible level of 68.27 %.
 //      
 // OUTPUT:
-//
-// TODO: - Separate the computing of the summary statistics from the writing to the file.
-//      
+//      A bidimensional Eigen Array containing all the estimates of the
+//      free parameters (one parameter per row).
 // 
 
-void Results::writeSummaryStatisticsToFile(string fullPath, const double credibleLevel)
+ArrayXXd Results::parameterEstimation(const double credibleLevel)
 {
     int Ndimensions = nestedSampler.posteriorSample.rows();
     int Niterations = nestedSampler.posteriorSample.cols();
     ArrayXd parameterComponent;
     ArrayXd marginalDistribution;
+    ArrayXd posteriorDistribution = posteriorProbability();
+    ArrayXXd parameterEstimates;
 
-    summaryStatistics.resize(Ndimensions, 5);
+
+    parameterEstimates.resize(Ndimensions, 5);
 
 
     // Loop over all free parameters
@@ -282,12 +179,13 @@ void Results::writeSummaryStatisticsToFile(string fullPath, const double credibl
             marginalDistribution = marginalDistributionCopy;
         }
 
+
         // Compute the mean value (expectation value)
        
         double meanParameter;
         
         meanParameter = (parameterComponent.cwiseProduct(marginalDistribution)).sum();
-        summaryStatistics(i,0) = meanParameter;
+        parameterEstimates(i,0) = meanParameter;
 
 
         // Compute the median value (value corresponding to 50% of probability)
@@ -303,7 +201,7 @@ void Results::writeSummaryStatisticsToFile(string fullPath, const double credibl
             k++;
         }
         
-        summaryStatistics(i,1) = medianParameter;
+        parameterEstimates(i,1) = medianParameter;
 
 
         // Find the mode value (parameter corresponding to maximum probability value)
@@ -314,7 +212,7 @@ void Results::writeSummaryStatisticsToFile(string fullPath, const double credibl
 
         maximumMarginal = marginalDistribution.maxCoeff(&max);
         maximumParameter = parameterComponent(max);
-        summaryStatistics(i,2) = maximumParameter;
+        parameterEstimates(i,2) = maximumParameter;
 
         
         // Compute the "shortest" credible intervals (CI)
@@ -363,28 +261,108 @@ void Results::writeSummaryStatisticsToFile(string fullPath, const double credibl
         lowerCredibleInterval = maximumParameter - limitParameterLeft;
         upperCredibleInterval = limitParameterRight - maximumParameter;
            
-        summaryStatistics(i,3) = lowerCredibleInterval;
-        summaryStatistics(i,4) = upperCredibleInterval;
+        parameterEstimates(i,3) = lowerCredibleInterval;
+        parameterEstimates(i,4) = upperCredibleInterval;
 
     }
 
+    return parameterEstimates;
+}
 
-    // Write output ASCII file
 
+
+
+
+
+
+
+
+
+
+
+
+// Results::writeParametersToFile()
+//
+// PURPOSE: 
+//      writes the parameters values from the nested sampling
+//      in separate ASCII files having one column format each.
+//      
+// OUTPUT:
+//      void
+// 
+
+void Results::writeParametersToFile(string pathPrefix, string outputFileExtension)
+{
+    File::arrayXXdRowsToFiles(nestedSampler.posteriorSample, pathPrefix, outputFileExtension);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Results::writeLogLikelihoodToFile()
+//
+// PURPOSE:
+//      writes the log likelihood values from the nested sampling
+//      into an ASCII file of one column format. The values are
+//      sorted in increasing order.
+//
+// OUTPUT:
+//      void
+// 
+
+void Results::writeLogLikelihoodToFile(string fullPath)
+{
     ofstream outputFile;
     File::openOutputFile(outputFile, fullPath);
             
-    outputFile << "# Summary statistics from MultiNest algorithm" << endl;
-    outputFile << "# Credible intervals are the shortest credible intervals" << endl; 
-    outputFile << "# according to the usual definition" << endl;
-    outputFile << "# Credible level: " << fixed << setprecision(2) << credibleLevel << " %" << endl;
-    outputFile << "# Column #1: Expectation" << endl;
-    outputFile << "# Column #2: Median" << endl;
-    outputFile << "# Column #3: Mode" << endl;
-    outputFile << "# Column #4: Lower Credible Interval (CI)" << endl;
-    outputFile << "# Column #5: Upper Credible Interval (CI)" << endl;
-    outputFile << fixed << setprecision(12);
-    File::arrayXXdToFile(outputFile, summaryStatistics);
+    outputFile << "# Posterior sample from nested sampling" << endl;
+    outputFile << "# log Likelihood" << endl;
+    outputFile << setiosflags(ios::scientific) << setprecision(9);
+    File::arrayXdToFile(outputFile, nestedSampler.logLikelihoodOfPosteriorSample);
+    outputFile.close();
+
+}
+
+
+
+
+
+
+
+
+
+
+
+// Results::writeEvidenceInformationToFile()
+//
+// PURPOSE:
+//      writes the evidence from the nested sampling into an ASCII file. 
+//      Evidence error and information Gain are also included.
+//
+// OUTPUT:
+//      void
+//
+
+void Results::writeEvidenceInformationToFile(string fullPath)
+{
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+            
+    outputFile << "# Evidence results from nested sampling" << endl;
+    outputFile << "# log(Evidence)    Error of log(Evidence)    Information Gain" << endl;
+    outputFile << setiosflags(ios::scientific) << setprecision(9);
+    outputFile << nestedSampler.getLogEvidence() << "    ";
+    outputFile << nestedSampler.getLogEvidenceError() << "    ";
+    outputFile << nestedSampler.getInformationGain() << endl;
     outputFile.close();
 
 } 
@@ -400,29 +378,29 @@ void Results::writeSummaryStatisticsToFile(string fullPath, const double credibl
 
 
 
-
-
-
-
-
-
-// Results::getPosteriorDistribution()
+// Results::writePosteriorProbabilityToFile()
 //
 // PURPOSE:
-//      Gets private data member posteriorDistribution.
+//      writes the posterior probability for the sample obtained from the 
+//      nested sampling into an ASCII file of one column format.
 //
 // OUTPUT:
-//      An Eigen Array containing the values of the posterior
-//      distribution.
-//
-// TODO: fixme: when this member function is called before any other member function,
-//              the result is undefined
+//      void
 // 
 
-ArrayXd Results::getPosteriorDistribution()
+void Results::writePosteriorProbabilityToFile(string fullPath)
 {
-    return posteriorDistribution;
-}
+    ArrayXd posteriorDistribution = posteriorProbability();
+
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+            
+    outputFile << "# Posterior probability distribution from nested sampling" << endl;
+    outputFile << scientific << setprecision(9);
+    File::arrayXdToFile(outputFile, posteriorDistribution);
+    outputFile.close();
+
+} 
 
 
 
@@ -432,29 +410,46 @@ ArrayXd Results::getPosteriorDistribution()
 
 
 
-
-
-// Results::getSummaryStatistics()
+// Results:writeParameterEstimationToFile()
 //
 // PURPOSE:
-//      Gets private data member summaryStatistics.
+//      Writes the expectation, median and mode values from the 
+//      marginalized posterior probability into an ASCII file. 
+//      Shortest Bayesian credible intervals (CI) are also included.
 //
+// INPUT:
+//      credibleLevel: a double number providing the desired credible 
+//      level to be computed. Default value correspond to most 
+//      used credible level of 68.27 %.
+//      
 // OUTPUT:
-//      An Eigen Array containing all the values obtained
-//      from the inference analysis of the posterior probability
-//      distribution.
 //
-// TODO: - fixme: when this member function is called before any other member function,
-//                the result is undefined
-//       - fixme: returning an array for which the user has to decipher what quantity is 
-//                located in which array element is not the best practice. Find a better
-//                solution
-//       
 // 
 
-ArrayXXd Results::getSummaryStatistics()
+void Results::writeParameterEstimationToFile(string fullPath, const double credibleLevel)
 {
-    return summaryStatistics;
-}
+    ArrayXXd parameterEstimates = parameterEstimation(credibleLevel);
+
+
+    // Write output ASCII file
+
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+            
+    outputFile << "# Summary of Parameter Estimation from nested sampling" << endl;
+    outputFile << "# Credible intervals are the shortest credible intervals" << endl; 
+    outputFile << "# according to the usual definition" << endl;
+    outputFile << "# Credible level: " << fixed << setprecision(2) << credibleLevel << " %" << endl;
+    outputFile << "# Column #1: Expectation" << endl;
+    outputFile << "# Column #2: Median" << endl;
+    outputFile << "# Column #3: Mode" << endl;
+    outputFile << "# Column #4: Lower Credible Interval (CI)" << endl;
+    outputFile << "# Column #5: Upper Credible Interval (CI)" << endl;
+    outputFile << fixed << setprecision(12);
+    File::arrayXXdToFile(outputFile, parameterEstimates);
+    outputFile.close();
+
+} 
+
 
 
