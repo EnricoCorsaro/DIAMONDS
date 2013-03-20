@@ -325,8 +325,8 @@ void Results::writeLogLikelihoodToFile(string fullPath)
     File::openOutputFile(outputFile, fullPath);
             
     outputFile << "# Posterior sample from nested sampling" << endl;
-    outputFile << "# log Likelihood" << endl;
-    outputFile << setiosflags(ios::scientific) << setprecision(9);
+    outputFile << "# log(Likelihood)" << endl;
+    outputFile << scientific << setprecision(9);
     File::arrayXdToFile(outputFile, nestedSampler.logLikelihoodOfPosteriorSample);
     outputFile.close();
 
@@ -358,10 +358,10 @@ void Results::writeEvidenceInformationToFile(string fullPath)
     File::openOutputFile(outputFile, fullPath);
             
     outputFile << "# Evidence results from nested sampling" << endl;
-    outputFile << "# log(Evidence)    Error of log(Evidence)    Information Gain" << endl;
-    outputFile << setiosflags(ios::scientific) << setprecision(9);
-    outputFile << nestedSampler.getLogEvidence() << "    ";
-    outputFile << nestedSampler.getLogEvidenceError() << "    ";
+    outputFile << "# log(Evidence)" << setw(12) << "Error of log(Evidence)" << setw(12) << "Information Gain" << endl;
+    outputFile << scientific << setprecision(9);
+    outputFile << nestedSampler.getLogEvidence() << setw(12);
+    outputFile << nestedSampler.getLogEvidenceError() << setw(12);
     outputFile << nestedSampler.getInformationGain() << endl;
     outputFile.close();
 
@@ -445,7 +445,7 @@ void Results::writeParameterEstimationToFile(string fullPath, const double credi
     outputFile << "# Column #3: Mode" << endl;
     outputFile << "# Column #4: Lower Credible Interval (CI)" << endl;
     outputFile << "# Column #5: Upper Credible Interval (CI)" << endl;
-    outputFile << fixed << setprecision(12);
+    outputFile << scientific << setprecision(9);
     File::arrayXXdToFile(outputFile, parameterEstimates);
     outputFile.close();
 

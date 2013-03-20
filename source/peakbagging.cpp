@@ -95,9 +95,9 @@ int main(int argc, char *argv[])
     string outputDirName(argv[2]);
     results.writeParametersToFile(outputDirName + "/parameter");
     results.writeLogLikelihoodToFile(outputDirName + "/likelihood.txt");
-    results.writeEvidenceInformationToFile(outputDirName + "evidence.txt");
-    results.writePosteriorProbabilityToFile(outputDirName + "posterior.txt");
-    results.writeParameterEstimationToFile(outputDirName + "summarystatistics.txt");
+    results.writeEvidenceInformationToFile(outputDirName + "/evidence.txt");
+    results.writePosteriorProbabilityToFile(outputDirName + "/posterior.txt");
+    results.writeParameterEstimationToFile(outputDirName + "/parameterestimation.txt");
     
     return EXIT_SUCCESS;
 }

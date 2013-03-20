@@ -319,7 +319,7 @@ void File::arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fil
         // Include the row number with preceding zeros in the filename
         
         ostringstream numberString;
-        numberString << setfill('0') << setw(Ndigits) << i;
+        numberString << setfill('0') << setw(3-Ndigits) << i;
         string fullPath = fullPathPrefix + numberString.str() + fileExtension;
        
 
