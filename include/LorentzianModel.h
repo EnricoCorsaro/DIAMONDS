@@ -25,7 +25,7 @@ class LorentzianModel : public Model
         ~LorentzianModel();
 
         virtual void predict(RefArrayXd predictions, const RefArrayXd nestedSampleOfParameters);
-        int getParametersNumber();
+        int getNparameters();
        
 
     protected:
@@ -33,7 +33,7 @@ class LorentzianModel : public Model
 
     private:
 
-        int parametersNumber;
+        int Nparameters;
     
 }; // END class LorentzianModel
 

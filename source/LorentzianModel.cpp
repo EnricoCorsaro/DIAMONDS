@@ -15,8 +15,7 @@ LorentzianModel::LorentzianModel(const RefArrayXd covariates)
 : Model(covariates)
 {
 
-} // END LorentzianModel::LorentzianModel
-
+}
 
 
 
@@ -33,8 +32,7 @@ LorentzianModel::LorentzianModel(const RefArrayXd covariates)
 LorentzianModel::~LorentzianModel()
 {
 
-} // END LorentzianModel::~LorentzianModel
-
+}
 
 
 
@@ -67,7 +65,7 @@ LorentzianModel::~LorentzianModel()
 
 void LorentzianModel::predict(RefArrayXd predictions, const RefArrayXd nestedSampleOfParameters)
 {
-    parametersNumber = nestedSampleOfParameters.size();
+    Nparameters = nestedSampleOfParameters.size();
 
     if (parametersNumber == 1)
     {
@@ -88,7 +86,7 @@ void LorentzianModel::predict(RefArrayXd predictions, const RefArrayXd nestedSam
         cerr << "Number of free parameters does not match model Lorentzian. Quitting program." << endl;
         exit(EXIT_FAILURE);
     }
-} // END LorentzianModel::predict()
+}
 
 
 
@@ -96,18 +94,17 @@ void LorentzianModel::predict(RefArrayXd predictions, const RefArrayXd nestedSam
 
 
 
-
-// LorentzianModel::getParametersNumber()
+// LorentzianModel::getNparameters()
 //
 // PURPOSE: 
-//      Get the private data member parametersNumber;
+//      Get the private data member Nparameters;
 //
 // OUTPUT:
 //      Returns an integer containing the total number of 
 //      free parameters used in the model.
 //
 
-int LorentzianModel::getParametersNumber()
+int LorentzianModel::getNparameters()
 {
-    return parametersNumber;
-} // END LorentzianModel::getParametersNumber()
+    return Nparameters;
+}
