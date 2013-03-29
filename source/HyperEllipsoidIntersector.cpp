@@ -68,28 +68,28 @@ int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd
     assert(centerCoordinates1.size() == centerCoordinates2.size());
     assert(covarianceMatrix1.cols() == centerCoordinates1.size());
 
-    int Ndim = centerCoordinates1.size()
+    int Ndimensions = centerCoordinates1.size()
 
 
     // Construct translation matrix
 
-    MatrixXd T1 = MatrixXd::Identity(Ndim+1,Ndim+1);
-    MatrixXd T2 = MatrixXd::Identity(Ndim+1,Ndim+1);
+    MatrixXd T1 = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
+    MatrixXd T2 = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
     
-    T1.bottomLeftCorner(1,Ndim) = -1.*centerCoordinates1.transpose();
-    T2.bottomLeftCorner(1,Ndim) = -1.*centerCoordinates2.transpose();
+    T1.bottomLeftCorner(1,Ndimensions) = -1.*centerCoordinates1.transpose();
+    T2.bottomLeftCorner(1,Ndimensions) = -1.*centerCoordinates2.transpose();
 
 
     // Construct ellipsoid matrix in homogeneous coordinates
 
-    MatrixXd A = MatrixXd::Zero(Ndim+1,Ndim+1);
+    MatrixXd A = MatrixXd::Zero(Ndimensions+1,Ndimensions+1);
     MatrixXd B = A;
 
-    A(Ndim,Ndim) = -1;
-    B(Ndim,Ndim) = -1;
+    A(Ndimensions,Ndimensions) = -1;
+    B(Ndimensions,Ndimensions) = -1;
     
-    A.topLeftCorner(Ndim,Ndim) = covarianceMatrix1.matrix().inverse();
-    B.topLeftCorner(Ndim,Ndim) = covarianceMatrix2.matrix().inverse();
+    A.topLeftCorner(Ndimensions,Ndimensions) = covarianceMatrix1.matrix().inverse();
+    B.topLeftCorner(Ndimensions,Ndimensions) = covarianceMatrix2.matrix().inverse();
 
     MatrixXd AT = T*A*T.transpose();        // Translating to ellispoid center
     MatrixXd BT = T*B*T.transpose();        // Translating to ellispoid center
@@ -99,9 +99,9 @@ int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd
     // and derive its eigenvalues decomposition
 
     MatrixXd C = AT.inverse() * BT;
-    MatrixXcd CC(Ndim+1,Ndim+1);
+    MatrixXcd CC(Ndimensions+1,Ndimensions+1);
 
-    CC.imag() = MatrixXd::Zero(Ndim+1,Ndim+1); 
+    CC.imag() = MatrixXd::Zero(Ndimensions+1,Ndimensions+1); 
     CC.real() = C;
     
     ComplexEigenSolver<MatrixXcd> eigenSolver(CC);
@@ -115,14 +115,14 @@ int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd
     double pointA;              // Point laying in elliposid A
     double pointB;              // Point laying in ellipsoid B
     
-    for (int i = 0; i < Ndim+1; i++)      // Loop over all eigenvectors
+    for (int i = 0; i < Ndimensions+1; i++)      // Loop over all eigenvectors
     {
-        if (V(Ndim,i).real() == 0)      // Skip inadmissible eigenvectors
+        if (V(Ndimensions,i).real() == 0)      // Skip inadmissible eigenvectors
             continue;                   
         else if (E(i).imag() != 0)
             {
-                V.col(i) = V.col(i).array() * (V.conjugate())(Ndim,i);      // Multiply eigenvector by complex conjugate of last element
-                V.col(i) = V.col(i).array() / V(Ndim,i).real();             // Normalize eigenvector to last component value
+                V.col(i) = V.col(i).array() * (V.conjugate())(Ndimensions,i);      // Multiply eigenvector by complex conjugate of last element
+                V.col(i) = V.col(i).array() / V(Ndimensions,i).real();             // Normalize eigenvector to last component value
                 pointA = V.col(i).transpose().real() * AT * V.col(i).real();        // Evaluate point from elliposid A
                 pointB = V.col(i).transpose().real() * BT * V.col(i).real();        // Evaluate point from ellipsoid B
 
