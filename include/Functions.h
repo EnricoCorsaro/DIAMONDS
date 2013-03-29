@@ -10,7 +10,7 @@
 #define FUNCTIONS_H
 
 #include <cmath>
-#include <assert>
+#include <cassert>
 #include <numeric>
 #include <functional>
 #include <random>
@@ -27,7 +27,7 @@
 using namespace std;
 using namespace Eigen;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
-
+typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
 namespace Functions
 {
@@ -63,8 +63,8 @@ namespace Functions
 
     // Sampling Distributions
 
-    void hyperSphericalDistribution(RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints = 1, const double radius);
-    ArrayXXd BoxMullerDistribution(const int Npoints);
+    void hyperSphericalDistribution(RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints = 1, const double radius = 1);
+    void BoxMullerDistribution(RefArrayXXd sampleDistribution, const int Npoints);
 
 
 } // END namespace Functions

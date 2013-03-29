@@ -220,8 +220,8 @@ void Functions::covarianceDecomposition(const RefArrayXXd covarianceMatrix, RefA
 
     if (eigenSolver.info() != Success) abort();
 
-    eigenValues.resize(Ndimensions)
-    eigenVectorsMatrix.resize(Ndimensions,Ndimensions)
+    eigenValues.resize(Ndimensions);
+    eigenVectorsMatrix.resize(Ndimensions,Ndimensions);
 
     eigenValues = eigenSolver.eigenvalues();
     eigenVectorsMatrix = eigenSolver.eigenvectors();
@@ -378,7 +378,7 @@ void Functions::sortElements(RefArrayXd array1, RefArrayXd array2)
 //      void
 //
 
-void Functions::hyperSphericalDistribution(RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints = 1, const double radius)
+void Functions::hyperSphericalDistribution(RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints, const double radius)
 {
     mt19937 engine(time(0));
     uniform_real_distribution<double> uniform_dist(0.0,1.0);
@@ -393,7 +393,7 @@ void Functions::hyperSphericalDistribution(RefArrayXXd sampleDistribution, const
     {
         for (int j = 0; j < Ndimensions; j++)
         {
-            sampleDistribution(j,i) = normal(); 
+            sampleDistribution(j,i) = normal();
         }
         sampleDistribution.col(i) = uniform()*radius*sampleDistribution.col(i)/sqrt(sampleDistribution.col(i).square().sum());
     }
@@ -419,31 +419,33 @@ void Functions::hyperSphericalDistribution(RefArrayXXd sampleDistribution, const
 //
 // INPUT:
 //      Npoints: number of samples in the distribution.
+//      sampleDistribution: an Eigen Array of size (2, Npoints) to contain the
+//      points normally distributed.
 //
 // OUTPUT:
-//      An Eigen Array containing the values of the distribution.
+//      void
 //
 // REMARKS:
-//      THe normal distribution generated has zero mean and unit standard deviation.
+//      THe two normal distributions generated have both zero mean and unit standard deviation.
 //
 
-ArrayXXd Functions::BoxMullerDistribution(const int Npoints)
+void Functions::BoxMullerDistribution(RefArrayXXd sampleDistribution, const int Npoints)
 {
     mt19937 engine(time(0));
     uniform_real_distribution<double> uniform_dist(0.0,1.0);
     auto uniform = bind(uniform_dist, engine);
-
     ArrayXd u;
     ArrayXd v;
-    ArrayXXd bm(2, Npoints);
+
+    sampleDistribution.resize(2, Npoints);
 
     for (int i = 0; i < Npoints; i++)
     {
         u(i) = uniform();
         v(i) = uniform();
-        bm(0,i) = sqrt(-2*log(u(i))) * cos(2*PI*v(i));
-        bm(1,i) = sqrt(-2*log(u(i))) * sin(2*PI*v(i));
+        sampleDistribution(0,i) = sqrt(-2*log(u(i))) * cos(2*PI*v(i));
+        sampleDistribution(1,i) = sqrt(-2*log(u(i))) * sin(2*PI*v(i));
     }
 
-    return bm;
 }
+
