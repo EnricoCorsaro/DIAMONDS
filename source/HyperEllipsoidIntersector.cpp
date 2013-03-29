@@ -68,7 +68,7 @@ int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd
     assert(centerCoordinates1.size() == centerCoordinates2.size());
     assert(covarianceMatrix1.cols() == centerCoordinates1.size());
 
-    int Ndimensions = centerCoordinates1.size()
+    int Ndimensions = centerCoordinates1.size();
 
 
     // Construct translation matrix
@@ -91,8 +91,8 @@ int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd
     A.topLeftCorner(Ndimensions,Ndimensions) = covarianceMatrix1.matrix().inverse();
     B.topLeftCorner(Ndimensions,Ndimensions) = covarianceMatrix2.matrix().inverse();
 
-    MatrixXd AT = T*A*T.transpose();        // Translating to ellispoid center
-    MatrixXd BT = T*B*T.transpose();        // Translating to ellispoid center
+    MatrixXd AT = T1*A*T1.transpose();        // Translating to ellispoid center
+    MatrixXd BT = T2*B*T2.transpose();        // Translating to ellispoid center
 
 
     // Compute Hyper Quadric Matrix generating from the two ellipsoids 
@@ -106,7 +106,7 @@ int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd
     
     ComplexEigenSolver<MatrixXcd> eigenSolver(CC);
 
-    if (eigensolver.info() != Success) abort();
+    if (eigenSolver.info() != Success) abort();
     
     MatrixXcd E = eigenSolver.eigenvalues();
     MatrixXcd V = eigenSolver.eigenvectors();
