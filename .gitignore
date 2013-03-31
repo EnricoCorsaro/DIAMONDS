@@ -7,7 +7,6 @@ source/.*swp
 include/.*swo
 include/.*swp
 results/
-demos/
 
 
 # Compiled source 
