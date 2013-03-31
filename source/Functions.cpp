@@ -160,8 +160,6 @@ double Functions::logGaussLikelihood(const RefArrayXd observations, const RefArr
 
 void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd covarianceMatrix, RefArrayXd centerCoordinates)
 {    
-    assert(covarianceMatrix.cols() == covarianceMatrix.rows());
-    
     int Ndimensions = clusterSample.rows();
     int Npoints = clusterSample.cols();
     covarianceMatrix.resize(Ndimensions, Ndimensions);
@@ -215,14 +213,12 @@ void Functions::covarianceDecomposition(const RefArrayXXd covarianceMatrix, RefA
     assert(covarianceMatrix.cols() == covarianceMatrix.rows());
 
     int Ndimensions = covarianceMatrix.cols();
-
     SelfAdjointEigenSolver<MatrixXd> eigenSolver(covarianceMatrix.matrix());
 
     if (eigenSolver.info() != Success) abort();
 
     eigenValues.resize(Ndimensions);
     eigenVectorsMatrix.resize(Ndimensions,Ndimensions);
-
     eigenValues = eigenSolver.eigenvalues();
     eigenVectorsMatrix = eigenSolver.eigenvectors();
 }
