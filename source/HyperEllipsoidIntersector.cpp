@@ -62,7 +62,7 @@ HyperEllipsoidIntersector::~HyperEllipsoidIntersector()
 //      E.g. if first center coordinate is x, then first row and column in covariance matrix refer to x coordinate.
 //
 
-bool HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd covarianceMatrix2, RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2)
+bool HyperEllipsoidIntersector::intersection(RefArrayXXd covarianceMatrix1, RefArrayXXd covarianceMatrix2, RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2)
 {
     assert(covarianceMatrix1.cols() == covarianceMatrix2.cols());
     assert(centerCoordinates1.size() == centerCoordinates2.size());
