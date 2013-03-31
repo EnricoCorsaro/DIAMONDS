@@ -8,7 +8,9 @@
 
 
 using namespace std;
+using namespace Eigen;
 typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
+typedef Eigen::Ref<Eigen::ArrayXi> RefArrayXi;
 
 
 class Clusterer
@@ -17,12 +19,14 @@ class Clusterer
     
         Clusterer(Metric &metric);
         ~Clusterer(){};    
-        virtual int cluster(RefArrayXXd sample, vector<int> &clusterIndices) = 0;
+        virtual int cluster(RefArrayXXd sample, RefArrayXi clusterIndices) = 0;
 
-        Metric &metric;
 
     protected:
+        
+        Metric &metric;
     
+
     private:
 
 };

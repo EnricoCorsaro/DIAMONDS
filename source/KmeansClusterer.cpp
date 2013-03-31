@@ -18,7 +18,12 @@
 // 
 
 KmeansClusterer::KmeansClusterer(Metric &metric, unsigned int minNclusters, unsigned int maxNclusters, unsigned int Ntrials, double relTolerance)
-: Clusterer(metric), minNclusters(minNclusters), maxNclusters(maxNclusters), Ntrials(Ntrials), engine(time(0)), relTolerance(relTolerance)
+: Clusterer(metric), 
+  minNclusters(minNclusters), 
+  maxNclusters(maxNclusters), 
+  Ntrials(Ntrials), 
+  relTolerance(relTolerance),
+  engine(time(0))
 {
     assert(minNclusters <= maxNclusters);
 }
@@ -184,7 +189,7 @@ void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXX
 
 
 bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, RefArrayXXd centers, 
-                                                         RefArrayXd clusterSizes, vector<int> &clusterIndices,
+                                                         RefArrayXd clusterSizes, RefArrayXi clusterIndices,
                                                          double &sumOfDistancesToClosestCenter, double relTolerance)
 {
     unsigned int Npoints = sample.cols();
@@ -225,7 +230,7 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
             newSumOfDistances += distanceToClosestCenter;
             updatedCenters.col(indexOfClosestCenter) += sample.col(n);
             clusterSizes(indexOfClosestCenter) += 1; 
-            clusterIndices[n] = indexOfClosestCenter;        
+            clusterIndices(n) = indexOfClosestCenter;        
         }
     
         // Assert that all clusters contain at least 2 points. If not we probably started
@@ -312,7 +317,7 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
 //
 
 double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers, 
-                                         RefArrayXd clusterSizes, vector<int> &clusterIndices)
+                                         RefArrayXd clusterSizes, RefArrayXi clusterIndices)
 {
     unsigned int Npoints = sample.cols();
     unsigned int Ndimensions = sample.rows();
@@ -326,7 +331,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
     
     for (int n = 0; n < Npoints; ++n)
     {
-        intraClusterVariances(clusterIndices[n]) += metric.distance(sample.col(n), centers.col(clusterIndices[n]));
+        intraClusterVariances(clusterIndices(n)) += metric.distance(sample.col(n), centers.col(clusterIndices(n)));
     }
     
     intraClusterVariances /= (clusterSizes-1); 
@@ -343,7 +348,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
     double logLikelihood = 0.0;
     for (int n = 0; n < Npoints; ++n)
     {
-        int cluster = clusterIndices[n]; 
+        int cluster = clusterIndices(n); 
         logLikelihood +=   log(clusterPriors(cluster))
                          - Ndimensions / 2.0 * log(intraClusterVariances(cluster))
                          - metric.distance(sample.col(n), centers.col(cluster)) / 2.0 / intraClusterVariances(cluster);
@@ -393,14 +398,14 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 //      The optimal number of clusters
 //
 
-int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices)
+int KmeansClusterer::cluster(RefArrayXXd sample, RefArrayXi optimalClusterIndices)
 {
     unsigned int Npoints = sample.cols();
     unsigned int Ndimensions = sample.rows();
     unsigned int optimalNclusters;    
     double bestBICvalue = DBL_MAX;
-    vector<int> clusterIndices(Npoints);            // for each point the index of the cluster to ...
-    vector<int> bestClusterIndices(Npoints);        // ... which it belongs
+    ArrayXi clusterIndices(Npoints);            // for each point the index of the cluster to ...
+    ArrayXi bestClusterIndices(Npoints);        // ... which it belongs
  
 
     // As we don't know a prior the optimal number of clusters, loop over a

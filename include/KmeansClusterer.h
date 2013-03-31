@@ -11,8 +11,6 @@
 
 
 using namespace std;
-using Eigen::ArrayXd;
-using Eigen::ArrayXXd;
 
 
 class KmeansClusterer : public Clusterer
@@ -22,7 +20,7 @@ class KmeansClusterer : public Clusterer
         KmeansClusterer(Metric &metric, unsigned int minNclusters, unsigned int maxNclusters, unsigned int Ntrials, double relTolerance);
         ~KmeansClusterer();
     
-        int cluster(RefArrayXXd sample, vector<int> &clusterIndices);
+        int cluster(RefArrayXXd sample, RefArrayXi clusterIndices);
     
     protected:
     
@@ -30,16 +28,16 @@ class KmeansClusterer : public Clusterer
     
         void chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXXd centers, unsigned int Nclusters);
         bool updateClusterCentersUntilConverged(RefArrayXXd sample, RefArrayXXd centers, 
-                                                RefArrayXd clusterSizes, vector<int> &clusterIndices,
+                                                RefArrayXd clusterSizes, RefArrayXi clusterIndices,
                                                 double &sumOfDistancesToClosestCenter, double relTolerance);
         double evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers, RefArrayXd clusterSizes, 
-                                vector<int> &clusterIndices);
+                                RefArrayXi clusterIndices);
 
         unsigned int minNclusters;
         unsigned int maxNclusters;
         unsigned int Ntrials;
-        mt19937 engine;
         double relTolerance;
+        mt19937 engine;
 
 };
 
