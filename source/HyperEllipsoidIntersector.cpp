@@ -41,7 +41,7 @@ HyperEllipsoidIntersector::~HyperEllipsoidIntersector()
 
 
 
-// HyperEllipsoidIntersector::result()
+// HyperEllipsoidIntersector::intersection()
 //
 // PURPOSE:
 //      Determines whether two input ellipsoids are overlapping according to
@@ -55,14 +55,14 @@ HyperEllipsoidIntersector::~HyperEllipsoidIntersector()
 //      centerCoordinates2: ArrayXd containing center coordinates of second ellipsoid
 //
 // OUTPUT:
-//      An integer specifying whether the two ellipsoids intersect (1) or not (0)
+//      A boolean value specifying whether the two ellipsoids intersect (true) or not (false)
 //
 // REMARKS:
 //      Coordinates of centers have to coincide in same order of the covariance matrix dimensions.
 //      E.g. if first center coordinate is x, then first row and column in covariance matrix refer to x coordinate.
 //
 
-int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd covarianceMatrix2, RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2)
+bool HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd covarianceMatrix2, RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2)
 {
     assert(covarianceMatrix1.cols() == covarianceMatrix2.cols());
     assert(centerCoordinates1.size() == centerCoordinates2.size());
@@ -111,7 +111,7 @@ int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd
     MatrixXcd E = eigenSolver.eigenvalues();
     MatrixXcd V = eigenSolver.eigenvectors();
 
-    int intersection = 0;       // Start with no intersection
+    bool intersection = false;       // Start with no intersection
     double pointA;              // Point laying in elliposid A
     double pointB;              // Point laying in ellipsoid B
     
@@ -128,7 +128,7 @@ int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd
 
                 if ((pointA <= 0) && (pointB <= 0))     // Accept only if point belongs to both ellipsoids
                 {
-                    intersection = 1;                   // Exit if intersection is found
+                    intersection = true;                   // Exit if intersection is found
                     break;
                 }
             }
@@ -137,7 +137,4 @@ int HyperEllipsoidIntersector::result(RefArrayXXd covarianceMatrix1, RefArrayXXd
     return intersection;
 
 }
-
-
-
 

@@ -23,7 +23,8 @@ class HyperEllipsoidIntersector : public HyperQuadricIntersector
         HyperEllipsoidIntersector();
         ~HyperEllipsoidIntersector();
 
-        virtual int result(RefArrayXXd covarianceMatrix1, RefArrayXXd covarianceMatrix2, RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2);
+        virtual bool intersection(RefArrayXXd covarianceMatrix1, RefArrayXXd covarianceMatrix2, 
+                                    RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2);
 
 
     protected:

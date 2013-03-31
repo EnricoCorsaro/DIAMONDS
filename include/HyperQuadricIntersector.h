@@ -25,7 +25,8 @@ class HyperQuadricIntersector
         HyperQuadricIntersector();
         ~HyperQuadricIntersector();
 
-        virtual int result(RefArrayXXd quadricMatrix1, RefArrayXXd quadricMatrix2, RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2) = 0;
+        virtual bool intersection(RefArrayXXd quadricMatrix1, RefArrayXXd quadricMatrix2, 
+                                    RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2) = 0;
 
 
     protected:
