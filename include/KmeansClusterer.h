@@ -20,10 +20,12 @@ class KmeansClusterer : public Clusterer
         KmeansClusterer(Metric &metric, unsigned int minNclusters, unsigned int maxNclusters, unsigned int Ntrials, double relTolerance);
         ~KmeansClusterer();
     
-        int cluster(RefArrayXXd sample, RefArrayXi clusterIndices);
-    
+        virtual int cluster(RefArrayXXd sample, RefArrayXi clusterIndices);
+   
+
     protected:
-    
+   
+
     private:
     
         void chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXXd centers, unsigned int Nclusters);
