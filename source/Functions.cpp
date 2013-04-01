@@ -310,7 +310,7 @@ double Functions::logExpSum(double x, double y)
 
 
 
-// Functions::sortElements()
+// Functions::sortElementsDouble()
 //
 // PURPOSE: 
 //      Sorts the element of the first input array in increasing order 
@@ -318,14 +318,14 @@ double Functions::logExpSum(double x, double y)
 //      sorting of the first array.
 //
 // INPUT: 
-//      array1: a first Eigen Array to be sorted in increasing order 
+//      array1: a first Eigen Array of double numbers to be sorted in increasing order 
 //      array2: a second Eigen Array to be sorted according to array1
 //
 // OUTPUT: 
 //      void
 //
 
-void Functions::sortElements(RefArrayXd array1, RefArrayXd array2)
+void Functions::sortElementsDouble(RefArrayXd array1, RefArrayXd array2)
 {
     for (int i = 0; i < array1.size(); i++)
     {
@@ -333,8 +333,8 @@ void Functions::sortElements(RefArrayXd array1, RefArrayXd array2)
         {
             if (array1(j-1) > array1(j))
             {
-                SWAP(array1(j-1),array1(j));        // SWAP array1 elements in increasing order
-                SWAP(array2(j-1),array2(j));        // SWAP array2 elements accordingly
+                SWAPDOUBLE(array1(j-1),array1(j));        // SWAP array1 elements in increasing order
+                SWAPDOUBLE(array2(j-1),array2(j));        // SWAP array2 elements accordingly
             }
             else
                 if (array1(j-1) == array1(j))
@@ -342,7 +342,54 @@ void Functions::sortElements(RefArrayXd array1, RefArrayXd array2)
         }
     }
     
-} // END Functions::sortElements()
+} // END Functions::sortElementsDouble()
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Functions::sortElementsInt()
+//
+// PURPOSE: 
+//      Sorts the element of the first input array in increasing order 
+//      and the elements of the second input array according to the 
+//      sorting of the first array.
+//
+// INPUT: 
+//      array1: a first Eigen Array of integer values to be sorted in increasing order 
+//      array2: a second Eigen Array to be sorted according to array1
+//
+// OUTPUT: 
+//      void
+//
+
+void Functions::sortElementsInt(RefArrayXi array1, RefArrayXd array2)
+{
+    for (int i = 0; i < array1.size(); i++)
+    {
+        for (int j = 1; j < (array1.size()-i); j++)
+        {
+            if (array1(j-1) > array1(j))
+            {
+                SWAPINT(array1(j-1),array1(j));         // SWAP array1 elements in increasing order
+                SWAPDOUBLE(array2(j-1),array2(j));      // SWAP array2 elements accordingly
+            }
+            else
+                if (array1(j-1) == array1(j))
+                    continue;
+        }
+    }
+    
+} // END Functions::sortElementsInt()
+
 
 
 
@@ -363,7 +410,8 @@ void Functions::sortElements(RefArrayXd array1, RefArrayXd array2)
 //      radius that is uniformly distributed in its volume. The method
 //      follows the approach described in Shaw J. R et al. (2007; MNRAS, 378, 1365).
 //
-// INPUT: 
+// INPUT:
+//      metric: an object containing the metric to be used to evaluate the vectorial normalization
 //      sampleDistribution: an Eigen Array of size (Ndimensions, Npoints) to contain the
 //      points spherically distributed.
 //      Ndimensions: the dimensions of the hyper-sphere
@@ -374,16 +422,16 @@ void Functions::sortElements(RefArrayXd array1, RefArrayXd array2)
 //      void
 //
 
-void Functions::hyperSphericalDistribution(RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints, const double radius)
+void Functions::hyperSphericalDistribution(Metric &metric, RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints, const double radius)
 {
     mt19937 engine(time(0));
     uniform_real_distribution<double> uniform_dist(0.0,1.0);
     auto uniform = bind(uniform_dist, engine);
-
     normal_distribution<double> normal_dist(0.0,1.0);
     auto normal = bind(normal_dist, engine);
 
     sampleDistribution.resize(Ndimensions, Npoints);
+    ArrayXd centerCoordinates = ArrayXd::Zero(Ndimensions);
 
     for (int i = 0; i < Npoints; i++)
     {
@@ -391,7 +439,9 @@ void Functions::hyperSphericalDistribution(RefArrayXXd sampleDistribution, const
         {
             sampleDistribution(j,i) = normal();
         }
-        sampleDistribution.col(i) = uniform()*radius*sampleDistribution.col(i)/sqrt(sampleDistribution.col(i).square().sum());
+
+        ArrayXd actualSampleDistribution = sampleDistribution.col(i);
+        sampleDistribution.col(i) = uniform()*radius*sampleDistribution.col(i)/metric.distance(actualSampleDistribution,centerCoordinates);
     }
 }
 

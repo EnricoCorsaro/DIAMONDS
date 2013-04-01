@@ -119,7 +119,7 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
         // Sort elements of array parameterComponent in increasing
         // order and sort elements of array marginalDistribution accordingly
         
-        Functions::sortElements(parameterComponent, marginalDistribution); 
+        Functions::sortElementsDouble(parameterComponent, marginalDistribution); 
         
 
         // Marginalize over parameter by merging posterior values 

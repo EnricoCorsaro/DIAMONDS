@@ -19,14 +19,16 @@
 #include <iostream>
 #include <cstdlib>
 #include <Eigen/Dense>
-#include "EuclideanMetric.h"
+#include "Metric.h"
 
-#define SWAP(a,b) {double copy; copy = a, a = b, b = copy;}
+#define SWAPDOUBLE(a,b) {double copy; copy = a, a = b, b = copy;}
+#define SWAPINT(a,b) {int copy; copy = a, a = b, b = copy;}
 
 
 using namespace std;
 using namespace Eigen;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
+typedef Eigen::Ref<Eigen::ArrayXi> RefArrayXi;
 typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
 namespace Functions
@@ -58,12 +60,13 @@ namespace Functions
     inline double product(const vector<double> &vec);
     inline double sum(const vector<double> &vec);
     double logExpSum(double x, double y);
-    void sortElements(RefArrayXd array1, RefArrayXd array2);
+    void sortElementsDouble(RefArrayXd array1, RefArrayXd array2);
+    void sortElementsInt(RefArrayXi array1, RefArrayXd array2);
 
 
     // Sampling Distributions
 
-    void hyperSphericalDistribution(RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints = 1, const double radius = 1);
+    void hyperSphericalDistribution(Metric &metric, RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints = 1, const double radius = 1);
     void BoxMullerDistribution(RefArrayXXd sampleDistribution, const int Npoints);
 
 
