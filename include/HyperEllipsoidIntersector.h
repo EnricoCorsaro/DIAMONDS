@@ -23,9 +23,10 @@ class HyperEllipsoidIntersector : public HyperQuadricIntersector
         HyperEllipsoidIntersector();
         ~HyperEllipsoidIntersector();
 
-        virtual bool intersection(RefArrayXXd covarianceMatrix1, RefArrayXXd covarianceMatrix2, 
-                                    RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2);
-
+        virtual bool intersection(const RefArrayXXd covarianceMatrix1, const RefArrayXXd covarianceMatrix2, 
+                                  const RefArrayXd centerCoordinates1, const RefArrayXd centerCoordinates2);
+        bool checkForOverlap(const RefArrayXd enlargedEigenValues, const RefArrayXXd eigenVectorsMatrix,
+                             const RefArrayXd centerCoordinates, const RefArrayXd pointCoordinates);
 
     protected:
 

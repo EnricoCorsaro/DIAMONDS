@@ -62,7 +62,7 @@ HyperEllipsoidIntersector::~HyperEllipsoidIntersector()
 //      E.g. if first center coordinate is x, then first row and column in covariance matrix refer to x coordinate.
 //
 
-bool HyperEllipsoidIntersector::intersection(RefArrayXXd covarianceMatrix1, RefArrayXXd covarianceMatrix2, RefArrayXd centerCoordinates1, RefArrayXd centerCoordinates2)
+bool HyperEllipsoidIntersector::intersection(const RefArrayXXd covarianceMatrix1, const RefArrayXXd covarianceMatrix2, const RefArrayXd centerCoordinates1, const RefArrayXd centerCoordinates2)
 {
     assert(covarianceMatrix1.cols() == covarianceMatrix2.cols());
     assert(centerCoordinates1.size() == centerCoordinates2.size());
@@ -138,3 +138,69 @@ bool HyperEllipsoidIntersector::intersection(RefArrayXXd covarianceMatrix1, RefA
 
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+// HyperEllipsoidIntersector::checkForOverlap()
+//
+// PURPOSE:
+//      Determines if the input point belongs to the input enlarged ellipsoid.
+//
+// INPUT:
+//      enlargedEigenvalues: the enlarged eigenvalues of the ellipsoid.
+//      eigenVectorsMatrix: the matrix of dimensions (Ndimensions, Ndimensions)
+//      containing the column eigenvectors of the ellipsoid covariance matrix.
+//      centersCoordinates: Eigen Array containing the center coordinates
+//      of the input ellipsoid.
+//      pointCoordinates: coordinates of the point to verify.
+//
+// OUTPUT:
+//      A boolean value specifying whether the point belongs to the input
+//      enlarged ellipsoid.
+//
+
+bool HyperEllipsoidIntersector::checkForOverlap(const RefArrayXd enlargedEigenvalues, const RefArrayXXd eigenVectorsMatrix, const RefArrayXd centerCoordinates, const RefArrayXd pointCoordinates)
+{
+    int Ndimensions = pointCoordinates.size();
+       
+    // Construct translation matrix
+
+    MatrixXd T = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
+    
+    T.bottomLeftCorner(1,Ndimensions) = -1.*centerCoordinates.transpose();
+
+
+    // Construct ellipsoid matrix in homogeneous coordinates
+
+    MatrixXd A = MatrixXd::Zero(Ndimensions+1,Ndimensions+1);
+    A(Ndimensions,Ndimensions) = -1;
+    
+    MatrixXd V = eigenVectorsMatrix.matrix();
+    MatrixXd C = MatrixXd::Zero(Ndimensions, Ndimensions);
+    
+    C = V * enlargedEigenvalues.matrix().asDiagonal() * V.transpose();      // Covariance matrix
+    A.topLeftCorner(Ndimensions,Ndimensions) = C.inverse();
+
+    MatrixXd AT = T*A*T.transpose();        // Translating to ellispoid center
+
+    VectorXd X(Ndimensions+1);
+    X.head(Ndimensions) = pointCoordinates.matrix();
+    X(Ndimensions) = 1;
+
+    bool overlap;
+    overlap = false;        // Start with no overlap
+
+    if (X.transpose() * AT * X <= 0)
+        overlap = true;
+        
+    return overlap;
+}
