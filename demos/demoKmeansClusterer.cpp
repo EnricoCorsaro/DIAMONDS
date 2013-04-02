@@ -10,6 +10,7 @@
 #include "File.h"
 #include "EuclideanMetric.h"
 #include "KmeansClusterer.h"
+#include "UniformPrior.h"
 #include "HyperEllipsoidSampler.h"
 
 using namespace std;
@@ -52,14 +53,25 @@ int main()
     // Output the results 
     
     cerr << "Optimal number of clusters: " << optimalNclusters << endl;
-    
-    for (int n = 0; n < Nrows; ++n)
-    {
-        cout << clusterIndices(n) << endl;
-    }
+    cout << clusterIndices << endl;
     
     // That's it!
 
+    ArrayXd maxima(2);
+    ArrayXd minima(2);
 
+    maxima << sample.row(0).maxCoeff(), sample.row(1).maxCoeff();
+    minima << sample.row(0).minCoeff(), sample.row(1).minCoeff();
+
+    UniformPrior prior(minima,maxima);
+    HyperEllipsoidSampler sampler(prior, myMetric, Nrows, 0.3, 1);
+
+    ArrayXi NpointsPerCluster(1);
+    ArrayXXd allClustersCovarianceMatrix(1,1);
+    ArrayXd allCentersCoordinates(1); 
+
+    sampler.computeEllipsoids(sample, clusterIndices, allClustersCovarianceMatrix, allCentersCoordinates, NpointsPerCluster);
+
+    cout << NpointsPerCluster << endl;
     return EXIT_SUCCESS;
 }
