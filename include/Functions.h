@@ -66,7 +66,6 @@ namespace Functions
 
     // Sampling Distributions
 
-    void hyperSphericalDistribution(Metric &metric, RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints = 1, const double radius = 1);
     void BoxMullerDistribution(RefArrayXXd sampleDistribution, const int Npoints);
 
 

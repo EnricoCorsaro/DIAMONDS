@@ -403,59 +403,6 @@ void Functions::sortElementsInt(RefArrayXi array1, RefArrayXd array2)
 
 
 
-// Functions::hyperSphericalDistribution()
-//
-// PURPOSE: 
-//      Generate a sample of points from a N-dimensional hyper-sphere of given
-//      radius that is uniformly distributed in its volume. The method
-//      follows the approach described in Shaw J. R et al. (2007; MNRAS, 378, 1365).
-//
-// INPUT:
-//      metric: an object containing the metric to be used to evaluate the vectorial normalization
-//      sampleDistribution: an Eigen Array of size (Ndimensions, Npoints) to contain the
-//      points spherically distributed.
-//      Ndimensions: the dimensions of the hyper-sphere
-//      Npoints: the number of points of the distribution
-//      radius: the radius of the hyper-sphere
-//
-// OUTPUT: 
-//      void
-//
-
-void Functions::hyperSphericalDistribution(Metric &metric, RefArrayXXd sampleDistribution, const int Ndimensions, const int Npoints, const double radius)
-{
-    mt19937 engine(time(0));
-    uniform_real_distribution<double> uniform_dist(0.0,1.0);
-    auto uniform = bind(uniform_dist, engine);
-    normal_distribution<double> normal_dist(0.0,1.0);
-    auto normal = bind(normal_dist, engine);
-
-    sampleDistribution.resize(Ndimensions, Npoints);
-    ArrayXd centerCoordinates = ArrayXd::Zero(Ndimensions);
-
-    for (int i = 0; i < Npoints; i++)
-    {
-        for (int j = 0; j < Ndimensions; j++)
-        {
-            sampleDistribution(j,i) = normal();
-        }
-
-        ArrayXd actualSampleDistribution = sampleDistribution.col(i);
-        sampleDistribution.col(i) = uniform()*radius*sampleDistribution.col(i)/metric.distance(actualSampleDistribution,centerCoordinates);
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
 
 // Functions::BoxMullerDistribution()
 //
