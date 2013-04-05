@@ -19,7 +19,8 @@
 //
 
 NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood)
-: informationGain(0.0), 
+: engine(time(0)),
+  informationGain(0.0), 
   logEvidence(-DBL_MAX),
   Niterations(0),
   prior(prior),
@@ -184,9 +185,7 @@ void NestedSampler::run(const int Nobjects)
     // between 0 and Nobjects-1, inclusive. The engine's seed is based on the
     // current time, and a Marsenne Twister pesudo-random generator is used.
 
-    uniform_int_distribution<int> uniform_distribution(0, Nobjects-1);
-    mt19937 engine(time(0));
-    auto uniform = bind(uniform_distribution, engine);              // Binding uniform distribution to seed value
+    uniform_int_distribution<int> uniform(0, Nobjects-1);
 
 
     // Set the sizes of the Eigen Arrays logLikelihood and nestedSampleOfParameters
@@ -260,7 +259,7 @@ void NestedSampler::run(const int Nobjects)
         {
             do 
             {
-                copy = uniform();             // 0 <= copy < Nobjects
+                copy = uniform(engine);             // 0 <= copy < Nobjects
             } 
             while (copy == worst);
         }

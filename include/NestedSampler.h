@@ -38,7 +38,8 @@ class NestedSampler
 
 
 	private:
-        
+
+        mt19937 engine;
         double informationGain;
         double logEvidence;
         double logEvidenceError;
