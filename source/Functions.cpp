@@ -192,7 +192,7 @@ void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd c
 
 
 
-// Functions::covarianceDecomposition()
+// Functions::selfAdjointMatrixDecomposition()
 //
 // PURPOSE:
 //      Compute the decomposition of a covariance matrix into eigenvectors and eigenvalues.
@@ -208,7 +208,7 @@ void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd c
 //      void
 //
 
-void Functions::covarianceDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenValues, RefArrayXXd eigenVectorsMatrix)
+void Functions::selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenValues, RefArrayXXd eigenVectorsMatrix)
 {
     assert(covarianceMatrix.cols() == covarianceMatrix.rows());
 
