@@ -29,8 +29,8 @@ class UniformPrior : public Prior
 
         ArrayXd getMinima();
         ArrayXd getMaxima();
-        double getUniformFactor();
 
+        virtual double getNormalizingFactor();
         virtual void draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects);
         virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood);
 
@@ -40,7 +40,6 @@ class UniformPrior : public Prior
         mt19937 engine;
         ArrayXd minima;
         ArrayXd maxima;
-        double uniformFactor;
 
 }; // END class UniformPrior
 

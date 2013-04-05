@@ -9,9 +9,12 @@
 #define PRIOR_H
 
 #include <random>
+#include <ctime>
+#include <vector>
 #include <cstdlib>
 #include <Eigen/Core>
 #include "Likelihood.h"
+#include "Functions.h"
 
 using namespace std;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
@@ -28,14 +31,14 @@ class Prior
         int getNdimensions();
 
 
-        // Pure virtual functions implemented in derived classes
-        
+        virtual double getNormalizingFactor() = 0;
         virtual void draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects) = 0;
         virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood) = 0;
 
     protected:
         
         int Ndimensions;
+        double normalizingFactor;
 
     private:
     

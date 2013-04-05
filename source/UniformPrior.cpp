@@ -1,4 +1,3 @@
-
 #include "UniformPrior.h"
 
 
@@ -23,9 +22,8 @@ UniformPrior::UniformPrior(const RefArrayXd minima, const RefArrayXd maxima)
   maxima(maxima)
 {
     assert (minima.size() == maxima.size());
-    uniformFactor = (1./(maxima - minima)).prod();
-    cerr << "Set parameter space of " << Ndimensions << " dimensions." << endl;
-} // END UniformPrior::UniformPrior()
+    normalizingFactor = (1./(maxima - minima)).prod();
+}
 
 
 
@@ -44,7 +42,7 @@ UniformPrior::UniformPrior(const RefArrayXd minima, const RefArrayXd maxima)
 UniformPrior::~UniformPrior()
 {
 
-} // END UniformPrior::~UniformPrior()
+}
 
 
 
@@ -68,7 +66,7 @@ UniformPrior::~UniformPrior()
 ArrayXd UniformPrior::getMinima()
 {
     return minima;    
-} // END UniformPrior::getMinima()
+}
 
 
 
@@ -92,7 +90,7 @@ ArrayXd UniformPrior::getMinima()
 ArrayXd UniformPrior::getMaxima()
 {
     return maxima;    
-} // END UniformPrior::getMaxima()
+}
 
 
 
@@ -103,7 +101,7 @@ ArrayXd UniformPrior::getMaxima()
 
 
 
-// UniformPrior::getUniformFactor()
+// UniformPrior::getNormalizingFactor()
 //
 // PURPOSE: 
 //      Get the private data member uniformFactor.
@@ -111,10 +109,12 @@ ArrayXd UniformPrior::getMaxima()
 // OUTPUT:
 //      An integer containing the normalization factor of the uniform prior.
 
-double UniformPrior::getUniformFactor()
+double UniformPrior::getNormalizingFactor()
 {
-    return uniformFactor;
-} // END UniformPrior::getUniformPrior()
+    return normalizingFactor;
+}
+
+
 
 
 
@@ -131,10 +131,9 @@ double UniformPrior::getUniformFactor()
 //      and contain Nobjects values each.
 //
 // INPUT:
-//      nestedSampleOfParameters: two-dimensional array to contain 
+//      nestedSampleOfParameters: two-dimensional Eigen Array to contain 
 //      the resulting parameters values.
-//      Nobjects: integer containing the number of objects used 
-//      in the nested sampling process.
+//      Nobjects: integer containing the number of objects to be drawn.
 //
 // OUTPUT:
 //      void
@@ -152,7 +151,7 @@ void UniformPrior::draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects
         }
     }
 
-} // END UniformPrior::draw()
+}
 
 
 
@@ -167,7 +166,7 @@ void UniformPrior::draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects
 //      having higher likelihood value.
 //
 // INPUT:
-//      nestedSampleOfParameters: one-dimensional array containing the set of 
+//      nestedSampleOfParameters: one-dimensional Eigen Array containing the set of 
 //      parameters values to be updated.
 //      likelihood: an object to compute the corresponding likelihood value.
 //
@@ -194,12 +193,11 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likel
                 nestedSampleOfParameters(i) = uniform(engine)*(maxima(i) - minima(i)) + minima(i);
             }
     
-        // nestedSampleOfParameters = uniform(engine)*(maxima - minima) + minima;
         logLikelihood = likelihood.logValue(nestedSampleOfParameters);
     }
     while (logLikelihood <= logLikelihoodConstraint);
     
 
-} // END UniformPrior::drawWithConstraint()
+}
 
 
