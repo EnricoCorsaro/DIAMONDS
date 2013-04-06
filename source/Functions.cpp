@@ -211,14 +211,14 @@ void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd c
 void Functions::selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenValues, RefArrayXXd eigenVectorsMatrix)
 {
     assert(covarianceMatrix.cols() == covarianceMatrix.rows());
+    assert(eigenValues.size() == covarianceMatrix.cols());
+    assert(eigenVectorsMatrix.cols() == eigenVectorsMatrix.rows());
+    assert(eigenVectorsMatrix.cols() == eigenValues.size());
 
-    int Ndimensions = covarianceMatrix.cols();
     SelfAdjointEigenSolver<MatrixXd> eigenSolver(covarianceMatrix.matrix());
 
     if (eigenSolver.info() != Success) abort();
 
-    eigenValues.resize(Ndimensions);
-    eigenVectorsMatrix.resize(Ndimensions,Ndimensions);
     eigenValues = eigenSolver.eigenvalues();
     eigenVectorsMatrix = eigenSolver.eigenvectors();
 }
