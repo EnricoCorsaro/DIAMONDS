@@ -50,8 +50,8 @@ HyperEllipsoidIntersector::~HyperEllipsoidIntersector()
 //
 // INPUT:
 //      covarianceMatrix1: ArrayXXd containing covariance matrix of the first ellipsoid
-//      covarianceMatrix2: ArrayXXd containing covariance matrix of the second ellipsoid
 //      centerCoordinates1: ArrayXd containing center coordinates of first ellipsoid
+//      covarianceMatrix2: ArrayXXd containing covariance matrix of the second ellipsoid
 //      centerCoordinates2: ArrayXd containing center coordinates of second ellipsoid
 //
 // OUTPUT:
@@ -62,7 +62,7 @@ HyperEllipsoidIntersector::~HyperEllipsoidIntersector()
 //      E.g. if first center coordinate is x, then first row and column in covariance matrix refer to x coordinate.
 //
 
-bool HyperEllipsoidIntersector::intersection(const RefArrayXXd covarianceMatrix1, const RefArrayXXd covarianceMatrix2, const RefArrayXd centerCoordinates1, const RefArrayXd centerCoordinates2)
+bool HyperEllipsoidIntersector::intersection(const RefArrayXXd covarianceMatrix1, const RefArrayXd centerCoordinates1, const RefArrayXXd covarianceMatrix2, const RefArrayXd centerCoordinates2)
 {
     assert(covarianceMatrix1.cols() == covarianceMatrix2.cols());
     assert(centerCoordinates1.size() == centerCoordinates2.size());
@@ -128,7 +128,7 @@ bool HyperEllipsoidIntersector::intersection(const RefArrayXXd covarianceMatrix1
 
                 if ((pointA <= 0) && (pointB <= 0))     // Accept only if point belongs to both ellipsoids
                 {
-                    intersection = true;                   // Exit if intersection is found
+                    intersection = true;                // Exit if intersection is found
                     break;
                 }
             }
@@ -149,8 +149,118 @@ bool HyperEllipsoidIntersector::intersection(const RefArrayXXd covarianceMatrix1
 
 
 
+// HyperEllipsoidIntersector::findNonOverlappingEllipsoids()
+//
+// PURPOSE:
+//      Determines which of Nclusters input ellipsoids are not overlapping.
+//
+// INPUT:
+//      Nclusters: an integer specifying the number of ellipsoids to check for
+//      overlaps.
+//      allEnlargedEigenvalues: an Eigen Array of dimensions (Nclusters * Ndimensions),
+//      containing all enlarged eigenvalues of each ellipsoid.
+//      allEigenvectorsMatrix: an Eigen Array matrix of dimensions 
+//      (Ndimensions, Nclusters * Ndimensions), containing 
+//      all eigenvectors of each ellipsoid.
+//      allCentersCoordinates: An Eigen Array of dimensions (Nclusters*Ndimensions)
+//      containing all the arrays of the center coordinates of each cluster.
+//
+// OUTPUT:
+//      An Eigen Array of integers specifying the subscripts of the ellipsoids that 
+//      are not overlapping. A single element array containing the value -1 is returned 
+//      in case no non-overlapping ellipsoids are found.
+//
+ArrayXi HyperEllipsoidIntersector::findNonOverlappingEllipsoids(const int Nclusters, const RefArrayXd allEnlargedEigenvalues, const RefArrayXXd allEigenvectorsMatrix, const RefArrayXd allCentersCoordinates)
+{
+    assert(allEnlargedEigenvalues.size() == allCentersCoordinates.size());
+    assert(allEigenvectorsMatrix.rows() == allCentersCoordinates.size()/Nclusters);
 
-// HyperEllipsoidIntersector::checkForOverlap()
+    int Ndimensions = allEigenvectorsMatrix.rows();
+
+    ArrayXd enlargedEigenvalues1(Ndimensions);
+    ArrayXd centerCoordinates1(Ndimensions);
+    ArrayXXd eigenvectorsMatrix1(Ndimensions,Ndimensions);
+    ArrayXXd covarianceMatrix1(Ndimensions,Ndimensions);
+    ArrayXd enlargedEigenvalues2(Ndimensions);
+    ArrayXd centerCoordinates2(Ndimensions);
+    ArrayXXd eigenvectorsMatrix2(Ndimensions,Ndimensions);
+    ArrayXXd covarianceMatrix2(Ndimensions,Ndimensions);
+    
+    bool overlap = false;
+    bool noOverlapFlag;
+    int count = 0;
+    ArrayXi nonOverlappingEllipsoids;
+
+    for (int i = 0; i < Nclusters-1; i++)
+    {
+        centerCoordinates1 = allCentersCoordinates.segment(i*Ndimensions, Ndimensions);
+        enlargedEigenvalues1 = allEnlargedEigenvalues.segment(i*Ndimensions, Ndimensions);
+        eigenvectorsMatrix1 = allEigenvectorsMatrix.block(0, i*Ndimensions, Ndimensions, Ndimensions);
+        covarianceMatrix1 = eigenvectorsMatrix1.matrix() * enlargedEigenvalues1.matrix().asDiagonal() * eigenvectorsMatrix1.matrix().transpose();
+        
+        for (int j = i + 1; j < Nclusters; j++)
+        {
+            centerCoordinates2 = allCentersCoordinates.segment(j*Ndimensions, Ndimensions);
+            enlargedEigenvalues2 = allEnlargedEigenvalues.segment(j*Ndimensions, Ndimensions);
+            eigenvectorsMatrix2 = allEigenvectorsMatrix.block(0, j*Ndimensions, Ndimensions, Ndimensions);
+            covarianceMatrix2 = eigenvectorsMatrix2.matrix() * enlargedEigenvalues2.matrix().asDiagonal() * eigenvectorsMatrix2.matrix().transpose();
+            overlap = intersection(covarianceMatrix1, centerCoordinates1, covarianceMatrix2, centerCoordinates2);
+
+            if (overlap)    // If overlap occurred, go to next i-th ellipsoid
+            {
+                noOverlapFlag = false;  // Set noOverlap flag to false
+                break;
+            }
+            else    // If no overlap occurred, go to next j-th ellipsoid
+            {
+                noOverlapFlag = true;  // Set noOverlap flag to true
+                continue;        
+            }
+                
+        }
+        
+        if (noOverlapFlag)      // If no overlaps for the i-th ellipsoid are found...
+        {
+            if (i == Nclusters-2)       // save i and i+1 if i is the last one
+            {
+                nonOverlappingEllipsoids.conservativeResize(count+2);
+                nonOverlappingEllipsoids(count) = i;
+                nonOverlappingEllipsoids(count+1) = i+1;
+                continue;
+            }
+            else                        // save i and go to next i otherwise
+            {
+                nonOverlappingEllipsoids.conservativeResize(count+1);
+                nonOverlappingEllipsoids(count) = i;
+                count++;
+            }
+        }
+        else                    // If overlaps are found, go to next i
+            continue;
+    }
+
+    return nonOverlappingEllipsoids;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// HyperEllipsoidIntersector::checkPointForOverlap()
 //
 // PURPOSE:
 //      Determines if the input point belongs to the input enlarged ellipsoid.
@@ -168,7 +278,7 @@ bool HyperEllipsoidIntersector::intersection(const RefArrayXXd covarianceMatrix1
 //      enlarged ellipsoid.
 //
 
-bool HyperEllipsoidIntersector::checkForOverlap(const RefArrayXd enlargedEigenvalues, const RefArrayXXd eigenVectorsMatrix, const RefArrayXd centerCoordinates, const RefArrayXd pointCoordinates)
+bool HyperEllipsoidIntersector::checkPointForOverlap(const RefArrayXd enlargedEigenvalues, const RefArrayXXd eigenVectorsMatrix, const RefArrayXd centerCoordinates, const RefArrayXd pointCoordinates)
 {
     int Ndimensions = pointCoordinates.size();
        

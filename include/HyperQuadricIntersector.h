@@ -24,9 +24,9 @@ class HyperQuadricIntersector
 
         HyperQuadricIntersector();
         ~HyperQuadricIntersector();
-
-        virtual bool intersection(const RefArrayXXd quadricMatrix1, const RefArrayXXd quadricMatrix2,
-                                  const RefArrayXd centerCoordinates1, const RefArrayXd centerCoordinates2) = 0;
+        
+        virtual bool intersection(const RefArrayXXd quadricMatrix1, const RefArrayXd centerCoordinates1, 
+                                  const RefArrayXXd quadricMatrix2, const RefArrayXd centerCoordinates2) = 0;
     
 
     protected:
