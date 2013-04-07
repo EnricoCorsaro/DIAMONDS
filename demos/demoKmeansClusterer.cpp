@@ -10,8 +10,11 @@
 #include "File.h"
 #include "EuclideanMetric.h"
 #include "KmeansClusterer.h"
-#include "UniformPrior.h"
 #include "HyperEllipsoidSampler.h"
+#include "HyperEllipsoidIntersector.h"
+#include "UniformPrior.h"
+#include "NormalLikelihood.h"
+#include "LorentzianModel.h"
 
 using namespace std;
 using namespace Eigen;
@@ -19,7 +22,8 @@ using namespace Eigen;
 
 int main()
 {
-    // Open the input file and read the data
+    /* ------ BEGINNING OF X-MEANS CLUSTERING DEMO ----- */
+    // Open the input file and read the data (synthetic sampling of a 2D parameter space)
     
     ifstream inputFile;
     File::openInputFile(inputFile, "kmeans_testsample.txt");
@@ -53,25 +57,94 @@ int main()
     // Output the results 
     
     cerr << "Optimal number of clusters: " << optimalNclusters << endl;
-    cout << clusterIndices << endl;
+    // cout << clusterIndices << endl;
+    
+    int Nclusters = optimalNclusters;
+    int Ndimensions = Ncols;
+    int Nobjects = Nrows;
     
     // That's it!
+    /* ------ END OF X-MEANS CLUSTERING DEMO ----- */
 
-    ArrayXd maxima(2);
-    ArrayXd minima(2);
 
-    maxima << sample.row(0).maxCoeff(), sample.row(1).maxCoeff();
-    minima << sample.row(0).minCoeff(), sample.row(1).minCoeff();
+    /* ------ BEGINNING OF ELLIPSOIDAL SAMPLING DEMO ----- */
+    // Read synthetic data from input file specified
 
-    UniformPrior prior(minima,maxima);
-    HyperEllipsoidSampler sampler(prior, myMetric, Nrows, 0.3, 1);
+    File::openInputFile(inputFile, "../data/data2.txt");
+    File::snifFile(inputFile, Nrows, Ncols);
+    data = File::arrayXXdFromFile(inputFile, Nrows, Ncols);
+    inputFile.close();
 
-    ArrayXi NpointsPerCluster(1);
-    ArrayXXd allClustersCovarianceMatrix(1,1);
-    ArrayXd allCentersCoordinates(1); 
 
-    sampler.computeEllipsoids(sample, clusterIndices, allClustersCovarianceMatrix, allCentersCoordinates, NpointsPerCluster);
+    // Creating arrays for each data type
+    
+    ArrayXd covariates = data.col(0);
+    ArrayXd observations = data.col(1);
+    ArrayXd uncertainties = data.col(2);
 
+
+    // Define boundaries of the free parameters of the problem (should be done with separate routine)
+
+    ArrayXd parametersMinima(Ndimensions);
+    ArrayXd parametersMaxima(Ndimensions);
+
+    parametersMaxima << sample.row(0).maxCoeff(), sample.row(1).maxCoeff();
+    parametersMinima << sample.row(0).minCoeff(), sample.row(1).minCoeff();
+
+
+    // First step - Setting Prior distribution and parameter space
+
+    UniformPrior myUniformPrior(parametersMinima, parametersMaxima);
+
+
+    // Second step - Setting up a model for the inference problem
+    
+    LorentzianModel model(covariates);
+    
+
+    // Third step - Setting up the likelihood function to be used
+    
+    NormalLikelihood likelihood(covariates, observations, uncertainties, model);
+   
+
+    // Testing of EllipsoidSampler class
+
+    HyperEllipsoidSampler sampler(myUniformPrior, myMetric, Nobjects, 1.4, 1);
+    ArrayXd drawnParameters(Ndimensions);
+
+    ofstream outputFile;
+    File::openOutputFile(outputFile, "drawnsample.txt");
+    sampler.computeEllipsoids(sample, Nclusters, clusterIndices);
+    
+    for (int i=0; i < 10; i++)
+    {
+        sampler.drawWithConstraint(sample, Nclusters, clusterIndices, 0, drawnParameters, likelihood);
+        File::arrayXXdToFile(outputFile, drawnParameters.transpose());
+    }
+    outputFile.close();
+
+    ArrayXXd allClustersCovarianceMatrix = sampler.getAllClustersCovarianceMatrix();
+    ArrayXd allCentersCoordinates = sampler.getAllCentersCoordinates();
+    ArrayXi NpointsPerCluster = sampler.getNpointsPerCluster();
+    ArrayXd allEnlargedEigenvalues = sampler.getAllEnlargedEigenvalues();
+    ArrayXd allEigenvalues = sampler.getAllEigenvalues();
+    ArrayXXd allEigenvectorsMatrix = sampler.getAllEigenvectorsMatrix();
+    ArrayXd hyperVolumes = sampler.getHyperVolumes();
+
+    cout << "Number of points per cluster: " << endl;
     cout << NpointsPerCluster << endl;
+    cout << "Hyper Volumes of each enlarged ellipsoid: " << endl;
+    cout << hyperVolumes << endl;
+    cout << "Matrix of all original covariance matrices: " << endl;
+    cout << allClustersCovarianceMatrix << endl;
+    cout << "All centers coordinates: " << endl;
+    cout << allCentersCoordinates << endl;
+    cout << "All eigenvalues: " << endl;
+    cout << allEigenvalues << endl;
+    cout << "All enlarged eigenvalues: " << endl;
+    cout << allEnlargedEigenvalues << endl;
+
+    /* ------ END OF ELLIPSOIDAL SAMPLING DEMO ----- */
+
     return EXIT_SUCCESS;
 }
