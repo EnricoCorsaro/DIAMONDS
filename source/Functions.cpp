@@ -199,28 +199,28 @@ void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd c
 //
 // INPUT:
 //      covarianceMatrix: an Eigen Array matrix to be decomposed
-//      eigenValues: an Eigen Array to contain the eigenvalues 
+//      eigenvalues: an Eigen Array to contain the eigenvalues 
 //      of the covariance matrix
-//      eigenVectorsMatrix: an Eigen Array matrix to contain the matrix of
+//      eigenvectorsMatrix: an Eigen Array matrix to contain the matrix of
 //      the eigenvectors of the covariance matrix
 //
 // OUTPUT:
 //      void
 //
 
-void Functions::selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenValues, RefArrayXXd eigenVectorsMatrix)
+void Functions::selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenvalues, RefArrayXXd eigenvectorsMatrix)
 {
     assert(covarianceMatrix.cols() == covarianceMatrix.rows());
-    assert(eigenValues.size() == covarianceMatrix.cols());
-    assert(eigenVectorsMatrix.cols() == eigenVectorsMatrix.rows());
-    assert(eigenVectorsMatrix.cols() == eigenValues.size());
+    assert(eigenvalues.size() == covarianceMatrix.cols());
+    assert(eigenvectorsMatrix.cols() == eigenvectorsMatrix.rows());
+    assert(eigenvectorsMatrix.cols() == eigenvalues.size());
 
     SelfAdjointEigenSolver<MatrixXd> eigenSolver(covarianceMatrix.matrix());
 
     if (eigenSolver.info() != Success) abort();
 
-    eigenValues = eigenSolver.eigenvalues();
-    eigenVectorsMatrix = eigenSolver.eigenvectors();
+    eigenvalues = eigenSolver.eigenvalues();
+    eigenvectorsMatrix = eigenSolver.eigenvectors();
 }
 
 

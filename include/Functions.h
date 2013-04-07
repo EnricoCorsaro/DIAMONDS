@@ -52,7 +52,7 @@ namespace Functions
     // Matrix algebra functions
 
     void clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd covarianceMatrix, RefArrayXd centerCoordinates);
-    void selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd covarianceEigenvalues, RefArrayXXd covarianceEigenvectors);
+    void selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenvalues, RefArrayXXd eigenvectorsMatrix);
     
 
     // Array algebra functions
