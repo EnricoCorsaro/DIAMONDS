@@ -166,12 +166,12 @@ void HyperEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 
         do
         {
-            do
-            {
+            //do
+            //{
                 drawFromHyperSphere(ellipsoidEigenvalues1, ellipsoidEigenvectorsMatrix1, centerCoordinates1, nestedSampleOfParameters);
-                logLikelihood = likelihood.logValue(nestedSampleOfParameters);
-            }
-            while (logLikelihood <= logLikelihoodConstraint);
+             //   logLikelihood = likelihood.logValue(nestedSampleOfParameters);
+            //}
+            //while (logLikelihood <= logLikelihoodConstraint);
 
             int Noverlaps = 1;        // Start with self-overlap only
             bool overlap = false;
@@ -634,20 +634,20 @@ void HyperEllipsoidSampler::drawFromHyperSphere(const RefArrayXd ellipsoidEigenv
     ArrayXd zeroCoordinates = ArrayXd::Zero(Ndimensions);
     double vectorNorm;
 
-    for (int i = 0; i < Ndimensions; i++)
+    do
     {
-        drawnParameters(i) = normal(engine);            // Sample normally each coordinate
+        for (int i = 0; i < Ndimensions; i++)
+        {
+            drawnParameters(i) = normal(engine);            // Sample normally each coordinate
+        }
+
+        vectorNorm = metric.distance(drawnParameters,zeroCoordinates);
     }
-
-    vectorNorm = metric.distance(drawnParameters,zeroCoordinates);
-    assert(vectorNorm != 0);
-    drawnParameters = drawnParameters/vectorNorm;
-
-    for (int i = 0; i < Ndimensions; i++)
-    {
-        drawnParameters(i) = uniform(engine)*drawnParameters(i);   // Sample uniformly in radial direction
-    }
-
+    while (vectorNorm == 0);                            // Repeat sampling if point falls in origin
+        
+    drawnParameters = drawnParameters/vectorNorm;       // Normalize coordinates
+    drawnParameters = pow(uniform(engine),1./Ndimensions)*drawnParameters;  // Sample uniformly in radial direction
+    
 
     // Transform sphere coordinates to ellipsoid coordinates
 

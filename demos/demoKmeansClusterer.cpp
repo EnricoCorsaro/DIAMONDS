@@ -115,10 +115,11 @@ int main()
     ofstream outputFile;
     File::openOutputFile(outputFile, "drawnsample.txt");
     
-    for (int i=0; i < 10; i++)
+    for (int i=0; i < 1000; i++)
     {
         sampler.drawWithConstraint(sample, Nclusters, clusterIndices, 0, drawnParameters, likelihood);
         File::arrayXXdToFile(outputFile, drawnParameters.transpose());
+        cout << i << endl;
     }
     outputFile.close();
 
