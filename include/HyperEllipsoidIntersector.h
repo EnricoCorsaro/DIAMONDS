@@ -29,8 +29,8 @@ class HyperEllipsoidIntersector : public HyperQuadricIntersector
                                              const RefArrayXXd allEigenvectorsMatrix, const RefArrayXd allCentersCoordinates);
         bool checkPointForOverlap(const RefArrayXd enlargedEigenValues, const RefArrayXXd eigenVectorsMatrix,
                                   const RefArrayXd centerCoordinates, const RefArrayXd pointCoordinates);
-        getNonOverlappingEllipsoidsIndices();
-        getOverlappingEllipsoidsIndices();
+        ArrayXi getNonOverlappingEllipsoidsIndices();
+        ArrayXi getOverlappingEllipsoidsIndices();
 
 
     protected:

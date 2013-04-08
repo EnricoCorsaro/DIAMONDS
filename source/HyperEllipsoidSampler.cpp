@@ -84,101 +84,132 @@ void HyperEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     // Compute covariance matrices and centers for ellipsoids associated with each cluster.
     // Compute eigenvalues and eigenvectors, enlarge eigenvalues and compute their hyper volumes.
 
-    computeEllipsoids(totalSampleOfParameters, Nclusters, clusterIndices);
+    computeEllipsoids(totalSampleOfParameters, Nclusters, clusterIndices, logWidthInPriorMass);
     
     
-    // Check which ellipsoids are not overlapping
+    // Find which ellipsoids are overlapping and which are not
     
-    ArrayXi noOverlappingEllipsoids = intersector.findNonOverlappingEllipsoids(Nclusters, allEnlargedEigenvalues, allEigenvectorsMatrix, allCentersCoordinates);
+    intersector.findOverlappingEllipsoids(Nclusters, allEnlargedEigenvalues, allEigenvectorsMatrix, allCentersCoordinates);
+    ArrayXi nonOverlappingEllipsoidsIndices = intersector.getNonOverlappingEllipsoidsIndices();
+    ArrayXi overlappingEllipsoidsIndices = intersector.getOverlappingEllipsoidsIndices();
+  
     
-    
-    // Start separate nested sampling from each non overlapping enlarged ellipsoid 
-    
-    int cluster;            // Ellipsoid number
-    int Nobjects2;          // Number of objects for the nested sampling within the identified ellipsoid
+    // Isolated ellipsoid sampling
 
-    for (int n = 0; n < noOverlappingEllipsoids.size(); n++)
+    if (nonOverlappingEllipsoidsIndices(0) != -1)
     {
-        cluster = noOverlappingEllipsoids(n);
-        Nobjects2 = NpointsPerCluster(cluster);
-        // NestedSampler nestedSampler(prior, likelihood);          // TO BE FIXED
-        // nestedSampler.run(Nobjects2);
+        // If non-overlapping ellipsoids exist start separate nested sampling 
+        // from each non overlapping enlarged ellipsoid 
+    
+        int clusterIndex;       // Cluster index
+        int Nobjects2;          // Number of objects for the nested sampling within the identified ellipsoid
+
+        for (int n = 0; n < nonOverlappingEllipsoidsIndices.size(); n++)
+        {
+            clusterIndex = nonOverlappingEllipsoidsIndices(n);
+            Nobjects2 = NpointsPerCluster(clusterIndex);
+            // NestedSampler nestedSampler(prior, likelihood);          // TO BE FIXED
+            // nestedSampler.runSubordinate(Nobjects2,clusterSampleOfObjects,reducedLogWidthInPriorMass);
+        }
     }
 
 
-    // Among remainders ellipsoids choose one with probability according to its volume fraction
+    // Overlapping ellipsoid sampling
 
-    ArrayXd volumeProbability = hyperVolumes/hyperVolumes.sum();
-    double actualProbability = uniform(engine);
-
-    ArrayXd centerCoordinates1;
-    ArrayXd ellipsoidEigenvalues1;
-    ArrayXXd ellipsoidEigenvectorsMatrix1;
-    centerCoordinates1 = allCentersCoordinates.segment(max*Ndimensions, Ndimensions);
-    ellipsoidEigenvalues1 = allEnlargedEigenvalues.segment(max*Ndimensions, Ndimensions);
-    ellipsoidEigenvectorsMatrix1 = allEigenvectorsMatrix.block(0, max*Ndimensions, Ndimensions, Ndimensions);
-
-
-    // Create arrays for a second ellipsoid to check for overlap
-
-    ArrayXd centerCoordinates2 = ArrayXd::Zero(Ndimensions);
-    ArrayXd ellipsoidEigenvalues2 = ArrayXd::Zero(Ndimensions);
-    ArrayXXd ellipsoidEigenvectorsMatrix2 = ArrayXXd::Zero(Ndimensions, Ndimensions);
-
-
-    // Sampe uniformly from first chosen ellipsoid until new parameter with logLikelihood > logLikelihoodConstraint is found
-    // If parameter is contained in Noverlaps ellipsoids, then accept parameter with probability 1/Noverlaps
-
-    double logLikelihood;
-    double logLikelihoodConstraint = likelihood.logValue(nestedSampleOfParameters);
-    double rejectProbability = 0;
-    
-    actualProbability = 0;
-
-    do
+    if (overlappingEllipsoidsIndices(0) != -1)
     {
+        // If overlapping ellipsoids exist choose one with probability according to its volume fraction
+
+        int NoverlappingEllipsoids = overlappingEllipsoidsIndices.size();
+        int ellipsoidIndex;
+        double volumeProbability;
+        double actualProbability; 
+        double totalVolume;
+        uniform_int_distribution<int> uniformIndex(0,NoverlappingEllipsoids-1);
+
+        for (int m = 0; m < NoverlappingEllipsoids; m++)
+        {   
+            ellipsoidIndex = overlappingEllipsoidsIndices(m);
+            totalVolume += hyperVolumes(ellipsoidIndex);                   // Compute total volume of overlapping ellipsoids
+        }
+
         do
         {
-            drawFromHyperSphere(ellipsoidEigenvalues1, ellipsoidEigenvectorsMatrix1, centerCoordinates1, nestedSampleOfParameters);
-            logLikelihood = likelihood.logValue(nestedSampleOfParameters);
+            ellipsoidIndex = overlappingEllipsoidsIndices(uniformIndex(engine));      // Pick up one ellipsoid randomly
+            volumeProbability = hyperVolumes(ellipsoidIndex)/totalVolume;             // Compute the probability for the selected ellipsoid based on its volume
+            actualProbability = uniform(engine);            // Give a probability value between 0 and 1
         }
-        while (logLikelihood <= logLikelihoodConstraint);
+        while (actualProbability > volumeProbability);      // If actualProbability < volumeProbability then pick the corresponding ellipsoid
 
-        int Noverlaps = 1;        // Start with no overlaps (only self-overlap)
-        bool overlap = false;
+        ArrayXd centerCoordinates1;
+        ArrayXd ellipsoidEigenvalues1;
+        ArrayXXd ellipsoidEigenvectorsMatrix1;
+        centerCoordinates1 = allCentersCoordinates.segment(ellipsoidIndex*Ndimensions, Ndimensions);
+        ellipsoidEigenvalues1 = allEnlargedEigenvalues.segment(ellipsoidIndex*Ndimensions, Ndimensions);
+        ellipsoidEigenvectorsMatrix1 = allEigenvectorsMatrix.block(0, ellipsoidIndex*Ndimensions, Ndimensions, Ndimensions);
 
-        for (int i = 0; i < Nclusters; i++)
+
+        // Create arrays for a second ellipsoid to check for overlap
+
+        int ellipsoidIndex2;
+        ArrayXd centerCoordinates2 = ArrayXd::Zero(Ndimensions);
+        ArrayXd ellipsoidEigenvalues2 = ArrayXd::Zero(Ndimensions);
+        ArrayXXd ellipsoidEigenvectorsMatrix2 = ArrayXXd::Zero(Ndimensions, Ndimensions);
+
+
+        // Sampe uniformly from first chosen ellipsoid until new parameter with logLikelihood > logLikelihoodConstraint is found
+        // If parameter is contained in Noverlaps ellipsoids, then accept parameter with probability 1/Noverlaps
+
+        double logLikelihood;
+        double logLikelihoodConstraint = likelihood.logValue(nestedSampleOfParameters);
+        double rejectProbability;
+
+        do
         {
-            if (i == max) 
-                continue;
+            do
+            {
+                drawFromHyperSphere(ellipsoidEigenvalues1, ellipsoidEigenvectorsMatrix1, centerCoordinates1, nestedSampleOfParameters);
+                logLikelihood = likelihood.logValue(nestedSampleOfParameters);
+            }
+            while (logLikelihood <= logLikelihoodConstraint);
+
+            int Noverlaps = 1;        // Start with self-overlap only
+            bool overlap = false;
+
+            for (int i = 0; i < NoverlappingEllipsoids; i++)        // Check other possibile overlapping ellipsoids
+            {
+                if (overlappingEllipsoidsIndices(i) == ellipsoidIndex)     // Skip if self-overlap
+                    continue;
+                else
+                {
+                    ellipsoidIndex2 = overlappingEllipsoidsIndices(i);
+                    centerCoordinates2 = allCentersCoordinates.segment(ellipsoidIndex2*Ndimensions, Ndimensions);
+                    ellipsoidEigenvalues2 = allEnlargedEigenvalues.segment(ellipsoidIndex2*Ndimensions, Ndimensions);
+                    ellipsoidEigenvectorsMatrix2 = allEigenvectorsMatrix.block(0, ellipsoidIndex2*Ndimensions, Ndimensions, Ndimensions);
+
+
+                    // Check if point belongs to ellipsoid 2
+
+                    overlap = intersector.checkPointForOverlap(ellipsoidEigenvalues2, ellipsoidEigenvectorsMatrix2, centerCoordinates2, nestedSampleOfParameters);
+                
+                    if (overlap)
+                        Noverlaps++;
+                    else
+                        continue;
+                }
+            }
+
+
+            if (Noverlaps == 1)                             // If no overlaps found, end function 
+                return;
             else
             {
-                ellipsoidEigenvalues2 = allEnlargedEigenvalues.segment(i*Ndimensions, Ndimensions);
-                ellipsoidEigenvectorsMatrix2 = allEigenvectorsMatrix.block(0, i*Ndimensions, Ndimensions, Ndimensions);
-                centerCoordinates2 = allCentersCoordinates.segment(i*Ndimensions, Ndimensions);
-
-
-                // Check if point belongs to ellipsoid 2
-
-                overlap = intersector.checkPointForOverlap(ellipsoidEigenvalues2, ellipsoidEigenvectorsMatrix2, centerCoordinates2, nestedSampleOfParameters);
-                
-                if (overlap)
-                    Noverlaps++;
-                else
-                    continue;
+                rejectProbability = 1./Noverlaps;           // Set rejection probability value
+                actualProbability = uniform(engine);        // Evaluate actual probability value
             }
         }
-
-
-        if (Noverlaps == 1)                             // If no overlaps found, end function 
-            return;
-        else
-        {
-            rejectProbability = 1./Noverlaps;           // Set rejection probability value
-            actualProbability = uniform(engine);        // Evaluate actual probability value
-        }
-    }
-    while (actualProbability > rejectProbability);      // If actual probability value < rejection probability then end function
+        while (actualProbability > rejectProbability);      // If actual probability value < rejection probability then accept point and end function
+    } // END sampling from overlapping ellipsoids
 }
 
 
@@ -205,12 +236,13 @@ void HyperEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 //      containing the total sample of points to be split into clusters.
 //      clusterIndices: a one dimensional Eigen Array containing the integers
 //      indices of the clusters as obtained from the clustering algorithm.
+//      logWidthInPriorMass: log Value of prior volume from the actual nested iteration.
 //
 // OUTPUT:
 //      void
 //
 
-void HyperEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices)
+void HyperEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices, const double logWidthInPriorMass)
 {
     assert(totalSampleOfParameters.cols() == clusterIndices.size());
     int Ndimensions = totalSampleOfParameters.rows();       
@@ -625,4 +657,43 @@ void HyperEllipsoidSampler::drawFromHyperSphere(const RefArrayXd ellipsoidEigenv
 
     drawnParameters = (T * drawnParameters.matrix()) + centerCoordinates.matrix();
 
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// HyperEllipsoidSampler::computeAllEnlargedCovarianceMatrix()
+// 
+// PURPOSE:
+//      Compute the total covariance matrix corresponding to the
+//      enlarged eigenvalues of each ellipsoid.
+//  
+// OUTPUT:
+//      void
+//
+
+void HyperEllipsoidSampler::computeAllEnlargedCovarianceMatrix()
+{
+    int Ndimensions = allEigenvectorsMatrix.rows();
+    int Nclusters = allEnlargedEigenvalues.size()/Ndimensions;
+    ArrayXd ellipsoidEigenvalues;
+    ArrayXXd ellipsoidEigenvectorsMatrix;
+    ArrayXXd covarianceMatrix;
+
+    for (int i=0; i < Nclusters; i++)
+    {
+        ellipsoidEigenvalues = allEnlargedEigenvalues.segment(i*Ndimensions, Ndimensions);
+        ellipsoidEigenvectorsMatrix = allEigenvectorsMatrix.block(0, i*Ndimensions, Ndimensions, Ndimensions);
+        covarianceMatrix = ellipsoidEigenvectorsMatrix.matrix() * ellipsoidEigenvalues.matrix().asDiagonal() * ellipsoidEigenvectorsMatrix.matrix().transpose();
+        allEnlargedCovarianceMatrix.block(0, i*Ndimensions, Ndimensions, Ndimensions) = covarianceMatrix;
+    }
 }

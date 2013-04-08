@@ -24,7 +24,8 @@ class HyperEllipsoidSampler : public HyperQuadricSampler
         
         virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices,
                                         const double logWidthInPriorMass, RefArrayXd nestedSampleOfParameters, Likelihood &likelihood);
-        void computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices);
+        void computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, 
+                               const RefArrayXi clusterIndices, const double logWidthInPrioMass);
         ArrayXXd getAllClustersCovarianceMatrix();
         ArrayXd getAllCentersCoordinates();
         ArrayXi getNpointsPerCluster();
@@ -39,8 +40,8 @@ class HyperEllipsoidSampler : public HyperQuadricSampler
       
         void ellipsoidEnlarger(RefArrayXd eigenvalues, const double logWidthInPriorMass, const int NpointsInCluster);
         void drawFromHyperSphere(const RefArrayXd eigenvalues, const RefArrayXXd eigenvectorsMatrix, 
-                                const RefArrayXd centerCoordinates, RefArrayXd drawnParameters);
-        void computeAllEnlargedCovarianceMatrix(){};
+                                 const RefArrayXd centerCoordinates, RefArrayXd drawnParameters);
+        void computeAllEnlargedCovarianceMatrix();
 
 
     private:

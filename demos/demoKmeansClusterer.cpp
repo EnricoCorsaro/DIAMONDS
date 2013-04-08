@@ -114,7 +114,6 @@ int main()
 
     ofstream outputFile;
     File::openOutputFile(outputFile, "drawnsample.txt");
-    sampler.computeEllipsoids(sample, Nclusters, clusterIndices);
     
     for (int i=0; i < 10; i++)
     {
