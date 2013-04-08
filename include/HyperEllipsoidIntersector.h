@@ -25,16 +25,21 @@ class HyperEllipsoidIntersector : public HyperQuadricIntersector
 
         virtual bool intersection(const RefArrayXXd covarianceMatrix1, const RefArrayXd centerCoordinates1, 
                                   const RefArrayXXd covarianceMatrix2, const RefArrayXd centerCoordinates2);
-        ArrayXi findNonOverlappingEllipsoids(const int Nclusters, const RefArrayXd allEnlargedEigenvalues, 
+        void findOverlappingEllipsoids(const int Nclusters, const RefArrayXd allEnlargedEigenvalues, 
                                              const RefArrayXXd allEigenvectorsMatrix, const RefArrayXd allCentersCoordinates);
         bool checkPointForOverlap(const RefArrayXd enlargedEigenValues, const RefArrayXXd eigenVectorsMatrix,
                                   const RefArrayXd centerCoordinates, const RefArrayXd pointCoordinates);
+        getNonOverlappingEllipsoidsIndices();
+        getOverlappingEllipsoidsIndices();
+
 
     protected:
-
+        
 
     private:
 
+        ArrayXi nonOverlappingEllipsoidsIndices;
+        ArrayXi overlappingEllipsoidsIndices;
 };
 
 #endif

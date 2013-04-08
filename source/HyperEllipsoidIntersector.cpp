@@ -149,10 +149,14 @@ bool HyperEllipsoidIntersector::intersection(const RefArrayXXd covarianceMatrix1
 
 
 
-// HyperEllipsoidIntersector::findNonOverlappingEllipsoids()
+// HyperEllipsoidIntersector::findOverlappingEllipsoids()
 //
 // PURPOSE:
-//      Determines which of Nclusters input ellipsoids are not overlapping.
+//      Determines which of Nclusters input ellipsoids are overlapping and which
+//      are not. The results are stored in the private data members specifying the 
+//      subscripts of the ellipsoids that are not overlapping. 
+//      A single element array containing the value -1 is saved 
+//      in case no matchings are found.
 //
 // INPUT:
 //      Nclusters: an integer specifying the number of ellipsoids to check for
@@ -170,7 +174,7 @@ bool HyperEllipsoidIntersector::intersection(const RefArrayXXd covarianceMatrix1
 //      are not overlapping. A single element array containing the value -1 is returned 
 //      in case no non-overlapping ellipsoids are found.
 //
-ArrayXi HyperEllipsoidIntersector::findNonOverlappingEllipsoids(const int Nclusters, const RefArrayXd allEnlargedEigenvalues, const RefArrayXXd allEigenvectorsMatrix, const RefArrayXd allCentersCoordinates)
+void HyperEllipsoidIntersector::findOverlappingEllipsoids(const int Nclusters, const RefArrayXd allEnlargedEigenvalues, const RefArrayXXd allEigenvectorsMatrix, const RefArrayXd allCentersCoordinates)
 {
     assert(allEnlargedEigenvalues.size() == allCentersCoordinates.size());
     assert(allEigenvectorsMatrix.rows() == allCentersCoordinates.size()/Nclusters);
@@ -188,9 +192,9 @@ ArrayXi HyperEllipsoidIntersector::findNonOverlappingEllipsoids(const int Nclust
     
     bool overlap = false;
     bool noOverlapFlag;
-    int count = 0;
-    ArrayXi nonOverlappingEllipsoids;
-
+    int countNo = 0;
+    int countYes = 0;
+    
     for (int i = 0; i < Nclusters-1; i++)
     {
         centerCoordinates1 = allCentersCoordinates.segment(i*Ndimensions, Ndimensions);
@@ -223,23 +227,43 @@ ArrayXi HyperEllipsoidIntersector::findNonOverlappingEllipsoids(const int Nclust
         {
             if (i == Nclusters-2)       // save i and i+1 if i is the last one
             {
-                nonOverlappingEllipsoids.conservativeResize(count+2);
-                nonOverlappingEllipsoids(count) = i;
-                nonOverlappingEllipsoids(count+1) = i+1;
+                nonOverlappingEllipsoidsIndices.conservativeResize(countNo+2);
+                nonOverlappingEllipsoidsIndices(countNo) = i;
+                nonOverlappingEllipsoidsIndices(countNo+1) = i+1;
                 continue;
             }
             else                        // save i and go to next i otherwise
             {
-                nonOverlappingEllipsoids.conservativeResize(count+1);
-                nonOverlappingEllipsoids(count) = i;
-                count++;
+                nonOverlappingEllipsoidsIndices.conservativeResize(countNo+1);
+                nonOverlappingEllipsoidsIndices(countNo) = i;
+                countNo++;
             }
         }
-        else                    // If overlaps are found, go to next i
-            continue;
+        else                    // If overlaps are found instead
+        {
+            if (i == Nclusters-2)       // save i and i+1 if i is the last one
+            {
+                overlappingEllipsoidsIndices.conservativeResize(countYes+2);
+                overlappingEllipsoidsIndices(countYes) = i;
+                overlappingEllipsoidsIndices(countYes+1) = i+1;
+                continue;
+            }
+            else                        // save i and go to next i otherwise
+            {
+                overlappingEllipsoidsIndices.conservativeResize(countYes+1);
+                overlappingEllipsoidsIndices(countYes) = i;
+                countYes++;
+            }
+        }
     }
 
-    return nonOverlappingEllipsoids;
+    if (countNo == 0 && nonOverlappingEllipsoidsIndices.size() == 1)
+        nonOverlappingEllipsoidsIndices(0) = -1;            // No non-overlapping ellipsoids found
+    else
+    {    
+        if (countYes == 0 && overlappingEllipsoidsIndices.size() == 1)
+            overlappingEllipsoidsIndices(0) = -1;           // No overlapping ellispoids found
+    }
 }
 
 
@@ -313,4 +337,60 @@ bool HyperEllipsoidIntersector::checkPointForOverlap(const RefArrayXd enlargedEi
         overlap = true;
         
     return overlap;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// HyperEllipsoidIntersector::getNonOverlappingEllipsoidsIndices()
+//
+// PURPOSE:
+//      Gets private data member nonOverlappingEllipsoidsIndices.
+//
+// OUTPUT:
+//      an Eigen Array containing the indices of the ellipsoids that
+//      are not overlapping.
+//
+
+ArrayXi HyperEllipsoidIntersector::getNonOverlappingEllipsoidsIndices()
+{
+    return nonOverlappingEllipsoidsIndices;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// HyperEllipsoidIntersector::getOverlappingEllipsoidsIndices()
+//
+// PURPOSE:
+//      Gets private data member overlappingEllipsoidsIndices.
+//
+// OUTPUT:
+//      an Eigen Array containing the indices of the ellipsoids that
+//      are overlapping.
+//
+
+ArrayXi HyperEllipsoidIntersector::getOverlappingEllipsoidsIndices()
+{
+    return overlappingEllipsoidsIndices;
 }
