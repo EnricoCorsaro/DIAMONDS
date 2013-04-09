@@ -102,11 +102,6 @@ void HyperEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     ArrayXi nonOverlappingEllipsoidsIndices = intersector.getNonOverlappingEllipsoidsIndices();
     ArrayXi overlappingEllipsoidsIndices = intersector.getOverlappingEllipsoidsIndices();
  
-    cout << "Non overlapping ellipsoids " << endl;
-    cout << nonOverlappingEllipsoidsIndices << endl;
-    cout << "Overlapping ellipsoids " << endl;
-    cout << overlappingEllipsoidsIndices << endl;
-
     
     // Isolated ellipsoid sampling
 
@@ -124,6 +119,7 @@ void HyperEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
             clusterIndex = nonOverlappingEllipsoidsIndices(n);
             NobjectsInCluster = NobjectsPerCluster(clusterIndex);
             logLocalWidthInPriorMass = exp(logWidthInPriorMass)*(NobjectsInCluster/Nobjects);
+            cout << "Start separate nesting loop for ellipsoid #" << clusterIndex << endl;
             // NestedSampler nestedSampler(prior, likelihood);          // TO BE FIXED
             // nestedSampler.runSubordinate(NobjectsInCluster,clusterSampleOfObjects,logLocalWidthInPriorMass);
         }
@@ -175,12 +171,12 @@ void HyperEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
         ArrayXXd ellipsoidEigenvectorsMatrix2 = ArrayXXd::Zero(Ndimensions, Ndimensions);
         ArrayXd drawnParameters;
 
+        
         // Sampe uniformly from first chosen ellipsoid until new parameter with logLikelihood > logLikelihoodConstraint is found
         // If parameter is contained in Noverlaps ellipsoids, then accept parameter with probability 1/Noverlaps
 
-        
-        
         //double logLikelihoodConstraint = likelihood.logValue(drawnParameters);
+        
         for (int m = 0; m < Ndraws; m++)
         {
             drawnParameters = nestedSampleOfParameters.col(m);
@@ -195,7 +191,7 @@ void HyperEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                 //while (logLikelihood <= logLikelihoodConstraint);
 
                 int Noverlaps = 1;        // Start with self-overlap only
-                bool overlap = false;
+                bool overlapFlag = false;
 
                 for (int i = 0; i < NoverlappingEllipsoids; i++)        // Check other possibile overlapping ellipsoids
                 {
@@ -211,9 +207,9 @@ void HyperEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 
                         // Check if point belongs to ellipsoid 2
 
-                        overlap = intersector.checkPointForOverlap(ellipsoidEigenvalues2, ellipsoidEigenvectorsMatrix2, centerCoordinates2, drawnParameters);
+                        overlapFlag = intersector.checkPointForOverlap(ellipsoidEigenvalues2, ellipsoidEigenvectorsMatrix2, centerCoordinates2, drawnParameters);
                 
-                        if (overlap)
+                        if (overlapFlag)
                             Noverlaps++;
                         else
                             continue;
@@ -225,8 +221,7 @@ void HyperEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                     break;
                 else
                 {
-                    cout << "HERE!!!!!!!!!!!!" << endl;
-                    rejectProbability = 0.;//1./Noverlaps;           // Set rejection probability value
+                    rejectProbability = 1./Noverlaps;           // Set rejection probability value
                     actualProbability = uniform(engine);        // Evaluate actual probability value
                 }
             }

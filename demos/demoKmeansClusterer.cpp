@@ -110,7 +110,7 @@ int main()
     // Testing of EllipsoidSampler class
 
     int Ndraws = 1000;
-    double initialEnlargementFactor = 1.4;
+    double initialEnlargementFactor = 2.0;
     double alpha = 1.;
     HyperEllipsoidSampler sampler(uniformPrior, likelihood, myMetric, Nobjects, initialEnlargementFactor, alpha);
     ArrayXXd sampleOfParameters(Ndimensions,Ndraws);
@@ -126,20 +126,16 @@ int main()
         File::arrayXXdToFile(outputFile, sampleOfParameters.col(i).transpose());
     }
     outputFile.close();
-
+    
     ArrayXXd allClustersCovarianceMatrix = sampler.getAllClustersCovarianceMatrix();
     ArrayXd allCentersCoordinates = sampler.getAllCentersCoordinates();
     ArrayXi NobjectsPerCluster = sampler.getNobjectsPerCluster();
     ArrayXd allEnlargedEigenvalues = sampler.getAllEnlargedEigenvalues();
     ArrayXd allEigenvalues = sampler.getAllEigenvalues();
     ArrayXXd allEigenvectorsMatrix = sampler.getAllEigenvectorsMatrix();
-    ArrayXd hyperVolumes = sampler.getHyperVolumes();
-    ArrayXXd allEnlargedCovarianceMatrix = sampler.getAllEnlargedCovarianceMatrix();
 
     cout << "Number of points per cluster: " << endl;
     cout << NobjectsPerCluster << endl;
-    cout << "Hyper Volumes of each enlarged ellipsoid: " << endl;
-    cout << hyperVolumes << endl;
     cout << "All centers coordinates: " << endl;
     cout << allCentersCoordinates << endl;
     cout << "Matrix of all original covariance matrices: " << endl;
@@ -148,8 +144,6 @@ int main()
     cout << allEigenvalues << endl;
     cout << "All enlarged eigenvalues: " << endl;
     cout << allEnlargedEigenvalues << endl;
-    cout << "All enlarged covariance matrix: " << endl;
-    cout << allEnlargedCovarianceMatrix << endl;
 
     /* ------ END OF ELLIPSOIDAL SAMPLING DEMO ----- */
 
