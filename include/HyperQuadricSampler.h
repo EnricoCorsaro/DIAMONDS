@@ -35,19 +35,20 @@ class HyperQuadricSampler
 
     public:
        
-        HyperQuadricSampler(Prior &prior, Metric &metric, const int Nobjects);
+        HyperQuadricSampler(Prior &prior, Likelihood &likelihood, Metric &metric, const int Nobjects);
         ~HyperQuadricSampler();
         
         virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, 
-                                        const int Nclusters, RefArrayXi clusterIndices,  // Information from clustering algorithm
-                                        const double logWidthInPriorMass,                // Information from nested sampling algorithm
-                                        RefArrayXd nestedSampleOfParameters, Likelihood &likelihood) = 0;
+                                        const int Nclusters, RefArrayXi clusterIndices,                     // Information from clustering algorithm
+                                        const double logWidthInPriorMass,                                  // Information from nested sampling algorithm
+                                        RefArrayXXd nestedSampleOfParameters) = 0;
 
 
     protected:
        
         int Nobjects;
         Prior &prior;
+        Likelihood &likelihood;
         Metric &metric;
 
 

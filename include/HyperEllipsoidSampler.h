@@ -19,16 +19,16 @@ class HyperEllipsoidSampler : public HyperQuadricSampler
 
     public:
        
-        HyperEllipsoidSampler(Prior &prior, Metric &metric, const int Nobjects, const double initialEnlargementFactor, const double alpha);
+        HyperEllipsoidSampler(Prior &prior, Likelihood &likelihood, Metric &metric, const int Nobjects, const double initialEnlargementFactor, const double alpha);
         ~HyperEllipsoidSampler();
         
         virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices,
-                                        const double logWidthInPriorMass, RefArrayXd nestedSampleOfParameters, Likelihood &likelihood);
+                                        const double logWidthInPriorMass, RefArrayXXd nestedSampleOfParameters);
         void computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, 
                                const RefArrayXi clusterIndices, const double logWidthInPrioMass);
         ArrayXXd getAllClustersCovarianceMatrix();
         ArrayXd getAllCentersCoordinates();
-        ArrayXi getNpointsPerCluster();
+        ArrayXi getNobjectsPerCluster();
         ArrayXXd getAllEigenvectorsMatrix();
         ArrayXd getAllEigenvalues();
         ArrayXd getAllEnlargedEigenvalues();
@@ -38,7 +38,7 @@ class HyperEllipsoidSampler : public HyperQuadricSampler
     
     protected:
       
-        void ellipsoidEnlarger(RefArrayXd eigenvalues, const double logWidthInPriorMass, const int NpointsInCluster);
+        void ellipsoidEnlarger(RefArrayXd eigenvalues, const double logWidthInPriorMass, const int NobjectsInCluster);
         void drawFromHyperSphere(const RefArrayXd eigenvalues, const RefArrayXXd eigenvectorsMatrix, 
                                  const RefArrayXd centerCoordinates, RefArrayXd drawnParameters);
         void computeAllEnlargedCovarianceMatrix();
@@ -54,12 +54,11 @@ class HyperEllipsoidSampler : public HyperQuadricSampler
         ArrayXXd allClustersCovarianceMatrix;
         ArrayXXd allEnlargedCovarianceMatrix;
         ArrayXd allCentersCoordinates;
-        ArrayXi NpointsPerCluster;
+        ArrayXi NobjectsPerCluster;
         ArrayXXd allEigenvectorsMatrix;
         ArrayXd allEigenvalues;
         ArrayXd allEnlargedEigenvalues;
         ArrayXd hyperVolumes;
-
 };
 
 #endif
