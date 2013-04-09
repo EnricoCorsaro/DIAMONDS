@@ -176,6 +176,15 @@ bool HyperEllipsoidIntersector::intersection(const RefArrayXXd covarianceMatrix1
 //
 void HyperEllipsoidIntersector::findOverlappingEllipsoids(const int Nclusters, const RefArrayXd allEnlargedEigenvalues, const RefArrayXXd allEigenvectorsMatrix, const RefArrayXd allCentersCoordinates)
 {
+    if (Nclusters == 1)         // If only one cluster is found, then return one non-overlapping ellipsoid
+    {
+        overlappingEllipsoidsIndices.resize(1);
+        nonOverlappingEllipsoidsIndices.resize(1);
+        overlappingEllipsoidsIndices(0) = -1;
+        nonOverlappingEllipsoidsIndices(0) = 0;
+        return;
+    }
+
     assert(allEnlargedEigenvalues.size() == allCentersCoordinates.size());
     assert(allEigenvectorsMatrix.rows() == allCentersCoordinates.size()/Nclusters);
 
@@ -189,81 +198,126 @@ void HyperEllipsoidIntersector::findOverlappingEllipsoids(const int Nclusters, c
     ArrayXd centerCoordinates2(Ndimensions);
     ArrayXXd eigenvectorsMatrix2(Ndimensions,Ndimensions);
     ArrayXXd covarianceMatrix2(Ndimensions,Ndimensions);
+   
+    overlappingEllipsoidsIndices.resize(1);
+    nonOverlappingEllipsoidsIndices.resize(1);
+    overlappingEllipsoidsIndices(0) = -1;
+    nonOverlappingEllipsoidsIndices(0) = -1;
+
+    bool overlapFlag = false;
+    bool saveFlagI = true;
+    bool saveFlagJ = true;
+    int countOverlap;
+    int countIndex = 0;
     
-    bool overlap = false;
-    bool noOverlapFlag;
-    int countNo = 0;
-    int countYes = 0;
-    
+    // Identify the overlapping ellipsoids
+
     for (int i = 0; i < Nclusters-1; i++)
     {
+        saveFlagI = true;       // Reset save index flag for i
+        countOverlap = 0;       // Reset overlap counter
         centerCoordinates1 = allCentersCoordinates.segment(i*Ndimensions, Ndimensions);
         enlargedEigenvalues1 = allEnlargedEigenvalues.segment(i*Ndimensions, Ndimensions);
         eigenvectorsMatrix1 = allEigenvectorsMatrix.block(0, i*Ndimensions, Ndimensions, Ndimensions);
         covarianceMatrix1 = eigenvectorsMatrix1.matrix() * enlargedEigenvalues1.matrix().asDiagonal() * eigenvectorsMatrix1.matrix().transpose();
         
         for (int j = i + 1; j < Nclusters; j++)
-        {
+        {   
+            saveFlagJ = true;        // Reset save index flag for j
             centerCoordinates2 = allCentersCoordinates.segment(j*Ndimensions, Ndimensions);
             enlargedEigenvalues2 = allEnlargedEigenvalues.segment(j*Ndimensions, Ndimensions);
             eigenvectorsMatrix2 = allEigenvectorsMatrix.block(0, j*Ndimensions, Ndimensions, Ndimensions);
             covarianceMatrix2 = eigenvectorsMatrix2.matrix() * enlargedEigenvalues2.matrix().asDiagonal() * eigenvectorsMatrix2.matrix().transpose();
-            overlap = intersection(covarianceMatrix1, centerCoordinates1, covarianceMatrix2, centerCoordinates2);
+            overlapFlag = intersection(covarianceMatrix1, centerCoordinates1, covarianceMatrix2, centerCoordinates2);
 
-            if (overlap)    // If overlap occurred, go to next i-th ellipsoid
+            if (overlapFlag)    // If overlap occurred
             {
-                noOverlapFlag = false;  // Set noOverlap flag to false
-                break;
-            }
-            else    // If no overlap occurred, go to next j-th ellipsoid
-            {
-                noOverlapFlag = true;  // Set noOverlap flag to true
-                continue;        
-            }
+                countOverlap++;
                 
+                for (int k = 0; k < overlappingEllipsoidsIndices.size(); k++) // Check if j is saved already
+                {
+                    if (j == overlappingEllipsoidsIndices(k))       
+                    {
+                        saveFlagJ = false; // If j is saved already, don't save it again and go to next j
+                        break;
+                    }
+                }
+
+                
+                if (saveFlagJ)      // If j is not saved yet, then save it
+                {
+                    overlappingEllipsoidsIndices.conservativeResize(countIndex+1);
+                    overlappingEllipsoidsIndices(countIndex) = j;
+                    countIndex++;
+                }
+            }
         }
-        
-        if (noOverlapFlag)      // If no overlaps for the i-th ellipsoid are found...
+
+        if (i == 0 && countOverlap != 0)   // If first i and at least one overlap is found, save also i and go to next i
         {
-            if (i == Nclusters-2)       // save i and i+1 if i is the last one
-            {
-                nonOverlappingEllipsoidsIndices.conservativeResize(countNo+2);
-                nonOverlappingEllipsoidsIndices(countNo) = i;
-                nonOverlappingEllipsoidsIndices(countNo+1) = i+1;
-                continue;
-            }
-            else                        // save i and go to next i otherwise
-            {
-                nonOverlappingEllipsoidsIndices.conservativeResize(countNo+1);
-                nonOverlappingEllipsoidsIndices(countNo) = i;
-                countNo++;
-            }
+            overlappingEllipsoidsIndices.conservativeResize(countIndex+1);
+            overlappingEllipsoidsIndices(countIndex) = i;
+            countIndex++;
+            continue;
         }
-        else                    // If overlaps are found instead
-        {
-            if (i == Nclusters-2)       // save i and i+1 if i is the last one
+        else 
+            if (i > 0 && countOverlap != 0)     // If i is not the first one and at least one overlap is found ...
             {
-                overlappingEllipsoidsIndices.conservativeResize(countYes+2);
-                overlappingEllipsoidsIndices(countYes) = i;
-                overlappingEllipsoidsIndices(countYes+1) = i+1;
-                continue;
+                for (int k = 0; k < overlappingEllipsoidsIndices.size(); k++) // Check if i is saved already
+                {
+                    if (i == overlappingEllipsoidsIndices(k))       
+                    {
+                        saveFlagI = false;       // If i is saved already, don't save it again and go to next i
+                        break;
+                    }
+                }
+
+                if (saveFlagI)      // If i is not saved yet, then save it
+                {
+                    overlappingEllipsoidsIndices.conservativeResize(countIndex+1);
+                    overlappingEllipsoidsIndices(countIndex) = i;
+                    countIndex++;
+                }
             }
-            else                        // save i and go to next i otherwise
+    }
+
+    int Noverlaps;
+
+    if (overlappingEllipsoidsIndices(0) != -1)
+        Noverlaps = overlappingEllipsoidsIndices.size();
+    else
+        Noverlaps = 0;
+
+    int NnonOverlaps = Nclusters - Noverlaps;
+
+    if (NnonOverlaps == 0)          // If no non-overlapping ellipsoids are found, keep vector element to -1
+        return;
+    else
+    {
+        nonOverlappingEllipsoidsIndices.resize(NnonOverlaps);       // Otherwise, at least 1 NnonOverlaps ellipsoid is found
+        countIndex = 0;
+
+        for (int i = 0; i < Nclusters; i++)
+        {
+            saveFlagI = true;       // Reset save flag for i
+
+            for (int j = 0; j < Noverlaps; j++)     // Check which ellipsoids are already overlapping
             {
-                overlappingEllipsoidsIndices.conservativeResize(countYes+1);
-                overlappingEllipsoidsIndices(countYes) = i;
-                countYes++;
+                if (i == overlappingEllipsoidsIndices(j))       // If ellipsoid i-th already overlap, then go to next i-th ellipsoid
+                {
+                    saveFlagI = false;
+                    break;
+                }
+            }
+
+            if (saveFlagI)      // If ellipsoid is not overlapping, save it among non-overlapping ellipsoids
+            {   
+                nonOverlappingEllipsoidsIndices(countIndex) = i;
+                countIndex++;
             }
         }
     }
 
-    if (countNo == 0 && nonOverlappingEllipsoidsIndices.size() == 1)
-        nonOverlappingEllipsoidsIndices(0) = -1;            // No non-overlapping ellipsoids found
-    else
-    {    
-        if (countYes == 0 && overlappingEllipsoidsIndices.size() == 1)
-            overlappingEllipsoidsIndices(0) = -1;           // No overlapping ellispoids found
-    }
 }
 
 
