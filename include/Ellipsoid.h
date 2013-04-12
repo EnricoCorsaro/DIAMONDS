@@ -30,7 +30,7 @@ class Ellipsoid
 
     public:
 
-        Ellipsoid(RefArrayXXd sampleOfParameters);
+        Ellipsoid(RefArrayXXd sampleOfParameters, const int index);
         ~Ellipsoid();
 
         void build(const double enlargementFactor);
@@ -39,6 +39,7 @@ class Ellipsoid
         ArrayXXd getSampleOfParameters();
         ArrayXXd getCovarianceMatrix();
         ArrayXXd getEigenvectorsMatrix();
+        int getIndex();
         int getNobjects();
         double getHyperVolume();
 
@@ -51,6 +52,7 @@ class Ellipsoid
         ArrayXXd covarianceMatrix;
         ArrayXXd eigenvectorsMatrix;
         int Nobjects;
+        int index;
         double hyperVolume;
 
 

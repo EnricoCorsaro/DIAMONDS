@@ -12,9 +12,10 @@
 //      coordinates of the objects inside the ellipsoid.
 //
 
-Ellipsoid::Ellipsoid(RefArrayXXd sampleOfParameters)
+Ellipsoid::Ellipsoid(RefArrayXXd sampleOfParameters, const int index)
 : sampleOfParameters(sampleOfParameters),
   Nobjects(sampleOfParameters.cols()),
+  index(index),
   Ndimensions(sampleOfParameters.rows())
 {
     eigenvalues.resize(Ndimensions);
@@ -251,6 +252,33 @@ int Ellipsoid::getNobjects()
     return Nobjects;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Ellipsoid::getIndex()
+//
+// PURPOSE: 
+//      Gets the protected data member index.      
+//
+// OUTPUT:
+//      An integer containing the reference number of the ellipsoid.
+//
+
+int Ellipsoid::getIndex()
+{
+    return index;
+}
 
 
 
