@@ -10,11 +10,11 @@
 #include "File.h"
 #include "EuclideanMetric.h"
 #include "KmeansClusterer.h"
-#include "HyperEllipsoidSampler.h"
-#include "HyperEllipsoidIntersector.h"
+#include "MultiEllipsoidSampler.h"
 #include "UniformPrior.h"
 #include "NormalLikelihood.h"
 #include "LorentzianModel.h"
+#include "Ellipsoid.h"
 
 using namespace std;
 using namespace Eigen;
@@ -107,43 +107,30 @@ int main()
     NormalLikelihood likelihood(covariates, observations, uncertainties, model);
    
 
-    // Testing of EllipsoidSampler class
+    // Testing of MultiEllipsoidSampler class
 
     int Ndraws = 1000;
-    double initialEnlargementFactor = 2.0;
+    double initialEnlargementFactor = 1.4;
     double alpha = 1.;
-    HyperEllipsoidSampler sampler(uniformPrior, likelihood, myMetric, Nobjects, initialEnlargementFactor, alpha);
-    ArrayXXd sampleOfParameters(Ndimensions,Ndraws);
+    MultiEllipsoidSampler sampler(uniformPrior, likelihood, myMetric, kmeans, Nobjects, initialEnlargementFactor, alpha);
+    ArrayXXd drawnSampleOfParameters = ArrayXXd::Zero(Ndimensions,Ndraws);
+    ArrayXi overlappingEllipsoidsIndices;
 
+    sampler.drawWithConstraint(sample, Nclusters, clusterIndices, 0, drawnSampleOfParameters);
+    overlappingEllipsoidsIndices = sampler.getOverlappingEllipsoidsIndices();
 
-    ofstream outputFile;
-    File::openOutputFile(outputFile, "drawnsample.txt");
-    
-    sampler.drawWithConstraint(sample, Nclusters, clusterIndices, 0, sampleOfParameters);
-    
-    for (int i=0; i < Ndraws; i++)
+    if (overlappingEllipsoidsIndices(0) != -1)      // If at least two overlapping ellipsoids are found, then print the results
     {
-        File::arrayXXdToFile(outputFile, sampleOfParameters.col(i).transpose());
-    }
-    outputFile.close();
+        ofstream outputFile;
+        File::openOutputFile(outputFile, "drawnsample.txt");
+        
+        for (int i=0; i < Ndraws; i++)
+        {
+            File::arrayXXdToFile(outputFile, drawnSampleOfParameters.col(i).transpose());
+        }
     
-    ArrayXXd allClustersCovarianceMatrix = sampler.getAllClustersCovarianceMatrix();
-    ArrayXd allCentersCoordinates = sampler.getAllCentersCoordinates();
-    ArrayXi NobjectsPerCluster = sampler.getNobjectsPerCluster();
-    ArrayXd allEnlargedEigenvalues = sampler.getAllEnlargedEigenvalues();
-    ArrayXd allEigenvalues = sampler.getAllEigenvalues();
-    ArrayXXd allEigenvectorsMatrix = sampler.getAllEigenvectorsMatrix();
-
-    cout << "Number of points per cluster: " << endl;
-    cout << NobjectsPerCluster << endl;
-    cout << "All centers coordinates: " << endl;
-    cout << allCentersCoordinates << endl;
-    cout << "Matrix of all original covariance matrices: " << endl;
-    cout << allClustersCovarianceMatrix << endl;
-    cout << "All eigenvalues: " << endl;
-    cout << allEigenvalues << endl;
-    cout << "All enlarged eigenvalues: " << endl;
-    cout << allEnlargedEigenvalues << endl;
+        outputFile.close();
+    }
 
     /* ------ END OF ELLIPSOIDAL SAMPLING DEMO ----- */
 
