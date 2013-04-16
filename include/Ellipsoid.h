@@ -47,7 +47,7 @@ class Ellipsoid
 
     protected:
 
-        ArrayXd centerCoordinates
+        ArrayXd centerCoordinates;
         ArrayXd eigenvalues;
         ArrayXXd sampleOfParameters;
         ArrayXXd covarianceMatrix;

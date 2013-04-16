@@ -83,8 +83,13 @@ void Ellipsoid::build(const double enlargeConstant)
     ArrayXd enlargedEigenvalues(Ndimensions);
     enlargedEigenvalues = eigenvalues.sqrt() + enlargeConstant*eigenvalues.sqrt();
     eigenvalues = enlargedEigenvalues * enlargedEigenvalues;
-    hyperVolume = enlargedEigenvalues.prod();           // Save quantity proportional to proper hyper-volume
+    hyperVolume = enlargedEigenvalues.prod();                       // Save quantity proportional to proper hyper-volume
     enlargementFactor = enlargeConstant;
+
+
+    // Update existing covariance matrix with the one computed from the enlarged eigenvalues
+
+    covarianceMatrix = eigenvectorsMatrix.matrix() * eigenvalues.matrix().asDiagonal() * eigenvectorsMatrix.matrix().transpose();
 }
 
 
