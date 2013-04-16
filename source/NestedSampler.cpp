@@ -158,6 +158,9 @@ int NestedSampler::getNiterations()
 // INPUT:
 //      Nobjects: an integer containing the number of objects to be
 //      used in the nested sampling process.
+//      Ndraws: number of points to be drawn at each nested iteration. Default is 1.
+//      NiterationsBeforeClustering: number of nested iterations required to recompute
+//      the clustering of the points in the sample.
 //
 // OUTPUT:
 //      void
@@ -168,7 +171,7 @@ int NestedSampler::getNiterations()
 //      (Ndim , ...), rather than (... , Ndim).
 //
 
-void NestedSampler::run(const int Nobjects)
+void NestedSampler::run(const int Nobjects, const int Ndraws, const int NiterationsBeforeClustering)
 {
     double logWidthInPriorMass;
     double logLikelihoodConstraint;
