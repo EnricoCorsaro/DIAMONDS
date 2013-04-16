@@ -60,26 +60,31 @@ Ellipsoid::~Ellipsoid()
 
 
 
-// Ellipsoid::getCenterCoordinates()
+// Ellipsoid::build()
 //
 // PURPOSE: 
 //      Compute covariance matrix, center coordinates, 
 //      eigenvalues and eigenvectors matrix of the ellipsoid.
 //      Eigenvalues are automatically enlarged according to the
-//      enlargementFactor.
+//      enlargeConstant term.
+//
+// INPUT:
+//      enlargeConstant: a double to contain the enlargement
+//      factor to be used for the chosen ellipsoid.
 //
 // OUTPUT:
 //      void
 
-void Ellipsoid::build(const double enlargementFactor)
+void Ellipsoid::build(const double enlargeConstant)
 {
     Functions::clusterCovariance(sampleOfParameters, covarianceMatrix, centerCoordinates);
     Functions::selfAdjointMatrixDecomposition(covarianceMatrix, eigenvalues, eigenvectorsMatrix);
 
     ArrayXd enlargedEigenvalues(Ndimensions);
-    enlargedEigenvalues = eigenvalues.sqrt() + enlargementFactor*eigenvalues.sqrt();
+    enlargedEigenvalues = eigenvalues.sqrt() + enlargeConstant*eigenvalues.sqrt();
     eigenvalues = enlargedEigenvalues * enlargedEigenvalues;
-    hyperVolume = enlargedEigenvalues.prod();
+    hyperVolume = enlargedEigenvalues.prod();           // Save quantity proportional to proper hyper-volume
+    enlargementFactor = enlargeConstant;
 }
 
 
@@ -305,4 +310,30 @@ int Ellipsoid::getIndex()
 double Ellipsoid::getHyperVolume()
 {
     return hyperVolume;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Ellipsoid::getEnlargementFactor()
+//
+// PURPOSE: 
+//      Get the private data member enlargementFactor.      
+//
+// OUTPUT:
+//      A double containing the enlargement factor computed for the ellipsoid.
+//
+
+double Ellipsoid::getEnlargementFactor()
+{
+    return enlargementFactor;
 }

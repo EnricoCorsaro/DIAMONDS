@@ -33,7 +33,7 @@ class Ellipsoid
         Ellipsoid(RefArrayXXd sampleOfParameters, const int index);
         ~Ellipsoid();
 
-        void build(const double enlargementFactor);
+        void build(const double enlargeConstant);
         ArrayXd getCenterCoordinates();
         ArrayXd getEigenvalues();
         ArrayXXd getSampleOfParameters();
@@ -42,6 +42,7 @@ class Ellipsoid
         int getIndex();
         int getNobjects();
         double getHyperVolume();
+        double getEnlargementFactor();
 
 
     protected:
@@ -54,6 +55,7 @@ class Ellipsoid
         int Nobjects;
         int index;
         double hyperVolume;
+        double enlargementFactor;
 
 
     private:
