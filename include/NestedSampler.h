@@ -20,7 +20,6 @@
 #include "Prior.h"
 #include "Likelihood.h"
 #include "Metric.h"
-#include "QuadricIntersector.h"
 #include "Clusterer.h"
 
 
@@ -46,7 +45,7 @@ class NestedSampler
         double getLogEvidenceError();
         double getInformationGain();
         int getNiterations();
-        void run(const int Nobjects, const int Ndraws, const int NiterationsBeforeClustering);
+        void run(const int Nobjects, const int NiterationsBeforeClustering, const int Ndraws = 1);
         virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices,
                                         const double logWidthInPriorMass, RefArrayXXd drawnSampleOfParameters) = 0;
 
@@ -58,6 +57,7 @@ class NestedSampler
         Metric &metric;
         Clusterer &clusterer;
         mt19937 engine;
+        int Ndimensions;
 
 
 	private:

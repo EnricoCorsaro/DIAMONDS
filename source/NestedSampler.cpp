@@ -9,22 +9,27 @@
 //      Increases the number of active nested processes.
 //
 // INPUT:
-//      prior: a prior class object used as Prior to draw from
-//      likelihood: a likelihood class object used for likelihood sampling
+//      prior: a Prior class object used as Prior to draw from.
+//      likelihood: a Likelihood class object used for likelihood sampling.
+//      metric: a Metric class object to contain the metric used in the problem.
+//      clusterer: a Clusterer class object specifying the type of clustering algorithm to be used.
 //
 // REMARK:
 //      The desired model for predictions is to be given initially to 
-//      the likelihood object and is not used directly inside the 
+//      the likelihood object and is not feeded directly inside the 
 //      nested sampling process.
 //
 
-NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood)
+NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
 : engine(time(0)),
   informationGain(0.0), 
   logEvidence(-DBL_MAX),
   Niterations(0),
+  Ndimensions(prior.getNdimensions()),
   prior(prior),
-  likelihood(likelihood)
+  likelihood(likelihood),
+  metric(metric),
+  clusterer(clusterer)
 {
     // ??? Not working
 //    NestedSampler::nestedCounter++;
@@ -171,7 +176,7 @@ int NestedSampler::getNiterations()
 //      (Ndim , ...), rather than (... , Ndim).
 //
 
-void NestedSampler::run(const int Nobjects, const int Ndraws, const int NiterationsBeforeClustering)
+void NestedSampler::run(const int Nobjects, const int NiterationsBeforeClustering, const int Ndraws)
 {
     double logWidthInPriorMass;
     double logLikelihoodConstraint;
@@ -179,7 +184,6 @@ void NestedSampler::run(const int Nobjects, const int Ndraws, const int Niterati
     double logWeight = 0.0;
     double exceedFactor = 1.2;                  // Defines the termination condition for the nested sampling loop 
                                                 // !!! Very critical !!!
-    int Ndimensions = prior.getNdimensions();
     int copy = 0;
     int worst;
 
