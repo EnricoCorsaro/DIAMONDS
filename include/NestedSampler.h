@@ -38,27 +38,28 @@ class NestedSampler
         ArrayXd logLikelihoodOfPosteriorSample;  // logLikelihood values corresponding to the posterior sample 
         ArrayXd logWeightOfPosteriorSample;      // logWeights corresponding to the posterior sample
 
-        NestedSampler(Prior &prior, Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
+        NestedSampler(vector<Prior*> ptrPriorsVector, Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
         double getLogEvidence();
         double getLogEvidenceError();
         double getInformationGain();
         int getNiterations();
-        void run(const int Nobjects, const int NiterationsBeforeClustering, const int Ndraws = 1);
+        void run(const int Nobjects, const double terminationFactor = 1, const int NiterationsBeforeClustering = 2);
         virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices,
                                         const double logWidthInPriorMass, RefArrayXXd drawnSampleOfParameters) = 0;
 
 
     protected:
 
-        Prior &prior;
+        vector<Prior*> ptrPriorsVector;
         Likelihood &likelihood;
         Metric &metric;
         Clusterer &clusterer;
         mt19937 engine;
         int Ndimensions;
-
+        double actualLogLikelihoodConstraint;    // Likelihood constraining value at each nested iteration
+        
 
 	private:
 

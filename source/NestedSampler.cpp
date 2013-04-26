@@ -9,7 +9,7 @@
 //      Increases the number of active nested processes.
 //
 // INPUT:
-//      prior: a Prior class object used as Prior to draw from.
+//      ptrPriorsVector: a vector of Prior class objects containing the priors used in the inference.
 //      likelihood: a Likelihood class object used for likelihood sampling.
 //      metric: a Metric class object to contain the metric used in the problem.
 //      clusterer: a Clusterer class object specifying the type of clustering algorithm to be used.
@@ -20,19 +20,26 @@
 //      nested sampling process.
 //
 
-NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
+NestedSampler::NestedSampler(vector<Prior*> ptrPriorsVector, Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
 : engine(time(0)),
   informationGain(0.0), 
   logEvidence(-DBL_MAX),
   Niterations(0),
-  Ndimensions(prior.getNdimensions()),
-  prior(prior),
+  ptrPriorsVector(ptrPriorsVector),
   likelihood(likelihood),
   metric(metric),
   clusterer(clusterer)
 {
-    // ??? Not working
-//    NestedSampler::nestedCounter++;
+    int totalNdimensions = 0;
+    
+    for (int i = 0; i < ptrPriorsVector.size(); i++)
+    {
+        totalNdimensions = ptrPriorsVector[i]->getNdimensions();        // Get the number of dimensions from each type of prior
+    }
+
+    Ndimensions = totalNdimensions;
+// ??? Not working
+//    nestedCounter++;
 //    cerr << "Nested process initialized" << endl;
 //    cerr << "Total number of active nested processes: " << NestedSampler::nestedCounter << endl;
    
@@ -52,8 +59,8 @@ NestedSampler::NestedSampler(Prior &prior, Likelihood &likelihood, Metric &metri
 
 NestedSampler::~NestedSampler()
 {
-    // ??? Not working
-//    NestedSampler::nestedCounter--;
+// ??? Not working
+//    nestedCounter--;
 //    cerr << "Nested process deleted" << endl;
 //    cerr << "Total number of remaining active nested processes: " << NestedSampler::nestedCounter << endl;
 } // END NestedSampler::~NestedSampler()
@@ -163,7 +170,8 @@ int NestedSampler::getNiterations()
 // INPUT:
 //      Nobjects: an integer containing the number of objects to be
 //      used in the nested sampling process.
-//      Ndraws: number of points to be drawn at each nested iteration. Default is 1.
+//      terminationFactor: a double specifying the amount of exceeding information to
+//      terminate nested iterations. Default is 1.
 //      NiterationsBeforeClustering: number of nested iterations required to recompute
 //      the clustering of the points in the sample.
 //
@@ -173,17 +181,14 @@ int NestedSampler::getNiterations()
 // REMARKS: 
 //      Eigen Matrices are defaulted column-major. Hence the 
 //      nestedSampleOfParameters and posteriorSample are resized as 
-//      (Ndim , ...), rather than (... , Ndim).
+//      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(const int Nobjects, const int NiterationsBeforeClustering, const int Ndraws)
+void NestedSampler::run(const int Nobjects, const double terminationFactor, const int NiterationsBeforeClustering)
 {
     double logWidthInPriorMass;
-    double logLikelihoodConstraint;
     double logEvidenceNew;
     double logWeight = 0.0;
-    double exceedFactor = 1.2;                  // Defines the termination condition for the nested sampling loop 
-                                                // !!! Very critical !!!
     int copy = 0;
     int worst;
 
@@ -199,12 +204,24 @@ void NestedSampler::run(const int Nobjects, const int NiterationsBeforeClusterin
 
     logLikelihood.resize(Nobjects);
     nestedSampleOfParameters.resize(Ndimensions, Nobjects);
+    ArrayXXd priorSampleOfParameters;
+    int NdimensionsPerPrior;               // Number of dimensions having same type of prior
+    int actualNdimensions = 0;
 
 
-    // Initialize the objects
-    // nestedSampleOfParameters will then contain the sample of parameters for nested sampling
+    // Initialize all the objects of the process.
+    // nestedSampleOfParameters will then contain the sample of coordinates for all the nested objects
+    // The first initialization is done by coordinates according to their corresponding prior distribution
+    // This process ensures that each object is drawn uniformly from the prior PDF
 
-    prior.draw(nestedSampleOfParameters, Nobjects);         
+    for (int i = 0; i < ptrPriorsVector.size(); i++)
+    {
+        NdimensionsPerPrior = ptrPriorsVector[i]->getNdimensions();
+        priorSampleOfParameters.resize(NdimensionsPerPrior, Nobjects);
+        ptrPriorsVector[i]->draw(priorSampleOfParameters, Nobjects);
+        nestedSampleOfParameters.block(actualNdimensions,0,NdimensionsPerPrior,Nobjects) = priorSampleOfParameters;      
+        actualNdimensions += NdimensionsPerPrior;
+    }
 
 
     // Initialize corresponding likelihood values
@@ -221,6 +238,12 @@ void NestedSampler::run(const int Nobjects, const int NiterationsBeforeClusterin
     // Initialize prior mass interval
 
     logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));
+    
+    
+    // Identify the clusters contained in the initial sample of nested objects
+
+    ArrayXi clusterIndices(Nobjects);
+    int Nclusters = clusterer.cluster(nestedSampleOfParameters, clusterIndices);
 
 
     // Nested sampling loop
@@ -238,14 +261,14 @@ void NestedSampler::run(const int Nobjects, const int NiterationsBeforeClusterin
         // Find worst object in the collection. The likelihood of this object
         // defines the constraint when drawing new objects later on.
         
-        logLikelihoodConstraint = logLikelihood.minCoeff(&worst);
-        logWeight = logWidthInPriorMass + logLikelihoodConstraint;                
+        actualLogLikelihoodConstraint = logLikelihood.minCoeff(&worst);
+        logWeight = logWidthInPriorMass + actualLogLikelihoodConstraint;                
 
 
         // Update the evidence Z and the information Gain
         
         logEvidenceNew = Functions::logExpSum(logEvidence, logWeight);
-        informationGain = exp(logWeight - logEvidenceNew) * logLikelihoodConstraint
+        informationGain = exp(logWeight - logEvidenceNew) * actualLogLikelihoodConstraint
                        + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
                        - logEvidenceNew;
         logEvidence = logEvidenceNew;
@@ -253,8 +276,8 @@ void NestedSampler::run(const int Nobjects, const int NiterationsBeforeClusterin
         
         // Save the actual posterior sample and its corresponding likelihood and weights
         
-        posteriorSample.col(Niterations) = nestedSampleOfParameters.col(worst);              // save parameter value
-        logLikelihoodOfPosteriorSample(Niterations) = logLikelihoodConstraint;       // save corresponding likelihood
+        posteriorSample.col(Niterations) = nestedSampleOfParameters.col(worst);      // save coordinates of worst nested object
+        logLikelihoodOfPosteriorSample(Niterations) = actualLogLikelihoodConstraint;       // save corresponding likelihood
         logWeightOfPosteriorSample(Niterations) = logWeight;                         // save corresponding weight ->
                                                                                      // proportional to posterior probability density
 
@@ -275,14 +298,21 @@ void NestedSampler::run(const int Nobjects, const int NiterationsBeforeClusterin
         logLikelihood(worst) = logLikelihood(copy);
         
 
-        // Evolve the replaced object with the new constraint logLikelihood > logLikelihoodConstraint
-        
-        nestedSamplePerObject = nestedSampleOfParameters.col(worst);
-        prior.drawWithConstraint(nestedSamplePerObject, likelihood);     // Array nestedSamplePerObject is updated after call to function
-        nestedSampleOfParameters.col(worst) = nestedSamplePerObject;     // Update new set of parameters in nestedSampleOfParameters array
+        // If condition is verified, identify the clusters contained in the actual sample of nested objects
+
+        if ((NiterationsBeforeClustering % Niterations) == 0)
+            Nclusters = clusterer.cluster(nestedSampleOfParameters, clusterIndices);
+
+
+        // Evolve the replaced object with the new constraint logLikelihood > actualLogLikelihoodConstraint
+        // Compute approximate sampling to find new point verifying the likelihood constraint
+
+        ArrayXXd drawnSampleOfParameters(Ndimensions, 1);
+        drawWithConstraint(nestedSampleOfParameters, Nclusters, clusterIndices, logWidthInPriorMass, drawnSampleOfParameters); 
+        nestedSampleOfParameters.col(worst) = drawnSampleOfParameters;     // Update new set of parameters in the overall nested sample coordinates
         
 
-        // Shrink interval
+        // Shrink prior mass interval
         
         logWidthInPriorMass -= 1.0 / Nobjects;
 
@@ -291,11 +321,10 @@ void NestedSampler::run(const int Nobjects, const int NiterationsBeforeClusterin
         
         Niterations++;
         cout << "Niterations: " << Niterations << endl;
-        cout << "Information Gain * Nobjects : " << informationGain * Nobjects << endl;
     }
-    while (Niterations <= 400);   // Termination condition suggested by Skilling 2004
-    // while (Niterations <= (exceedFactor * informationGain * Nobjects));   // Termination condition suggested by Skilling 2004
-                                                                            // Run till Niterations >> Nobjects * informationGain
+    while (Niterations <= 400);
+    // while (Niterations <= (terminationFactor * informationGain * Nobjects));   // Termination condition suggested by Skilling 2004
+                                                                                  // Run till Niterations >> Nobjects * informationGain
     
  
     // Compute uncertainty on the log of the Evidence Z
