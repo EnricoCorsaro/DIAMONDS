@@ -9,13 +9,19 @@
 // INPUT:
 //      Ndimensions : integer containing the number of dimensions, i.e.
 //      the number of free parameters of the problem.
+//      uniformFlag: a boolean variable specifying whether the prior
+//      is uniform or not.
 //
 
-Prior::Prior(const int Ndimensions)
-: Ndimensions(Ndimensions)
+Prior::Prior(const int Ndimensions, const bool uniformFlag)
+: Ndimensions(Ndimensions),
+  uniformFlag(uniformFlag),
+  engine(time(0))
 {
 
-} // END Prior::Prior()
+}
+
+
 
 
 
@@ -32,7 +38,34 @@ Prior::Prior(const int Ndimensions)
 Prior::~Prior()
 {
 
-} // END Prior::~Prior()
+}
+
+
+
+
+
+
+
+
+
+
+// Prior::priorIsUniform()
+//
+// PURPOSE: 
+//      States whether the prior is a uniform prior or not.
+//
+// OUTPUT:
+//      A boolean variable specifying whether the prior is uniform (true)
+//      or different than uniform (false).
+
+bool Prior::priorIsUniform()
+{
+    return uniformFlag;
+}
+
+
+
+
 
 
 
@@ -52,6 +85,6 @@ Prior::~Prior()
 int Prior::getNdimensions()
 {
     return Ndimensions;
-} // END Prior::getNdimensions()
+}
 
 

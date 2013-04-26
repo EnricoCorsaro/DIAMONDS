@@ -15,12 +15,11 @@
 //
 
 NormalPrior::NormalPrior(const RefArrayXd mean, const RefArrayXd standardDeviation)
-: Prior(mean.size()),
-  engine(time(0)),  
+: Prior(mean.size(),false),
   mean(mean),
   standardDeviation(standardDeviation)
 {
-    assert (mean.size() == standardDeviation.size());
+    assert(mean.size() == standardDeviation.size());
     normalDistributionVector.resize(mean.size());
 
     for (int i = 0; i < mean.size(); i++)
@@ -32,6 +31,8 @@ NormalPrior::NormalPrior(const RefArrayXd mean, const RefArrayXd standardDeviati
     normalizingFactor = (1./(standardDeviation*sqrt(2*Functions::PI))).prod();
 
 }
+
+
 
 
 
@@ -111,6 +112,8 @@ ArrayXd NormalPrior::getStandardDeviation()
 
 
 
+
+
 // NormalPrior::getNormalizingFactor()
 //
 // PURPOSE: 
@@ -122,7 +125,8 @@ ArrayXd NormalPrior::getStandardDeviation()
 double NormalPrior::getNormalizingFactor()
 {
     return normalizingFactor;
-} // END NormalPrior::getNormalPrior()
+}
+
 
 
 
@@ -208,6 +212,54 @@ void NormalPrior::drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likeli
     while (logLikelihood <= logLikelihoodConstraint);
     
 
-} // END NormalPrior::drawWithConstraint()
+} 
 
+
+
+
+
+
+
+
+
+
+
+
+
+// NormalPrior::pointIsRejected()
+//
+// PURPUSE:
+//      Evaluates whether input point coordinates satisfy prior conditions.
+//
+// INPUT:
+//      drawnSampleOfParameters: an Eigen Array of size (Ndimensions, 2)
+//      containing a sample of coordinates for one object to be verified (column 0)
+//      and for a reference object used in the sampling process (column 1).
+//
+// OUTPUT:
+//      A bool variable declaring whether the point has to be rejected (true)
+//      or accepted (false)
+//
+
+bool NormalPrior::pointIsRejected(RefArrayXXd drawnSampleOfParameters)
+{
+    assert(drawnSampleOfParameters.cols() == 2);
+    assert(drawnSampleOfParameters.rows() == Ndimensions);
+    
+    bool pointIsRejected = false;
+
+    
+    // Compute density-related values for each point
+
+    double weight1;
+    double weight2;
+
+    weight1 = ((drawnSampleOfParameters.col(0) - mean)/standardDeviation).square().sum();
+    weight2 = ((drawnSampleOfParameters.col(1) - mean)/standardDeviation).square().sum();
+
+    if (weight1 > weight2)          // If prior density of drawn point is lower than reference point
+        pointIsRejected = true;     // then drawn point is not accepeted
+                                                        
+    return pointIsRejected;
+}
 

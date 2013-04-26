@@ -28,18 +28,20 @@ class NormalPrior : public Prior
 
         ArrayXd getMean();
         ArrayXd getStandardDeviation();
-        
+     
         virtual double getNormalizingFactor();
         virtual void draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects);
         virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood);
+        virtual bool pointIsRejected(RefArrayXXd drawnSampleOfParameters);
+
 
     private:
         
         vector<normal_distribution<>> normalDistributionVector;
         normal_distribution<> normal;
-        mt19937 engine;
         ArrayXd mean;
         ArrayXd standardDeviation;
+
 
 }; // END class NormalPrior
 

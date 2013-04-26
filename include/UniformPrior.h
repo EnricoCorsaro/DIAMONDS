@@ -33,13 +33,15 @@ class UniformPrior : public Prior
         virtual double getNormalizingFactor();
         virtual void draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects);
         virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood);
+        virtual bool pointIsRejected(RefArrayXXd drawnSampleOfParameters);
+
 
     private:
 
         uniform_real_distribution<> uniform;
-        mt19937 engine;
         ArrayXd minima;
         ArrayXd maxima;
+
 
 }; // END class UniformPrior
 

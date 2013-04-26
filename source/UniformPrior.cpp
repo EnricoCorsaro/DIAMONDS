@@ -15,9 +15,8 @@
 //
 
 UniformPrior::UniformPrior(const RefArrayXd minima, const RefArrayXd maxima)
-: Prior(minima.size()), 
+: Prior(minima.size(), true),
   uniform(0.0,1.0),
-  engine(time(0)),  
   minima(minima),
   maxima(maxima)
 {
@@ -101,6 +100,8 @@ ArrayXd UniformPrior::getMaxima()
 
 
 
+
+
 // UniformPrior::getNormalizingFactor()
 //
 // PURPOSE: 
@@ -113,6 +114,8 @@ double UniformPrior::getNormalizingFactor()
 {
     return normalizingFactor;
 }
+
+
 
 
 
@@ -201,3 +204,50 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likel
 }
 
 
+
+
+
+
+
+
+
+
+
+
+
+// UniformPrior::pointIsRejected()
+//
+// PURPUSE:
+//      Evaluates whether input point coordinates satisfy prior conditions.
+//
+// INPUT:
+//      drawnSampleOfParameters: an Eigen Array of size Ndimensions
+//      containing a sample of coordinates for one object to be verified.
+//
+// OUTPUT:
+//      A bool variable declaring whether the point has to be rejected (true)
+//      or accepted (false)
+//
+
+bool UniformPrior::pointIsRejected(RefArrayXXd drawnSampleOfParameters)
+{
+    assert (drawnSampleOfParameters.cols() == 1);
+    assert (drawnSampleOfParameters.rows() == Ndimensions);
+
+
+    bool pointIsRejected = false;           // Start without rejection
+
+    for (int i = 0; i < Ndimensions; i++)
+    {
+        // If at least in one dimension the coordinate is not verifying boundaries, 
+        // reject the point and end function
+
+        if ((drawnSampleOfParameters(i,0) > maxima(i)) || (drawnSampleOfParameters(i,0) < minima(i)))
+        {
+            pointIsRejected = true;
+            return pointIsRejected;
+        }
+    }
+
+    return pointIsRejected;
+}

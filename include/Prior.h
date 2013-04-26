@@ -26,22 +26,28 @@ class Prior
 
     public:
 
-        Prior(const int Ndimensions);
+        Prior(const int Ndimensions, const bool uniformFlag);
         ~Prior();
         int getNdimensions();
-
-
+        bool priorIsUniform();     // true if uniform, false otherwise
+        
         virtual double getNormalizingFactor() = 0;
         virtual void draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects) = 0;
         virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood) = 0;
+        virtual bool pointIsRejected(RefArrayXXd drawnSampleOfParameters) = 0;
+
 
     protected:
         
+        bool uniformFlag;
         int Ndimensions;
         double normalizingFactor;
+        mt19937 engine;
 
+    
     private:
     
+
 }; // END class Prior
 
 #endif
