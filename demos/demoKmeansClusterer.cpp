@@ -12,6 +12,8 @@
 #include "KmeansClusterer.h"
 #include "MultiEllipsoidSampler.h"
 #include "UniformPrior.h"
+#include "NormalPrior.h"
+#include "Prior.h"
 #include "NormalLikelihood.h"
 #include "LorentzianModel.h"
 #include "Ellipsoid.h"
@@ -88,13 +90,24 @@ int main()
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
 
-    parametersMaxima << sample.row(0).maxCoeff(), sample.row(1).maxCoeff();
-    parametersMinima << sample.row(0).minCoeff(), sample.row(1).minCoeff();
+    parametersMaxima << 12., 12.;
+    parametersMinima << -7,-7;
+
+    ArrayXd parametersMean(Ndimensions);
+    ArrayXd parametersSDV(Ndimensions);
+
+    parametersMean << -3.5,-4.5;
+    parametersSDV << 1.2,0.5;
 
 
     // First step - Setting Prior distribution and parameter space
 
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
+    vector<Prior*> ptrPriorsVector(1);
+    ptrPriorsVector[0] = &uniformPrior;
+
+    NormalPrior normalPrior(parametersMean, parametersSDV);
+    ptrPriorsVector[0] = &normalPrior;
 
 
     // Second step - Setting up a model for the inference problem
@@ -112,10 +125,11 @@ int main()
     int Ndraws = 1000;
     double initialEnlargementFactor = 1.4;
     double alpha = 1.;
-    MultiEllipsoidSampler sampler(uniformPrior, likelihood, myMetric, kmeans, Nobjects, initialEnlargementFactor, alpha);
+
+    MultiEllipsoidSampler sampler(ptrPriorsVector, likelihood, myMetric, kmeans, Nobjects, initialEnlargementFactor, alpha);
     ArrayXXd drawnSampleOfParameters = ArrayXXd::Zero(Ndimensions,Ndraws);
     ArrayXi overlappingEllipsoidsIndices;
-
+    
     sampler.drawWithConstraint(sample, Nclusters, clusterIndices, 0, drawnSampleOfParameters);
     overlappingEllipsoidsIndices = sampler.getOverlappingEllipsoidsIndices();
 
