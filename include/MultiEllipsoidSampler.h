@@ -14,6 +14,7 @@
 #include <Eigen/Dense>
 #include "NestedSampler.h"
 #include "Ellipsoid.h"
+#include "Prior.h"
 
 using namespace std;
 
@@ -22,12 +23,12 @@ class MultiEllipsoidSampler : public NestedSampler
 
     public:
        
-        MultiEllipsoidSampler(Prior &prior, Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
+        MultiEllipsoidSampler(vector<Prior*> ptrPriorsVector, Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
                               const int Nobjects, const double initialEnlargementFactor, const double alpha);
         ~MultiEllipsoidSampler();
         
         virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices,
-                                        const double logWidthInPriorMass, RefArrayXXd drawnSampleOfParameters);
+                                        const double logWidthInPriorMass, RefArrayXXd drawnSampleOfParameters); 
         void computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, 
                                const RefArrayXi clusterIndices, const double logWidthInPrioMass);
         ArrayXi getNonOverlappingEllipsoidsIndices();
@@ -55,6 +56,8 @@ class MultiEllipsoidSampler : public NestedSampler
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFactor;        // Initial factor for enlargement of ellipsoids
         double alpha;                           // Prior volume shrinkage rate (between 0 and 1)
+        
+        void runSeparateNestedProcess(const double logWidthInPriorMassReduced, Ellipsoid &ellipsoid){};
 
 };
 
