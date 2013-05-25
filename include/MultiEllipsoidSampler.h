@@ -28,9 +28,9 @@ class MultiEllipsoidSampler : public NestedSampler
         ~MultiEllipsoidSampler();
         
         virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices,
-                                        const double logWidthInPriorMass, RefArrayXXd drawnSampleOfParameters); 
+                                        const double logTotalWidthInPriorMass, RefArrayXXd drawnSampleOfParameters); 
         void computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, 
-                               const RefArrayXi clusterIndices, const double logWidthInPrioMass);
+                               const RefArrayXi clusterIndices, const double logRemainingWidthInPrioMass);
         ArrayXi getNonOverlappingEllipsoidsIndices();
         ArrayXi getOverlappingEllipsoidsIndices();
         vector<Ellipsoid> getEllipsoidsVector();
@@ -52,13 +52,13 @@ class MultiEllipsoidSampler : public NestedSampler
         ArrayXi overlappingEllipsoidsIndices;
         uniform_real_distribution<> uniform;
         normal_distribution<> normal;           
-        int Nobjects;                           // Total number of objects
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFactor;        // Initial factor for enlargement of ellipsoids
         double alpha;                           // Prior volume shrinkage rate (between 0 and 1)
+        double logRemainingWidthInPriorMass;    // log value of the total remaining prior mass at the actual nested iteration
         
-        void runSeparateNestedProcess(const double logWidthInPriorMassReduced, Ellipsoid &ellipsoid){};
-
+        //void nestFromIsolatedEllipsoid(const int ellipsoidIndex, double logLocalEvidence){};
+        //void nestFromOverlappingEllipsoids(double logLocalEvidence){};
 };
 
 #endif
