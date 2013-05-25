@@ -9,6 +9,8 @@
 //      Increases the number of active nested processes.
 //
 // INPUT:
+//      Nobjects: an integer containing the number of objects to be
+//      used in the nested sampling process.
 //      ptrPriorsVector: a vector of Prior class objects containing the priors used in the inference.
 //      likelihood: a Likelihood class object used for likelihood sampling.
 //      metric: a Metric class object to contain the metric used in the problem.
@@ -20,11 +22,12 @@
 //      nested sampling process.
 //
 
-NestedSampler::NestedSampler(vector<Prior*> ptrPriorsVector, Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
+NestedSampler::NestedSampler(const int Nobjects, vector<Prior*> ptrPriorsVector, Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
 : engine(time(0)),
   informationGain(0.0), 
   logEvidence(-DBL_MAX),
   Niterations(0),
+  Nobjects(Nobjects),
   ptrPriorsVector(ptrPriorsVector),
   likelihood(likelihood),
   metric(metric),
@@ -38,12 +41,9 @@ NestedSampler::NestedSampler(vector<Prior*> ptrPriorsVector, Likelihood &likelih
     }
 
     Ndimensions = totalNdimensions;
-// ??? Not working
-//    nestedCounter++;
-//    cerr << "Nested process initialized" << endl;
-//    cerr << "Total number of active nested processes: " << NestedSampler::nestedCounter << endl;
-   
 } // END NestedSampler::NestedSampler()
+
+
 
 
 
@@ -59,11 +59,9 @@ NestedSampler::NestedSampler(vector<Prior*> ptrPriorsVector, Likelihood &likelih
 
 NestedSampler::~NestedSampler()
 {
-// ??? Not working
-//    nestedCounter--;
-//    cerr << "Nested process deleted" << endl;
-//    cerr << "Total number of remaining active nested processes: " << NestedSampler::nestedCounter << endl;
 } // END NestedSampler::~NestedSampler()
+
+
 
 
 
@@ -84,6 +82,8 @@ double NestedSampler::getLogEvidence()
 {
     return logEvidence;
 } // END NestedSampler::logEvidence()
+
+
 
 
 
@@ -168,8 +168,6 @@ int NestedSampler::getNiterations()
 //      logWeightOfPosteriorSample.
 //
 // INPUT:
-//      Nobjects: an integer containing the number of objects to be
-//      used in the nested sampling process.
 //      terminationFactor: a double specifying the amount of exceeding information to
 //      terminate nested iterations. Default is 1.
 //      NiterationsBeforeClustering: number of nested iterations required to recompute
@@ -184,14 +182,20 @@ int NestedSampler::getNiterations()
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(const int Nobjects, const double terminationFactor, const int NiterationsBeforeClustering)
+void NestedSampler::run(const double terminationFactor, const int NiterationsBeforeClustering)
 {
     double logWidthInPriorMass;
     double logEvidenceNew;
     double logWeight = 0.0;
+    double logMeanEvidence = -DBL_MAX;
+    double logMeanLiveEvidence;
+    double logTotalLikelihoodOfLivePoints;
     int copy = 0;
     int worst;
 
+    double delta = 1.0/(Nobjects + 1);
+    double alpha = delta*Nobjects;
+    double beta = 1.0/((Nobjects + 2)*delta);
 
     // Set up the random number generator. It generates integers random numbers
     // between 0 and Nobjects-1, inclusive. The engine's seed is based on the
@@ -238,6 +242,7 @@ void NestedSampler::run(const int Nobjects, const double terminationFactor, cons
     // Initialize prior mass interval
 
     logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));
+    double logTotalWidthInPriorMass = logWidthInPriorMass;
     
     
     // Identify the clusters contained in the initial sample of nested objects
@@ -268,7 +273,7 @@ void NestedSampler::run(const int Nobjects, const double terminationFactor, cons
         // Update the evidence Z and the information Gain
         
         logEvidenceNew = Functions::logExpSum(logEvidence, logWeight);
-        informationGain = exp(logWeight - logEvidenceNew) * actualLogLikelihoodConstraint
+        informationGain = exp(logWeight - logEvidenceNew) * actualLogLikelihoodConstraint       // Not necessary with new statistical uncertainty
                        + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
                        - logEvidenceNew;
         logEvidence = logEvidenceNew;
@@ -280,6 +285,33 @@ void NestedSampler::run(const int Nobjects, const double terminationFactor, cons
         logLikelihoodOfPosteriorSample(Niterations) = actualLogLikelihoodConstraint;       // save corresponding likelihood
         logWeightOfPosteriorSample(Niterations) = logWeight;                         // save corresponding weight ->
                                                                                      // proportional to posterior probability density
+
+        // Compute average likelihood of the actual set of live points
+        
+        logTotalLikelihoodOfLivePoints = logLikelihood(0);
+
+        for (int m = 1; m < Nobject; m++)
+        {
+            logTotalLikelihoodOfLivePoints = Functions::logExpSum(totalLogLikelihoodOfLivePoints,logLikelihood(m));
+            m++;
+        }
+
+        logMeanLikelihoodOfLivePoints = logTotalLikelihoodOfLivePoints - log(Nobjects);
+        
+        
+        // Compute mean evidence and mean live evidence
+
+        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations*log(alpha);
+        logMeanEvidenceNew = Functions::logExpSum(actualLogLikelihoodConstraint + Niterations*log(alpha) - log(Nobjects), logMeanEvidence);
+        logMeanEvidence = logMeanEvidenceNew;
+        logMeanTotalEvidence = Functions::logExpSum(logMeanEvidence, logMeanLiveEvidence);
+        actualLogTerminationFactor = logMeanLiveEvidence - logMeanEvidence;
+        cout << "Skilling's log(Evidence): " << logEvidence << endl;
+        cout << "Keeton's log(<Evidence>): " << logMeanEvidence << endl;
+        cout << "Keeton's log(<Evidence_Live>): " << logMeanLiveEvidence << endl;
+        cout << "Keeton's log(<Total Evidence>): " << logMeanTotalEvidence << endl;
+        cout << "------------------------------------" << endl;
+
 
         // Replace worst object in favour of a copy of different survivor
         // No replacement if Nobjects == 1. Fundamental step to preserve
@@ -308,13 +340,18 @@ void NestedSampler::run(const int Nobjects, const double terminationFactor, cons
         // Compute approximate sampling to find new point verifying the likelihood constraint
 
         ArrayXXd drawnSampleOfParameters(Ndimensions, 1);
-        drawWithConstraint(nestedSampleOfParameters, Nclusters, clusterIndices, logWidthInPriorMass, drawnSampleOfParameters); 
+        drawWithConstraint(nestedSampleOfParameters, Nclusters, clusterIndices, logTotalWidthInPriorMass, drawnSampleOfParameters); 
         nestedSampleOfParameters.col(worst) = drawnSampleOfParameters;     // Update new set of parameters in the overall nested sample coordinates
         
-
+        
         // Shrink prior mass interval
         
         logWidthInPriorMass -= 1.0 / Nobjects;
+
+        
+        // Update total width in prior mass from beginning to actual nested iteration
+
+        logTotalWidthInPriorMass = Functions::logExpSum(logTotalWidthInPriorMass,logWidthInPriorMass);
 
         
         // Increase nested loop counter
@@ -322,12 +359,12 @@ void NestedSampler::run(const int Nobjects, const double terminationFactor, cons
         Niterations++;
         cout << "Niterations: " << Niterations << endl;
     }
-    while (Niterations <= 400);
+    while (Niterations <= 200);
     // while (Niterations <= (terminationFactor * informationGain * Nobjects));   // Termination condition suggested by Skilling 2004
                                                                                   // Run till Niterations >> Nobjects * informationGain
     
  
-    // Compute uncertainty on the log of the Evidence Z
+    // Compute total uncertainty for the Evidence Z
     
     logEvidenceError = sqrt(fabs(informationGain)/Nobjects);
 
