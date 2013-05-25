@@ -298,7 +298,7 @@ inline double Functions::sum(const vector<double> &vec)
 
 double Functions::logExpSum(double x, double y)
 {
-    return (x >= y ? x+log(1.+exp(y-x)) : y + log(1.+exp(x-y)));
+    return (x >= y ? x + log(1.+exp(y-x)) : y + log(1.+exp(x-y)));
 } // END Functions::logExpSum()
 
 
