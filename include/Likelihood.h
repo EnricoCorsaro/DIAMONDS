@@ -17,25 +17,24 @@ using Eigen::ArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 
 
-
 class Likelihood
 {
 
     public:
 
-        Likelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
+        Likelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
         ~Likelihood();
-        ArrayXd getCovariates();
         ArrayXd getObservations();
 
         virtual double logValue(RefArrayXd nestedSampleOfParameters) = 0;
 
+
     protected:
         
-        ArrayXd covariates;
         ArrayXd observations;
         ArrayXd uncertainties;
         Model &model;
+
 
     private:
 

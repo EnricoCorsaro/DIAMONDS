@@ -8,23 +8,17 @@
 //      Derived class onstructor.
 //
 // INPUT:
-//      covariates: array containing the independent variable values
 //      observations: array containing the dependent variable values
 //      uncertainties: array containing the uncertainties of the observations
 //      model: object specifying the model to be used.
 // 
 
-MeanNormalLikelihood::MeanNormalLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
-: Likelihood(covariates, observations, uncertainties, model)
+MeanNormalLikelihood::MeanNormalLikelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
+: Likelihood(observations, uncertainties, model)
 {
     double normalizeFactor;
     
-    if (covariates.size() != observations.size() || covariates.size() != uncertainties.size())
-    {
-        cerr << "Array dimensions do not match. Quitting program." << endl;
-        exit(EXIT_FAILURE);
-    }
-
+    assert(observations.size() != uncertainties.size());
     normalizeFactor = sqrt(observations.size()/uncertainties.pow(-2).sum());
     normalizedUncertainties = uncertainties/normalizeFactor; 
 

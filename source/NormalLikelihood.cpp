@@ -7,20 +7,15 @@
 //      Derived class onstructor.
 //
 // INPUT:
-//      covariates: array containing the independent variable values
 //      observations: array containing the dependent variable values
 //      uncertainties: array containing the uncertainties of the observations
 //      model: object specifying the model to be used.
 // 
 
-NormalLikelihood::NormalLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
-: Likelihood(covariates, observations, uncertainties, model)
+NormalLikelihood::NormalLikelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
+: Likelihood(observations, uncertainties, model)
 {
-    if (covariates.size() != observations.size() || covariates.size() != uncertainties.size())
-    {
-        cerr << "Array dimensions do not match. Quitting program." << endl;
-        exit(EXIT_FAILURE);
-    }
+    assert(observations.size() || uncertainties.size());
 } // END NormalLikelihood::NormalLikelihood()
 
 
@@ -93,7 +88,7 @@ double NormalLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
     ArrayXd lambda;
     ArrayXd lambda0;
     
-    predictions.resize(covariates.size());
+    predictions.resize(observations.size());
     model.predict(predictions, nestedSampleOfParameters);
     
     lambda0 = -0.5 * observations.size() * log(2.0*Functions::PI) -1.0 * uncertainties.log(); 

@@ -11,6 +11,7 @@
 #include <cmath>
 #include <iostream>
 #include <cstdlib>
+#include <cassert>
 #include "Likelihood.h"
 
 
@@ -24,7 +25,7 @@ class NormalLikelihood : public Likelihood
 
     public:
 
-        NormalLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
+        NormalLikelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
         ~NormalLikelihood();
         ArrayXd getUncertainties();
 

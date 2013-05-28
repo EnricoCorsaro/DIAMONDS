@@ -24,7 +24,7 @@ class MeanNormalLikelihood : public Likelihood
 
     public:
 
-        MeanNormalLikelihood(const RefArrayXd covariates, const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
+        MeanNormalLikelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
         ~MeanNormalLikelihood();
         ArrayXd getNormalizedUncertainties();
 
