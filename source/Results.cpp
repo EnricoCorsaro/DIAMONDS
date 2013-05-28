@@ -358,10 +358,10 @@ void Results::writeEvidenceInformationToFile(string fullPath)
     File::openOutputFile(outputFile, fullPath);
             
     outputFile << "# Evidence results from nested sampling" << endl;
-    outputFile << "# log(Evidence)" << setw(12) << "Error of log(Evidence)" << setw(12) << "Information Gain" << endl;
+    outputFile << "# log(Evidence)" << setw(30) << "Error of log(Evidence)" << setw(30) << "Information Gain" << endl;
     outputFile << scientific << setprecision(9);
-    outputFile << nestedSampler.getLogEvidence() << setw(12);
-    outputFile << nestedSampler.getLogEvidenceError() << setw(12);
+    outputFile << nestedSampler.getLogEvidence() << setw(30);
+    outputFile << nestedSampler.getLogEvidenceError() << setw(30);
     outputFile << nestedSampler.getInformationGain() << endl;
     outputFile.close();
 

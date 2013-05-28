@@ -14,8 +14,8 @@
 //
 
 Prior::Prior(const int Ndimensions, const bool uniformFlag)
-: Ndimensions(Ndimensions),
-  uniformFlag(uniformFlag),
+: uniformFlag(uniformFlag),
+  Ndimensions(Ndimensions),
   engine(time(0))
 {
 
