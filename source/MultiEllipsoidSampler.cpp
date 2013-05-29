@@ -322,7 +322,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                 
                     Nloops++;
         
-                    if (Nloops >= NloopMaximum)
+                    if ((Nloops >= NloopMaximum) && (NnonOverlappingEllipsoids != 1))
                         break;
                 
                     logLikelihood = likelihood.logValue(drawnParametersPerObject);
