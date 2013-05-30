@@ -194,6 +194,9 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
     double logTotalLikelihoodOfLivePoints = -DBL_MAX;
     int copy = 0;
     int worst;
+    int startTime = time(0);
+    int endTime;
+    double computationalTime;
 
     double delta = 1.0/(Nobjects + 1);
     double alpha = delta*Nobjects;
@@ -320,8 +323,7 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         if ((Niterations % NiterationsBeforeClustering)  == 0)
         {
             Nclusters = clusterer.cluster(nestedSampleOfParameters, clusterIndices);
-            cout << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
-            cout << "Keeton's log(<Evidence>): " << logMeanEvidence << endl;
+            cout << "Keeton's log(<Evidence>): " << setprecision(12) << logMeanEvidence << endl;
             cout << "Keeton's log(<Evidence_Live>): " << logMeanLiveEvidence << endl;
             cout << "Keeton's log(<Total Evidence>): " << logMeanTotalEvidence << endl;
             cout << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
@@ -371,13 +373,33 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         Niterations++;
     }
     while (terminationFactor < actualTerminationFactor);                          // Termination condition by Keeton 2011
-    //while (Niterations <= 400);
-    // while (Niterations <= (terminationFactor * informationGain * Nobjects));   // Termination condition suggested by Skilling 2004
-                                                                                  // Run till Niterations >> Nobjects * informationGain
     
  
     // Compute total uncertainty for the Evidence Z
     
     logEvidenceError = sqrt(fabs(informationGain)/Nobjects);
+
+
+    // Compute total computational time
+
+    endTime = time(0);
+    computationalTime = endTime - startTime; 
+
+    if (computationalTime < 60)
+    {
+        cout << "Computational Time: " << computationalTime << " seconds" << endl;
+    }
+    else 
+        if ((computationalTime >= 60) && (computationalTime < 60*60))
+        {
+            computationalTime = computationalTime/60.;
+            cout << "Computational Time: " << computationalTime << " minutes" << endl;
+        }
+    else 
+        if (computationalTime >= 60*60)
+        {
+            computationalTime = computationalTime/(60.*60.);
+            cout << "Computational Time: " << computationalTime << " hours" << endl;
+        }
 
 } // END NestedSampler::run()
