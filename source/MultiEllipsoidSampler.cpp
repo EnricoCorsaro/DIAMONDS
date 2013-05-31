@@ -298,17 +298,18 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 
                                 pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnParametersPerPrior);
                             }
-                            else
-                            {
-                                // Only for non-uniform priors
+                            else 
+                                if (!(ptrPriorsVector[i]->priorIsUniform()))
+                                {
+                                    // Only for non-uniform priors
 
-                                drawFromHyperSphere(ellipsoidsVector[ellipsoidIndex], referenceParametersPerObject);
-                                drawnAndReferenceParametersPerPrior.resize(NdimensionsPerPrior,2);
-                                referenceParametersPerPrior = referenceParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);      
-                                drawnAndReferenceParametersPerPrior.col(0) = drawnParametersPerPrior;      
-                                drawnAndReferenceParametersPerPrior.col(1) = referenceParametersPerPrior;
-                                pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnAndReferenceParametersPerPrior);
-                            }
+                                    drawFromHyperSphere(ellipsoidsVector[ellipsoidIndex], referenceParametersPerObject);
+                                    drawnAndReferenceParametersPerPrior.resize(NdimensionsPerPrior,2);
+                                    referenceParametersPerPrior = referenceParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);      
+                                    drawnAndReferenceParametersPerPrior.col(0) = drawnParametersPerPrior;      
+                                    drawnAndReferenceParametersPerPrior.col(1) = referenceParametersPerPrior;
+                                    pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnAndReferenceParametersPerPrior);
+                                }
                             
                             actualNdimensions += NdimensionsPerPrior;       // Move to next prior dimensions
                         }
@@ -380,17 +381,18 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 
                                     pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnParametersPerPrior);
                                 }
-                                else
-                                {
-                                    // Only for non-uniform priors
+                                else 
+                                    if (!(ptrPriorsVector[i]->priorIsUniform()))
+                                    {
+                                        // Only for non-uniform priors
 
-                                    drawFromHyperSphere(ellipsoidsVector[ellipsoidIndex], referenceParametersPerObject);
-                                    drawnAndReferenceParametersPerPrior.resize(NdimensionsPerPrior,2);
-                                    referenceParametersPerPrior = referenceParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);      
-                                    drawnAndReferenceParametersPerPrior.col(0) = drawnParametersPerPrior;      
-                                    drawnAndReferenceParametersPerPrior.col(1) = referenceParametersPerPrior;
-                                    pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnAndReferenceParametersPerPrior);
-                                }
+                                        drawFromHyperSphere(ellipsoidsVector[ellipsoidIndex], referenceParametersPerObject);
+                                        drawnAndReferenceParametersPerPrior.resize(NdimensionsPerPrior,2);
+                                        referenceParametersPerPrior = referenceParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);      
+                                        drawnAndReferenceParametersPerPrior.col(0) = drawnParametersPerPrior;      
+                                        drawnAndReferenceParametersPerPrior.col(1) = referenceParametersPerPrior;
+                                        pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnAndReferenceParametersPerPrior);
+                                    }
                             
                                 actualNdimensions += NdimensionsPerPrior;       // Move to next prior dimensions
                             }
