@@ -14,6 +14,7 @@
 #include "EuclideanMetric.h"
 #include "TestLikelihood1.h"
 #include "TestLikelihood2.h"
+#include "TestLikelihood3.h"
 #include "Prior.h"
 #include "UniformPrior.h"
 #include "NormalPrior.h"
@@ -67,8 +68,8 @@ int main(int argc, char *argv[])
     ///*
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
-    parametersMinima <<  0.0, 0.0;         // Parameter 1, Parameter2
-    parametersMaxima << 10.0*Functions::PI, 10.0*Functions::PI;
+    parametersMinima <<  -6.0, -6.0;         // Parameter 1, Parameter2
+    parametersMaxima << 6.0, 6.0;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriorsVector[0] = &uniformPrior;
     //*/
@@ -91,14 +92,15 @@ int main(int argc, char *argv[])
     // Set up the likelihood function to be used
     
     //TestLikelihood1 likelihood(observations, uncertainties, model);
-    TestLikelihood2 likelihood(observations, uncertainties, model);
+    //TestLikelihood2 likelihood(observations, uncertainties, model);
+    TestLikelihood3 likelihood(observations, uncertainties, model);
     
 
     // Set up the K-means clusterer using an Euclidean metric
 
     EuclideanMetric myMetric;
     int minNclusters = 1;
-    int maxNclusters = 20;
+    int maxNclusters = 10;
     int Ntrials = 10;
     double relTolerance = 0.01;
 
@@ -107,11 +109,11 @@ int main(int argc, char *argv[])
 
     // Start nested sampling process
     
-    int Nobjects = 2000;
-    int NiterationsBeforeClustering = 50;        // Number of nesting iterations before executing clustering algorithm again
-    double initialEnlargementFactor = 3.0;  
-    double alpha = 0.7;                         // Exponent for remaining prior mass in ellipsoid enlargement factor
-    double terminationFactor = 0.05;             // Termination factor for nesting loop
+    int Nobjects = 400;
+    int NiterationsBeforeClustering = 1;        // Number of nesting iterations before executing clustering algorithm again
+    double initialEnlargementFactor = 3.5;  
+    double alpha = 0.2;                         // Exponent for remaining prior mass in ellipsoid enlargement factor
+    double terminationFactor = 0.01;             // Termination factor for nesting loop
 
     MultiEllipsoidSampler nestedSampler(ptrPriorsVector, likelihood, myMetric, kmeans, Nobjects, initialEnlargementFactor, alpha);
     nestedSampler.run(terminationFactor, NiterationsBeforeClustering);
@@ -121,10 +123,10 @@ int main(int argc, char *argv[])
 
     Results results(nestedSampler);
     string outputDirName(argv[2]);
-    results.writeParametersToFile(outputDirName + "/test2_Parameter");
-    results.writeLogLikelihoodToFile(outputDirName + "/test2_LogLikelihood.txt");
-    results.writeEvidenceInformationToFile(outputDirName + "/test2_Evidence.txt");
-    results.writePosteriorProbabilityToFile(outputDirName + "/test2_Posterior.txt");
+    results.writeParametersToFile(outputDirName + "/test3_Parameter");
+    results.writeLogLikelihoodToFile(outputDirName + "/test3_LogLikelihood.txt");
+    results.writeEvidenceInformationToFile(outputDirName + "/test3_Evidence.txt");
+    results.writePosteriorProbabilityToFile(outputDirName + "/test3_Posterior.txt");
     
     return EXIT_SUCCESS;
 }
