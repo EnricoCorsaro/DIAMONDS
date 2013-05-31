@@ -296,10 +296,38 @@ inline double Functions::sum(const vector<double> &vec)
 //      The logarithmic summation of the exponentials log(exp(x)+exp(y)).
 //
 
-double Functions::logExpSum(double x, double y)
+double Functions::logExpSum(const double x, const double y)
 {
     return (x >= y ? x + log(1.+exp(y-x)) : y + log(1.+exp(x-y)));
 } // END Functions::logExpSum()
+
+
+
+
+
+
+
+
+
+// Functions::logExpDifference()
+//
+// PURPOSE: 
+//      Computes a logaritmic difference of exponentials in order to avoid overflow errors.
+//
+// INPUT: 
+//      x : a first variable to be added
+//      y : a second variable to be added
+//
+// OUTPUT: 
+//      The logarithmic difference of the exponentials log(exp(x)+exp(y)).
+//
+
+double Functions::logExpDifference(const double x, const double y)
+{
+    return (x >= y ? x + log(1.0 - exp(y-x)) : y + log(1.0 - exp(x-y)));
+}
+
+
 
 
 

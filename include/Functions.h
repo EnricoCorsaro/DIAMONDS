@@ -59,7 +59,8 @@ namespace Functions
     
     inline double product(const vector<double> &vec);
     inline double sum(const vector<double> &vec);
-    double logExpSum(double x, double y);
+    double logExpSum(const double x, const double y);
+    double logExpDifference(const double x, const double y);
     void sortElementsDouble(RefArrayXd array1, RefArrayXd array2);
     void sortElementsInt(RefArrayXi array1, RefArrayXd array2);
 
