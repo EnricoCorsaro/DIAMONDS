@@ -1,7 +1,7 @@
 // Class for Toy Likelihood example #1 by Feroz et al. 2008, MNRAS, 384, 449
 // Created by Enrico Corsaro @ IvS - 28 May 2013
 // e-mail: enrico.corsaro@ster.kuleuven.be
-// Header file "NormalLikelihood.h"
+// Header file "TestLikelihood1.h"
 // Implementations contained in "TestLikelihood1.cpp"
 
 
@@ -35,6 +35,6 @@ class TestLikelihood1 : public Likelihood
 
     private:
 
-}; // END class NormalLikelihood
+}; // END class TestLikelihood1
 
 #endif
