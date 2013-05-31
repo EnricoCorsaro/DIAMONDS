@@ -30,7 +30,7 @@ class NormalPrior : public Prior
         ArrayXd getStandardDeviation();
      
         virtual double getNormalizingFactor();
-        virtual void draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects);
+        virtual void draw(RefArrayXXd nestedSampleOfParameters);
         virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood);
         virtual bool pointIsRejected(RefArrayXXd drawnSampleOfParameters);
 

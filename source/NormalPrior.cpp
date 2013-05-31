@@ -147,19 +147,18 @@ double NormalPrior::getNormalizingFactor()
 // INPUT:
 //      nestedSampleOfParameters: two-dimensional Eigen Array to contain 
 //      the resulting parameters values.
-//      Nobjects: integer containing the number of objects to be drawn.
 //
 // OUTPUT:
 //      void
 //
 
-void NormalPrior::draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects)
+void NormalPrior::draw(RefArrayXXd nestedSampleOfParameters)
 {
     // Normal sampling over parameters intervals
     
     for (int i = 0; i < Ndimensions; i++)
     {
-        for (int j = 0; j < Nobjects; j++)
+        for (int j = 0; j < nestedSampleOfParameters.cols(); j++)
         {
             nestedSampleOfParameters(i,j) = normalDistributionVector[i](engine);
         }

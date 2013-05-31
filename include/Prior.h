@@ -32,7 +32,7 @@ class Prior
         bool priorIsUniform();     // true if uniform, false otherwise
         
         virtual double getNormalizingFactor() = 0;
-        virtual void draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects) = 0;
+        virtual void draw(RefArrayXXd nestedSampleOfParameters) = 0;
         virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood) = 0;
         virtual bool pointIsRejected(RefArrayXXd drawnSampleOfParameters) = 0;
 

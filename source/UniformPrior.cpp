@@ -136,19 +136,18 @@ double UniformPrior::getNormalizingFactor()
 // INPUT:
 //      nestedSampleOfParameters: two-dimensional Eigen Array to contain 
 //      the resulting parameters values.
-//      Nobjects: integer containing the number of objects to be drawn.
 //
 // OUTPUT:
 //      void
 //
 
-void UniformPrior::draw(RefArrayXXd nestedSampleOfParameters, const int Nobjects)
+void UniformPrior::draw(RefArrayXXd nestedSampleOfParameters)
 {
     // Uniform sampling over parameters intervals
     
     for (int i = 0; i < Ndimensions; i++)
     {
-        for (int j = 0; j < Nobjects; j++)
+        for (int j = 0; j < nestedSampleOfParameters.cols(); j++)
         {
             nestedSampleOfParameters(i,j) = uniform(engine)*(maxima(i)-minima(i)) + minima(i);
         }
