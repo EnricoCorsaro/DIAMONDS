@@ -9,10 +9,10 @@
 // INPUT:
 // 
 
-TestLikelihood1::TestLikelihood1(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
-: Likelihood(observations, uncertainties, model)
+TestLikelihood1::TestLikelihood1(const RefArrayXd observations, Model &model)
+: Likelihood(observations, model)
 {
-} // END TestLikelihood1::TestLikelihood1()
+}
 
 
 
@@ -30,8 +30,7 @@ TestLikelihood1::TestLikelihood1(const RefArrayXd observations, const RefArrayXd
 
 TestLikelihood1::~TestLikelihood1()
 {
-
-} // END TestLikelihood1::~TestLikelihood1()
+}
 
 
 

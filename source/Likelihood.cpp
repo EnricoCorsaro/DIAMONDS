@@ -10,13 +10,11 @@
 //
 // INPUT:
 //      observations: array containing the dependent variable values
-//      uncertainties: array containing the uncertainties of the observations
 //      model: object specifying the model to be used.
 // 
 
-Likelihood::Likelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
+Likelihood::Likelihood(const RefArrayXd observations, Model &model)
 : observations(observations), 
-  uncertainties(uncertainties), 
   model(model)
 {
 

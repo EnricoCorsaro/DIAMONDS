@@ -22,7 +22,7 @@ class Likelihood
 
     public:
 
-        Likelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
+        Likelihood(const RefArrayXd observations, Model &model);
         ~Likelihood();
         ArrayXd getObservations();
 
@@ -32,7 +32,6 @@ class Likelihood
     protected:
         
         ArrayXd observations;
-        ArrayXd uncertainties;
         Model &model;
 
 

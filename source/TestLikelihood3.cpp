@@ -9,10 +9,10 @@
 // INPUT:
 // 
 
-TestLikelihood3::TestLikelihood3(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
-: Likelihood(observations, uncertainties, model)
+TestLikelihood3::TestLikelihood3(const RefArrayXd observations, Model &model)
+: Likelihood(observations, model)
 {
-} // END TestLikelihood3::TestLikelihood3()
+}
 
 
 
@@ -30,8 +30,7 @@ TestLikelihood3::TestLikelihood3(const RefArrayXd observations, const RefArrayXd
 
 TestLikelihood3::~TestLikelihood3()
 {
-
-} // END TestLikelihood3::~TestLikelihood3()
+}
 
 
 
@@ -76,6 +75,4 @@ double TestLikelihood3::logValue(RefArrayXd nestedSampleOfParameters)
 
     return logLikelihood;
 }
-
-
 

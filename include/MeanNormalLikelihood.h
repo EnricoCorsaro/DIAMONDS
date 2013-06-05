@@ -26,13 +26,18 @@ class MeanNormalLikelihood : public Likelihood
 
         MeanNormalLikelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model);
         ~MeanNormalLikelihood();
+        ArrayXd getUncertainties();
         ArrayXd getNormalizedUncertainties();
+        ArrayXd getWeights();
 
         virtual double logValue(RefArrayXd nestedSampleOfParameters);
 
     private:
         
+        ArrayXd uncertainties;
         ArrayXd normalizedUncertainties;
+        ArrayXd weights;
+
 }; // END class MeanNormalLikelihood
 
 #endif

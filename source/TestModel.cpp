@@ -56,8 +56,6 @@ int main(int argc, char *argv[])
     
     ArrayXd covariates = data.col(0);
     ArrayXd observations = data.col(1);
-    ArrayXd uncertainties = data.col(2);
-
 
 
     // Setting Prior distribution and parameter space
@@ -91,16 +89,16 @@ int main(int argc, char *argv[])
 
     // Set up the likelihood function to be used
     
-    //TestLikelihood1 likelihood(observations, uncertainties, model);
-    //TestLikelihood2 likelihood(observations, uncertainties, model);
-    TestLikelihood3 likelihood(observations, uncertainties, model);
+    //TestLikelihood1 likelihood(observations, model);
+    //TestLikelihood2 likelihood(observations, model);
+    TestLikelihood3 likelihood(observations, model);
     
 
     // Set up the K-means clusterer using an Euclidean metric
 
     EuclideanMetric myMetric;
     int minNclusters = 1;
-    int maxNclusters = 10;
+    int maxNclusters = 5;
     int Ntrials = 10;
     double relTolerance = 0.01;
 
@@ -110,9 +108,9 @@ int main(int argc, char *argv[])
     // Start nested sampling process
     
     int Nobjects = 400;
-    int NiterationsBeforeClustering = 1;        // Number of nesting iterations before executing clustering algorithm again
-    double initialEnlargementFactor = 3.5;  
-    double alpha = 0.2;                         // Exponent for remaining prior mass in ellipsoid enlargement factor
+    int NiterationsBeforeClustering = 10;        // Number of nesting iterations before executing clustering algorithm again
+    double initialEnlargementFactor = 2.;  
+    double alpha = 0.1;                         // Exponent for remaining prior mass in ellipsoid enlargement factor
     double terminationFactor = 0.01;             // Termination factor for nesting loop
 
     MultiEllipsoidSampler nestedSampler(ptrPriorsVector, likelihood, myMetric, kmeans, Nobjects, initialEnlargementFactor, alpha);

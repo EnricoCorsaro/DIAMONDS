@@ -14,13 +14,15 @@
 // 
 
 MeanNormalLikelihood::MeanNormalLikelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
-: Likelihood(observations, uncertainties, model)
+: Likelihood(observations, model),
+  uncertainties(uncertainties)
 {
     double normalizeFactor;
     
     assert(observations.size() != uncertainties.size());
     normalizeFactor = sqrt(observations.size()/uncertainties.pow(-2).sum());
     normalizedUncertainties = uncertainties/normalizeFactor; 
+    weights = normalizedUncertainties.pow(-2);
 
 } // END MeanNormalLikelihood::MeanNormalLikelihood()
 
@@ -93,22 +95,22 @@ ArrayXd MeanNormalLikelihood::getNormalizedUncertainties()
 
 double MeanNormalLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
 {
-    ArrayXd predictions;
+    unsigned long n = observations.size();
     double lambda0;
     double lambda;
     ArrayXd argument;
-    unsigned long n = observations.size();
+    ArrayXd predictions;
 
     predictions.resize(n);
     model.predict(predictions, nestedSampleOfParameters);
-    argument = (observations - predictions)/normalizedUncertainties;
-    argument = argument*argument;
+    argument = (observations - predictions);
+    argument = argument*argument*weights;
 
-    lambda0 = lgammal(n/2.) - log(2) - (n/2.)*log(Functions::PI * n - 1./n) - normalizedUncertainties.log().sum();
-    lambda = lambda0 - (n/2.) * log (argument.sum());
+    lambda0 = lgammal(n/2.) - log(2) - (n/2.)*log(Functions::PI) + 0.5*weights.log().sum();
+    lambda = lambda0 - (n/2.)*log(argument.sum());
 
     return lambda;
-} // END MeanNormalLikelihood::logValue()
+}
 
 
 

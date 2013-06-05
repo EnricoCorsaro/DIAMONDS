@@ -13,10 +13,11 @@
 // 
 
 NormalLikelihood::NormalLikelihood(const RefArrayXd observations, const RefArrayXd uncertainties, Model &model)
-: Likelihood(observations, uncertainties, model)
+: Likelihood(observations, model),
+  uncertainties(uncertainties)
 {
     assert(observations.size() || uncertainties.size());
-} // END NormalLikelihood::NormalLikelihood()
+}
 
 
 
@@ -35,7 +36,7 @@ NormalLikelihood::NormalLikelihood(const RefArrayXd observations, const RefArray
 NormalLikelihood::~NormalLikelihood()
 {
 
-} // END NormalLikelihood::~NormalLikelihood()
+}
 
 
 
@@ -58,7 +59,7 @@ NormalLikelihood::~NormalLikelihood()
 ArrayXd NormalLikelihood::getUncertainties()
 {
     return uncertainties;
-} // END NormalLikelihood::getUncertainties()
+}
 
 
 
@@ -95,7 +96,7 @@ double NormalLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
     lambda = lambda0 - 0.5 * ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);
     
     return lambda.sum();
-} // END NormalLikelihood::logValue()
+}
 
 
 
