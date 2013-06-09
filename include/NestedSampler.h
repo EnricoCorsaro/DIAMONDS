@@ -41,13 +41,18 @@ class NestedSampler
         NestedSampler(const int Nobjects, vector<Prior*> ptrPriorsVector, Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
-        double getLogEvidence();
-        double getLogEvidenceError();
-        double getInformationGain();
-        int getNiterations();
-        void run(const double terminationFactor = 0.5, const int NiterationsBeforeClustering = 10);
+        void run(const bool printFlag, const double terminationFactor = 0.5, const int NiterationsBeforeClustering = 10);
         virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices,
                                         const double logWidthInPriorMass, RefArrayXXd drawnSampleOfParameters) = 0;
+        int getNiterations();
+        double getLogEvidence();
+        double getLogEvidenceError();
+        double getLogMeanEvidence();
+        double getLogMeanEvidenceError();
+        double getLogMeanTotalEvidence();
+        double getLogMeanTotalEvidenceError();
+        double getInformationGain();
+        double getComputationalTime();
 
 
     protected:
@@ -59,20 +64,31 @@ class NestedSampler
         mt19937 engine;
         int Ndimensions;
         int Nobjects;                           // Total number of objects
-        double actualLogLikelihoodConstraint;    // Likelihood constraining value at each nested iteration
-        double logTotalWidthInPriorMass;     // The remaining width in prior mass at a given nested iteration (log X_k)
+        double actualLogLikelihoodConstraint;   // Likelihood constraining value at each nested iteration
+        double logTotalWidthInPriorMass;        // The remaining width in prior mass at a given nested iteration (log X_k)
 
 
 	private:
 
-        double informationGain;
-        double logEvidence;
-        double logEvidenceError;
-        double logMeanLikelihoodOfLivePoints;       // The average likelihood value of the remaining set of live points
-        static unsigned nestedCounter;           // Static counter containing the number of Nested processes running
         int Niterations;                         // Counter saving the number of nested loops used
-        ArrayXXd nestedSampleOfParameters;       // parameters values (the free parameters of the problem) of the actual set of live points
+        double informationGain;                  // Information gain in moving from prior to posterior PDF
+        double logEvidence;                      // Skilling's evidence
+        double logEvidenceError;                 // Skilling's error on evidence (based on information gain)
+        double logMeanEvidence;                  // Keeton's mean evidence (derived from Skilling equation)
+        double logMeanTotalEvidence;             // Keeton's mean live evidence
+        double logMeanEvidenceError;             // Keeton's error on evidence (no contribution from live evidence)
+        double logMeanTotalEvidenceError;        // Keeton's total error on evidence (contribution from live evidence)
+        double logMeanLikelihoodOfLivePoints;    // The logarithm of the mean likelihood value of the remaining set of live points
+        double logMaximumLikelihoodOfLivePoints; // The logarithm of the maximun likelihood value of the remaining set of live points
+        double computationalTime;
+        double constant1;                        // Constant factors used in Keeton's formulas
+        double constant2;
+        double constant3;
         ArrayXd logLikelihood;                   // log-likelihood values of the actual set of live points
+        ArrayXXd nestedSampleOfParameters;       // parameters values (the free parameters of the problem) of the actual set of live points
+
+        void computeKeetonEvidenceError(const bool printFlag, const double logMeanLiveEvidence);
+        void printComputationalTime(const double startTime);
 
 
 }; // END class NestedSampler

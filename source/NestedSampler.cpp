@@ -29,9 +29,10 @@ NestedSampler::NestedSampler(const int Nobjects, vector<Prior*> ptrPriorsVector,
   clusterer(clusterer),
   engine(time(0)),
   Nobjects(Nobjects),
+  Niterations(0),
   informationGain(0.0), 
   logEvidence(-DBL_MAX),
-  Niterations(0)
+  logMeanEvidence(-DBL_MAX)
 {
     int totalNdimensions = 0;
     
@@ -41,7 +42,13 @@ NestedSampler::NestedSampler(const int Nobjects, vector<Prior*> ptrPriorsVector,
     }
 
     Ndimensions = totalNdimensions;
+    constant1 = 1.0/(Nobjects + 1);
+    constant2 = constant1*Nobjects;
+    constant3 = 1.0/((Nobjects + 2)*constant1);
+
 } // END NestedSampler::NestedSampler()
+
+
 
 
 
@@ -69,97 +76,6 @@ NestedSampler::~NestedSampler()
 
 
 
-// NestedSampler::getLogEvidence()
-//
-// PURPOSE:
-//      Get private data member logEvidence.
-//
-// OUTPUT:
-//      A double containing the natural logarithm of the final evidence.
-//
-
-double NestedSampler::getLogEvidence()
-{
-    return logEvidence;
-} // END NestedSampler::logEvidence()
-
-
-
-
-
-
-
-
-
-// NestedSampler::getLogEvidenceError()
-//
-// PURPOSE:
-//      Get private data member logEvidenceError.
-//
-// OUTPUT:
-//      A double containing the natural logarithm of the 
-//      final error on the evidence.
-//
-
-double NestedSampler::getLogEvidenceError()
-{
-    return logEvidenceError;
-} // END NestedSampler::logEvidenceError()
-
-
-
-
-
-
-
-
-
-// NestedSampler::getInformationGain()
-//
-// PURPOSE:
-//      Get private data member informationGain.
-//
-// OUTPUT:
-//      A double containing the final amount of
-//      information gain in moving from prior to posterior.
-//
-double NestedSampler::getInformationGain()
-{
-    return informationGain;
-} // END NestedSampler::getInformationGain()
-
-
-
-
-
-
-
-
-
-
-// NestedSampler::getNiterations()
-//
-// PURPOSE:
-//      Get private data member Niterations.
-//
-// OUTPUT:
-//      An integer containing the final number of
-//      nested loop iterations.
-//
-int NestedSampler::getNiterations()
-{
-    return Niterations;
-} // END NestedSampler::getNiterations()
-
-
-
-
-
-
-
-
-
-
 // NestedSampler::run()
 //
 // PURPOSE:
@@ -168,6 +84,8 @@ int NestedSampler::getNiterations()
 //      logWeightOfPosteriorSample.
 //
 // INPUT:
+//      printFlag: a boolean value specifying whether the results are to 
+//      be printed on the screen or not.
 //      terminationFactor: a double specifying the amount of exceeding information to
 //      terminate nested iterations. Default is 1.
 //      NiterationsBeforeClustering: number of nested iterations required to recompute
@@ -182,25 +100,21 @@ int NestedSampler::getNiterations()
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(const double terminationFactor, const int NiterationsBeforeClustering)
+void NestedSampler::run(const bool printFlag, const double terminationFactor, const int NiterationsBeforeClustering)
 {
-    double logWidthInPriorMass;
-    double logEvidenceNew;
-    double logWeight = 0.0;
-    double logMeanEvidence = -DBL_MAX;
-    double logMeanEvidenceNew;
-    double logMeanLiveEvidence;
-    double logMeanTotalEvidence;
-    double logTotalLikelihoodOfLivePoints = -DBL_MAX;
     int copy = 0;
     int worst;
     int startTime = time(0);
-    int endTime;
-    double computationalTime;
+    int NdimensionsPerPrior;               // Number of dimensions having same type of prior
+    int actualNdimensions = 0;
+    double logWidthInPriorMass;
+    double logEvidenceNew;
+    double logWeight = 0.0;
+    double logMeanEvidenceNew;
+    double logMeanLiveEvidence;
+    double logTotalLikelihoodOfLivePoints = -DBL_MAX;
+    double actualTerminationFactor;
 
-    double delta = 1.0/(Nobjects + 1);
-    double alpha = delta*Nobjects;
-    double beta = 1.0/((Nobjects + 2)*delta);
 
     // Set up the random number generator. It generates integers random numbers
     // between 0 and Nobjects-1, inclusive. The engine's seed is based on the
@@ -214,9 +128,6 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
     logLikelihood.resize(Nobjects);
     nestedSampleOfParameters.resize(Ndimensions, Nobjects);
     ArrayXXd priorSampleOfParameters;
-    int NdimensionsPerPrior;               // Number of dimensions having same type of prior
-    int actualNdimensions = 0;
-    double actualTerminationFactor;
 
 
     // Initialize all the objects of the process.
@@ -228,7 +139,7 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
     {
         NdimensionsPerPrior = ptrPriorsVector[i]->getNdimensions();
         priorSampleOfParameters.resize(NdimensionsPerPrior, Nobjects);
-        ptrPriorsVector[i]->draw(priorSampleOfParameters, Nobjects);
+        ptrPriorsVector[i]->draw(priorSampleOfParameters);
         nestedSampleOfParameters.block(actualNdimensions,0,NdimensionsPerPrior,Nobjects) = priorSampleOfParameters;      
         actualNdimensions += NdimensionsPerPrior;
     }
@@ -302,13 +213,12 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         }
 
         logMeanLikelihoodOfLivePoints = logTotalLikelihoodOfLivePoints - log(Nobjects);
-        logTotalLikelihoodOfLivePoints = -DBL_MAX;
         
         
         // Compute mean evidence and mean live evidence
 
-        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations*log(alpha);
-        logMeanEvidenceNew = Functions::logExpSum(actualLogLikelihoodConstraint + Niterations*log(alpha) - log(Nobjects), logMeanEvidence);
+        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations*log(constant2);
+        logMeanEvidenceNew = Functions::logExpSum(actualLogLikelihoodConstraint + Niterations*log(constant2) - log(Nobjects), logMeanEvidence);
         logMeanEvidence = logMeanEvidenceNew;
         logMeanTotalEvidence = Functions::logExpSum(logMeanEvidence, logMeanLiveEvidence);
 
@@ -323,13 +233,19 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         if ((Niterations % NiterationsBeforeClustering)  == 0)
         {
             Nclusters = clusterer.cluster(nestedSampleOfParameters, clusterIndices);
-            cout << "Keeton's log(<Evidence>): " << setprecision(12) << logMeanEvidence << endl;
-            cout << "Keeton's log(<Evidence_Live>): " << logMeanLiveEvidence << endl;
-            cout << "Keeton's log(<Total Evidence>): " << logMeanTotalEvidence << endl;
-            cout << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
-            cout << "Termination Factor: " << actualTerminationFactor << endl;
-            cout << "Niterations: " << Niterations << endl;
-            cout << "------------------------------------" << endl;
+            
+            if (printFlag == true)
+            {
+                cout << "------------------------------------" << endl;
+                cout << "Skilling's logEvidence: " << setprecision(12) << logEvidence << endl;
+                cout << "Keeton's log(<Evidence>): " << logMeanEvidence << endl;
+                cout << "Keeton's log(<Evidence_Live>): " << logMeanLiveEvidence << endl;
+                cout << "Keeton's log(<Total Evidence>): " << logMeanTotalEvidence << endl;
+                cout << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
+                cout << "Termination Factor: " << actualTerminationFactor << endl;
+                cout << "Niterations: " << Niterations << endl;
+                cout << "------------------------------------" << endl;
+            }
         }
 
 
@@ -375,31 +291,343 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
     while (terminationFactor < actualTerminationFactor);                          // Termination condition by Keeton 2011
     
  
-    // Compute total uncertainty for the Evidence Z
+    // Compute Skilling's error on the log(Evidence)
     
     logEvidenceError = sqrt(fabs(informationGain)/Nobjects);
 
 
-    // Compute total computational time
+    // Compute Keeton's errors on the log(Evidence)
 
-    endTime = time(0);
+    computeKeetonEvidenceError(printFlag, logMeanLiveEvidence);
+
+
+    // Compute and print total computational time
+
+    printComputationalTime(startTime);
+
+}
+
+
+
+
+
+
+
+
+
+// NestedSampler::getNiterations()
+//
+// PURPOSE:
+//      Get private data member Niterations.
+//
+// OUTPUT:
+//      An integer containing the final number of
+//      nested loop iterations.
+//
+
+int NestedSampler::getNiterations()
+{
+    return Niterations;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogEvidence()
+//
+// PURPOSE:
+//      Get private data member logEvidence.
+//
+// OUTPUT:
+//      A double containing the natural logarithm of the final evidence.
+//
+
+double NestedSampler::getLogEvidence()
+{
+    return logEvidence;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogEvidenceError()
+//
+// PURPOSE:
+//      Get private data member logEvidenceError.
+//
+// OUTPUT:
+//      A double containing the Skilling's error on the logEvidence.
+//
+
+double NestedSampler::getLogEvidenceError()
+{
+    return logEvidenceError;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogMeanEvidence()
+//
+// PURPOSE:
+//      Get private data member logMeanEvidence.
+//
+// OUTPUT:
+//      A double containing the natural logarithm of the Keeton's mean evidence.
+//
+
+double NestedSampler::getLogMeanEvidence()
+{
+    return logMeanEvidence;
+}
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogMeanEvidenceError()
+//
+// PURPOSE:
+//      Get private data member logMeanEvidenceError.
+//
+// OUTPUT:
+//      A double containing the Keeton's error on the logMeanEvidence.
+//
+
+double NestedSampler::getLogMeanEvidenceError()
+{
+    return logMeanEvidenceError;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogMeanTotalEvidence()
+//
+// PURPOSE:
+//      Get private data member logMeanTotalEvidence.
+//
+// OUTPUT:
+//      A double containing the Keeton's mean total evidence.
+//
+
+double NestedSampler::getLogMeanTotalEvidence()
+{
+    return logMeanTotalEvidence;
+}
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogMeanTotalEvidenceError()
+//
+// PURPOSE:
+//      Get private data member logMeanTotalEvidenceError.
+//
+// OUTPUT:
+//      A double containing the Keeton's error on the logarithm of the mean total evidence.
+//
+
+double NestedSampler::getLogMeanTotalEvidenceError()
+{
+    return logMeanTotalEvidenceError;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getInformationGain()
+//
+// PURPOSE:
+//      Get private data member informationGain.
+//
+// OUTPUT:
+//      A double containing the final amount of
+//      information gain in moving from prior to posterior.
+//
+
+double NestedSampler::getInformationGain()
+{
+    return informationGain;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getComputationalTime()
+//
+// PURPOSE:
+//      Get private data member computationalTime.
+//
+// OUTPUT:
+//      A double containing the final computational time of the process.
+//
+
+double NestedSampler::getComputationalTime()
+{
+    return computationalTime;
+}
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::computeKeetonEvidenceError()
+//
+// PURPOSE:
+//      Computes the total evidence error on the total evidence, according to the
+//      description by Keeton C. 2011, MNRAS, 414,1418.
+//
+// INPUT:
+//      printFlag: a boolean value specifying whether the results are to 
+//      be printed on the screen or not.
+//      logMeanLiveEvidence: a double containing the logarithm of the live evidence
+//      compure by means of Keeton's equations.
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::computeKeetonEvidenceError(const bool printFlag, const double logMeanLiveEvidence)
+{
+    double logAdditionalEvidenceError;
+    double errorTerm1 = -DBL_MAX;
+    double errorTerm2 = -DBL_MAX;
+    double errorTerm3 = -DBL_MAX;
+    double errorTerm4 = -DBL_MAX;
+    double errorTerm5;
+
+    for (int j = 0; j < Niterations; j++)
+    {
+        for (int i = 0; i < j; i++)
+        {
+            errorTerm2 = Functions::logExpSum(logLikelihoodOfPosteriorSample(i) + i*log(constant3), errorTerm2);
+        }
+
+        errorTerm1 = Functions::logExpSum(logLikelihoodOfPosteriorSample(j) + j*log(constant2) + errorTerm2, errorTerm1);
+        errorTerm3 = Functions::logExpSum(logLikelihoodOfPosteriorSample(j) + j*log(constant2), errorTerm3);
+        errorTerm2 = -DBL_MAX;
+        errorTerm5 = Functions::logExpDifference(log(constant1) + j*log(constant3), j*log(constant2) - log(Nobjects));
+        errorTerm4 = Functions::logExpSum(logLikelihoodOfPosteriorSample(j) + errorTerm5, errorTerm4);
+    }
+    
+    logMeanEvidenceError = log(2.0) + log(constant1) - log(Nobjects) + errorTerm1;
+    logMeanEvidenceError = Functions::logExpDifference(logMeanEvidenceError, -2.0*log(Nobjects) + 2.0*errorTerm3);
+    
+    logAdditionalEvidenceError = 2.0*logMeanLikelihoodOfLivePoints + Niterations*log(constant2) 
+                                 + Functions::logExpDifference(Niterations*log(constant3), Niterations*log(constant3));
+    logAdditionalEvidenceError = Functions::logExpSum(logAdditionalEvidenceError, log(2) + logMeanLikelihoodOfLivePoints + Niterations*log(constant2) + errorTerm4);
+    logMeanTotalEvidenceError = sqrt(exp(logMeanEvidenceError) + exp(logAdditionalEvidenceError))/(exp(logMeanLiveEvidence) + exp(logMeanEvidence));
+    logMeanEvidenceError = sqrt(exp(logMeanEvidenceError))/exp(logMeanEvidence);
+
+    if (printFlag == true)
+    {
+        cout << "Keeton's Error log(Evidence): " << logMeanEvidenceError << endl; 
+        cout << "Keeton's Total Error log(Evidence): " << logMeanTotalEvidenceError << endl; 
+        cout << "Skilling Error log(Evidence): " << logEvidenceError << endl; 
+    }
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::printComputationalTime()
+//
+// PURPOSE:
+//      Computes the total computational time of the nested sampling process
+//      and prints the result expressed in either seconds, minutes or hours on the screen.
+//
+// INPUT:
+//      startTime a double specifying the seconds at the moment the process started
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::printComputationalTime(const double startTime)
+{
+    double endTime = time(0);
     computationalTime = endTime - startTime; 
-
+    
     if (computationalTime < 60)
     {
+        cout << "------------------------------------" << endl;
         cout << "Computational Time: " << computationalTime << " seconds" << endl;
+        cout << "------------------------------------" << endl;
     }
     else 
         if ((computationalTime >= 60) && (computationalTime < 60*60))
         {
             computationalTime = computationalTime/60.;
+            cout << "------------------------------------" << endl;
             cout << "Computational Time: " << computationalTime << " minutes" << endl;
+            cout << "------------------------------------" << endl;
         }
     else 
         if (computationalTime >= 60*60)
         {
             computationalTime = computationalTime/(60.*60.);
+            cout << "------------------------------------" << endl;
             cout << "Computational Time: " << computationalTime << " hours" << endl;
+            cout << "------------------------------------" << endl;
         }
-
-} // END NestedSampler::run()
+}
