@@ -51,6 +51,7 @@ class Results
         void writeEvidenceInformationToFile(string fullPath);
         void writePosteriorProbabilityToFile(string fullPath);
         void writeParameterEstimationToFile(string fullPath, const double credibleLevel = 68.27);
+        void writeObjectsIdentificationToFile(){};          // TO DO
 
 
     private:

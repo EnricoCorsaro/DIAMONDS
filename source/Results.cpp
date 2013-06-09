@@ -83,12 +83,12 @@ ArrayXd Results::posteriorProbability()
 //      computes the expectation, median and mode values from the 
 //      marginalized posterior probability. 
 //      Shortest Bayesian credible intervals (CI) are also computed.
-//      All the values are stored in to a bidimensional nEigen Array.
+//      All the values are stored in a bidimensional Eigen Array.
 //
 // INPUT:
 //      credibleLevel: a double number providing the desired credible 
-//      level to be computed. Default value corresponds to most 
-//      used credible level of 68.27 %.
+//      level to be computed. Default value corresponds to
+//      credible level of 68.27 %.
 //      
 // OUTPUT:
 //      A bidimensional Eigen Array containing all the estimates of the
@@ -97,13 +97,42 @@ ArrayXd Results::posteriorProbability()
 
 ArrayXXd Results::parameterEstimation(const double credibleLevel)
 {
+    int k,n;
+    int hStart;
+    int min,max;
     int Ndimensions = nestedSampler.posteriorSample.rows();
     int Niterations = nestedSampler.posteriorSample.cols();
-    ArrayXd parameterComponent;
+    int NduplicateParameterComponents;              
+    int Nbins;                                      // Optimal number of bins in rebinning process
+    int stepRight;
+    double parameterMean;
+    double parameterStandardDeviation;
+    double parameterMedian;
+    double parameterMode;
+    double parameterMinimum;
+    double parameterMaximum;
+    double marginalDistributionMode;
+    double totalProbability;
+    double binWidth;
+    double lowerCredibleInterval;
+    double upperCredibleInterval;
+    double limitProbabilityRight;
+    double limitProbabilityLeft;
+    double limitParameterLeft;
+    double limitParameterRight;
+    ArrayXd parameterValues;
     ArrayXd marginalDistribution;
     ArrayXd posteriorDistribution = posteriorProbability();
+    ArrayXd marginalDistributionLeft;               // Marginal distribution up to mode value
+    ArrayXd parameterValuesLeft;                    // Parameter range up to mode value
+    ArrayXd marginalDifferenceLeft;                 // Difference distribution to find point in 
+                                                    // in the distribution left to mode value having equal
+                                                    // probability to that identified in the right to mode value part
+    ArrayXd parameterValuesCopy;
+    ArrayXd marginalDistributionCopy;
+    ArrayXd marginalDistributionRebinned;
+    ArrayXd parameterValuesRebinned;
     ArrayXXd parameterEstimates;
-
 
     parameterEstimates.resize(Ndimensions, 5);
 
@@ -112,41 +141,41 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
 
     for (int i = 0; i < Ndimensions; i++)
     {
-        parameterComponent = nestedSampler.posteriorSample.row(i);
+        parameterValues = nestedSampler.posteriorSample.row(i);
         marginalDistribution = posteriorDistribution;
 
 
-        // Sort elements of array parameterComponent in increasing
+        // Sort elements of array parameterValues in increasing
         // order and sort elements of array marginalDistribution accordingly
         
-        Functions::sortElementsDouble(parameterComponent, marginalDistribution); 
+        Functions::sortElementsDouble(parameterValues, marginalDistribution); 
         
 
-        // Marginalize over parameter by merging posterior values 
-        // corresponding to equal parameter values
+        // Merge existing posterior values 
+        // corresponding to equal parameter values (if any)
 
-        int NduplicateParameterComponents = 0;
+        NduplicateParameterComponents = 0;
 
         for (int j = 0; j < Niterations - 1; j++)
         {  
-            if (parameterComponent(j) == -DBL_MAX)
-                continue;
-            else
+            if (parameterValues(j) != -DBL_MAX)
             {
                 for (int k = j + 1; k < Niterations; k++)
                 {
-                    if (parameterComponent(k) == -DBL_MAX)
+                    if (parameterValues(k) == -DBL_MAX)
                         continue;
                     else
-                        if (parameterComponent(j) == parameterComponent(k))
+                        if (parameterValues(j) == parameterValues(k))
                         {   
-                            parameterComponent(k) = -DBL_MAX;        // Set duplicate to bad value (flag)
+                            parameterValues(k) = -DBL_MAX;        // Set duplicate to bad value (flag)
                             marginalDistribution(j) = marginalDistribution(j) + marginalDistribution(k); // Merge probability values
                             marginalDistribution(k) = 0.0;
                             NduplicateParameterComponents++;
                         }
                 }
             }
+            else
+                continue;
         }
 
 
@@ -154,19 +183,19 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
 
         if (NduplicateParameterComponents > 0) // Check if bad points are present otherwise skip block
         {
-            ArrayXd parameterComponentCopy(Niterations - NduplicateParameterComponents);
-            ArrayXd marginalDistributionCopy(Niterations - NduplicateParameterComponents);
+            parameterValuesCopy.resize(Niterations - NduplicateParameterComponents);
+            marginalDistributionCopy.resize(Niterations - NduplicateParameterComponents);
         
-            int n = 0;
+            n = 0;
 
             for (int m = 0; (m < Niterations) && (n < (Niterations - NduplicateParameterComponents)); m++)
             {
-                if (parameterComponent(m) == -DBL_MAX)
+                if (parameterValues(m) == -DBL_MAX)
                     continue;
                 else
-                    if (parameterComponent(m) != -DBL_MAX)
+                    if (parameterValues(m) != -DBL_MAX)
                         {
-                            parameterComponentCopy(n) = parameterComponent(m);
+                            parameterValuesCopy(n) = parameterValues(m);
                             marginalDistributionCopy(n) = marginalDistribution(m);
                             n++;
                         }
@@ -175,91 +204,127 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
 
             // Replace original marginal arrays with array copies
 
-            parameterComponent = parameterComponentCopy;
+            parameterValues = parameterValuesCopy;
             marginalDistribution = marginalDistributionCopy;
         }
 
 
         // Compute the mean value (expectation value)
        
-        double meanParameter;
+        parameterMean = (parameterValues * marginalDistribution).sum();
+        parameterEstimates(i,0) = parameterMean;
+
+
+        // Compute standard deviation of the sample distribution
+
+        parameterStandardDeviation = sqrt((pow(parameterValues - parameterMean, 2) * marginalDistribution).sum());
         
-        meanParameter = (parameterComponent.cwiseProduct(marginalDistribution)).sum();
-        parameterEstimates(i,0) = meanParameter;
-
-
+        
         // Compute the median value (value corresponding to 50% of probability)
 
-        double medianParameter;
-        double totalProbability = 0.0;
-        int k = 0;
+        totalProbability = 0.0;
+        k = 0;
         
         while (totalProbability < 0.5)
         {
-            medianParameter = parameterComponent(k);
+            parameterMedian = parameterValues(k);
             totalProbability += marginalDistribution(k);
             k++;
         }
         
-        parameterEstimates(i,1) = medianParameter;
+        parameterEstimates(i,1) = parameterMedian;
 
 
         // Find the mode value (parameter corresponding to maximum probability value)
 
-        int max = 0;                                    // Subscript corresponding to mode value
-        double maximumMarginal;
-        double maximumParameter;
-
-        maximumMarginal = marginalDistribution.maxCoeff(&max);
-        maximumParameter = parameterComponent(max);
-        parameterEstimates(i,2) = maximumParameter;
+        max = 0;                                    // Subscript corresponding to mode value
+        marginalDistributionMode = marginalDistribution.maxCoeff(&max);
+        parameterMode = parameterValues(max);
+        parameterEstimates(i,2) = parameterMode;
 
         
+        // Compute optimal bin size for rebinning marginal distribution according to Scott's normal reference rule
+
+        binWidth = 3.5*parameterStandardDeviation/pow(parameterValues.size(),1.0/3.0);
+
+
+        // Rebin marginal distribution for computing credible intervals        
+
+        parameterMaximum = parameterValues.maxCoeff();
+        parameterMinimum = parameterValues.minCoeff();
+        Nbins = ceil((parameterMaximum - parameterMinimum)/binWidth);
+        marginalDistributionRebinned = ArrayXd::Zero(Nbins);
+        parameterValuesRebinned.resize(Nbins);
+        hStart = 0;
+
+
+        // Merge marginal distribution for each bin up to the second last bin
+
+        for (int j = 0; j < Nbins-1; j++)
+        {
+            parameterValuesRebinned(j) = parameterMinimum + j*binWidth + 0.5*binWidth;
+            
+            for (int h = hStart; h < parameterValues.size(); h++)
+            {
+                if ((parameterValues(h) >= parameterMinimum + j*binWidth) && (parameterValues(h) < parameterMinimum + (j+1)*binWidth))
+                {
+                    marginalDistributionRebinned(j) += marginalDistribution(h);
+                    hStart = h;
+                }
+            }
+        }
+
+
+        // Merge marginal distribution in the Last bin
+
+        parameterValuesRebinned(Nbins-1) = parameterMinimum + (Nbins-1)*binWidth + 0.5*(parameterMaximum - parameterMinimum + (Nbins-1)*binWidth);
+            
+        for (int h = hStart; h < parameterValues.size(); h++)
+        {
+            if ((parameterValues(h) >= parameterMinimum + (Nbins-1)*binWidth) && (parameterValues(h) <= parameterMaximum))
+            {
+                marginalDistributionRebinned(Nbins-1) += marginalDistribution(h);
+            }
+        }
+
+
         // Compute the "shortest" credible intervals (CI)
 
-        int stepRight = 1;
-        double limitProbabilityRight;
-        double limitProbabilityLeft;
-        double limitParameterLeft;
-        double limitParameterRight;
-        ArrayXd marginalDistributionLeft(max + 1);       // Marginal distribution up to mode value
-        ArrayXd parameterComponentLeft(max + 1);          // Parameter range up to mode value
-        ArrayXd marginalDifferenceLeft;                  // Difference distribution to find point in 
-                                                         // in the left-hand distribution having equal
-                                                         // probability to that identified in the right-hand part
+        stepRight = 1;
+        marginalDistributionMode = marginalDistributionRebinned.maxCoeff(&max);
+        marginalDistributionLeft.resize(max + 1);       // Marginal distribution up to mode value
+        parameterValuesLeft.resize(max + 1);            // Parameter range up to mode value
+        
         for (int nn = 0; nn <= max; nn++)
         {
-            marginalDistributionLeft(nn) = marginalDistribution(nn);          // Consider left-hand distribution (up to mode value)
-            parameterComponentLeft(nn) = parameterComponent(nn);
+            marginalDistributionLeft(nn) = marginalDistributionRebinned(nn);          // Consider left-hand distribution (up to mode value)
+            parameterValuesLeft(nn) = parameterValuesRebinned(nn);
         }
 
 
         while (totalProbability < (credibleLevel/100.))     // Stop when probability >= credibleLevel 
         {
             totalProbability = 0.0;
-            limitProbabilityRight = marginalDistribution(max + stepRight);
-            limitParameterRight = parameterComponent(max + stepRight);
+            limitProbabilityRight = marginalDistributionRebinned(max + stepRight);
+            limitParameterRight = parameterValuesRebinned(max + stepRight);
             marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();
 
-            int min = 0;
-
+            min = 0;
             limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);
-            limitProbabilityLeft = marginalDistribution(min);
-            limitParameterLeft = parameterComponent(min);
+            limitProbabilityLeft = marginalDistributionRebinned(min);
+            limitParameterLeft = parameterValuesRebinned(min);
 
             for (int t = min; t <= (max + stepRight); t++)
             {
-                totalProbability += marginalDistribution(t);        // Evaluate total probability within the range
+                totalProbability += marginalDistributionRebinned(t);        // Evaluate total probability within the range
             }
 
             stepRight++;
         }
 
-        double lowerCredibleInterval;
-        double upperCredibleInterval;
 
-        lowerCredibleInterval = maximumParameter - limitParameterLeft;
-        upperCredibleInterval = limitParameterRight - maximumParameter;
+        lowerCredibleInterval = parameterMean - limitParameterLeft;
+        upperCredibleInterval = limitParameterRight - parameterMean;
            
         parameterEstimates(i,3) = lowerCredibleInterval;
         parameterEstimates(i,4) = upperCredibleInterval;
@@ -295,7 +360,6 @@ void Results::writeParametersToFile(string pathPrefix, string outputFileExtensio
 {
     File::arrayXXdRowsToFiles(nestedSampler.posteriorSample, pathPrefix, outputFileExtension);
 }
-
 
 
 
@@ -345,8 +409,9 @@ void Results::writeLogLikelihoodToFile(string fullPath)
 // Results::writeEvidenceInformationToFile()
 //
 // PURPOSE:
-//      writes the evidence from the nested sampling into an ASCII file. 
-//      Evidence error and information Gain are also included.
+//      writes all the information related to the evidence computed from 
+//      the nested sampling into an ASCII file. 
+//      Skilling's evidence, evidence error and information gain are also included.
 //
 // OUTPUT:
 //      void
@@ -358,13 +423,14 @@ void Results::writeEvidenceInformationToFile(string fullPath)
     File::openOutputFile(outputFile, fullPath);
             
     outputFile << "# Evidence results from nested sampling" << endl;
-    outputFile << "# log(Evidence)" << setw(30) << "Error of log(Evidence)" << setw(30) << "Information Gain" << endl;
     outputFile << scientific << setprecision(9);
-    outputFile << nestedSampler.getLogEvidence() << setw(30);
-    outputFile << nestedSampler.getLogEvidenceError() << setw(30);
-    outputFile << nestedSampler.getInformationGain() << endl;
+    outputFile << "# Keeton's log(Evidence)" << setw(40) << "Keeton's Error log(Evidence)" << endl; 
+    outputFile << nestedSampler.getLogMeanEvidence() << setw(40) << nestedSampler.getLogMeanEvidenceError() << endl;
+    outputFile << "# Keeton's log(Total Evidence)" << setw(40) << "Keeton's Error log(Total Evidence)" << endl;
+    outputFile << nestedSampler.getLogMeanTotalEvidence() << setw(40) << nestedSampler.getLogMeanTotalEvidenceError() << endl;
+    outputFile << "# Skilling's log(Evidence)" << setw(40) << "Skilling's Error log(Evidence)" << setw(40) << "Skilling's Information Gain" << endl;
+    outputFile << nestedSampler.getLogEvidence() << setw(40) << nestedSampler.getLogEvidenceError() << setw(40) << nestedSampler.getInformationGain() << endl;
     outputFile.close();
-
 } 
 
 
