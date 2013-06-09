@@ -107,14 +107,16 @@ int main(int argc, char *argv[])
 
     // Start nested sampling process
     
+    bool printFlag = true;                      // Print results on the screen
     int Nobjects = 400;
-    int NiterationsBeforeClustering = 10;        // Number of nesting iterations before executing clustering algorithm again
+    int NiterationsBeforeClustering = 10;       // Number of nesting iterations before executing clustering algorithm again
     double initialEnlargementFactor = 2.;  
     double alpha = 0.1;                         // Exponent for remaining prior mass in ellipsoid enlargement factor
-    double terminationFactor = 0.01;             // Termination factor for nesting loop
+    double terminationFactor = 0.01;            // Termination factor for nesting loop
+
 
     MultiEllipsoidSampler nestedSampler(ptrPriorsVector, likelihood, myMetric, kmeans, Nobjects, initialEnlargementFactor, alpha);
-    nestedSampler.run(terminationFactor, NiterationsBeforeClustering);
+    nestedSampler.run(printFlag, terminationFactor, NiterationsBeforeClustering);
 
 
     // Save the results in output files
