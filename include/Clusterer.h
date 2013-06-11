@@ -18,8 +18,9 @@ class Clusterer
     public:
     
         Clusterer(Metric &metric);
-        ~Clusterer(){};    
-        virtual int cluster(RefArrayXXd sample, RefArrayXi clusterIndices) = 0;
+        ~Clusterer(){};
+    
+        virtual int cluster(const bool printFlag, RefArrayXXd sample, RefArrayXi clusterIndices) = 0;
 
 
     protected:

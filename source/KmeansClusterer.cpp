@@ -1,11 +1,11 @@
-
 #include "KmeansClusterer.h"
 
 
 
 // KmeansClusterer::KmeansClusterer()
 //
-// PURPOSE: constructor
+// PURPOSE: 
+//      Constructor.
 //
 // INPUT: 
 //      metric: this class is used to compute the squared distance between two points
@@ -38,7 +38,8 @@ KmeansClusterer::KmeansClusterer(Metric &metric, unsigned int minNclusters, unsi
 
 // KmeansClusterer::~KmeansClusterer()
 //
-// PURPOSE: destructor
+// PURPOSE: 
+//      Destructor.
 //
 
 KmeansClusterer::~KmeansClusterer()
@@ -55,26 +56,30 @@ KmeansClusterer::~KmeansClusterer()
 
 // KmeansClusterer::chooseInitialClusterCenters()
 //
-// PURPOSE: choose semi-randomly the initial centers of the clusters among the sample
-//          of points given
+// PURPOSE: 
+//      Choose semi-randomly the initial centers of the clusters among the sample
+//      of points given
 //
 // INPUT:
 //      sample(Ndimensions, Npoints): sample of N-dimensional points
 //      center(Ndimensions, Nclusters): set of N-dimensional coordinates of the cluster centers 
 //      Nclusters: number of clusters considered
 // 
-// OUTPUT: void
+// OUTPUT: 
+//      void
 //
 
 void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXXd centers, unsigned int Nclusters)
 {
     unsigned int Npoints = sample.cols();
-    
+
+
     // Set up a some random generators
     
     uniform_real_distribution<> uniform01(0.0, 1.0);
     uniform_int_distribution<> uniform(0, Npoints-1);
-    
+
+
     // Picking the initial centers randomly is prone to leading to a local rather than 
     // the global minumum. Choosing k centers as far away from each other as possible 
     // is prone to outliers. We therefore adopt the method of Arthur & Vassilvitskii (2007)
@@ -82,11 +87,19 @@ void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXX
     // chooses each center at random with a probability proportional to its (squared) 
     // distance from the centers chosen already.
 
+
     // Choose the first center randomly
 
     int randomPointIndex = uniform(engine);
+    int k;
+    double distanceToClosestCenter[Npoints];
+    double sumOfDistancesToClosestCenters;
+    double distance;
+    double uniform01Number;
+    double cumulativeDistance;
     centers.col(0) = sample.col(randomPointIndex);
 
+    
     // Select the other initial centers probabilistically 
 
     for (int n = 1; n < Nclusters; ++n)
@@ -94,14 +107,13 @@ void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXX
         // For each of the points in the sample, determine the distance to
         // its closest center 
     
-        double distanceToClosestCenter[Npoints];
-        double sumOfDistancesToClosestCenters = 0.0;
+        sumOfDistancesToClosestCenters = 0.0;
     
         for (int k = 0; k < Npoints; ++k)
         {
             for (int j = 0; j < n; ++j)
             {
-                double distance = metric.distance(sample.col(k), centers.col(j));
+                distance = metric.distance(sample.col(k), centers.col(j));
                 if (j == 0)
                 {
                     // This is the very first center we're checking, so let's adopt
@@ -125,6 +137,7 @@ void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXX
             sumOfDistancesToClosestCenters += distanceToClosestCenter[k];
         } 
     
+
         // Normalize the distances
     
         for (int k = 0; k < Npoints; ++k)
@@ -132,16 +145,19 @@ void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXX
             distanceToClosestCenter[k] /= sumOfDistancesToClosestCenters;
         }
     
+
         // Generate a uniform random number between 0 and 1
     
-        double uniform01Number = uniform01(engine);
+        uniform01Number = uniform01(engine);
     
+
         // Select the point that makes the cumulative distance greater than the random
         // number. Those points with a larger distance to their closest center, will have 
         // a greater chance to be chosen as the next cluster center point, than the others.
         
-        double cumulativeDistance = distanceToClosestCenter[0];
-        int k = 0;
+        cumulativeDistance = distanceToClosestCenter[0];
+        k = 0;
+        
         while (cumulativeDistance < uniform01Number)
         {
             k++;
@@ -164,11 +180,12 @@ void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXX
 
 
 
-// KmeansClusterer::updateClusterCenters()
+// KmeansClusterer::updateClusterCentersUntilConverged()
 //
-// PURPOSE: evolve the cluster centers according to the k-means algorithm. Given a set of cluster
-//          centers, gather for each center the sample points that are closest to it, and use 
-//          the barycenter of these gathered points as the updated cluster center. And so on.
+// PURPOSE: 
+//      Evolve the cluster centers according to the k-means algorithm. Given a set of cluster
+//      centers, gather for each center the sample points that are closest to it, and use 
+//      the barycenter of these gathered points as the updated cluster center. And so on.
 //
 // INPUT:
 //      sample(Ndimensions, Npoints): sample of N-dimensional points
@@ -183,7 +200,7 @@ void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXX
 //                    change in total sum of distances of all points to their cluster center.  
 // 
 // OUTPUT:
-//      true if the convergence of k-means was successfully, false otherwise. A convergence is
+//      True if the convergence of k-means was successfully, false otherwise. A convergence is
 //      considered successfully if the relTolerance-criterion is satisfied (see above), _and_ if 
 //      all clusters contain at least 2 points.
 
@@ -197,12 +214,17 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
     unsigned int Nclusters = centers.cols();
     ArrayXXd updatedCenters = ArrayXXd::Zero(Ndimensions, Nclusters);   // coordinates of each of the new cluster centers
 
+
     // Perform the k-means clustering iteration, each time improving the cluster centers,
     // and redetermining which points belongs to which cluster
 
+    bool stopIterations = false;
+    unsigned int indexOfClosestCenter;
     double oldSumOfDistances = 0.0;
     double newSumOfDistances = 0.0;
-    bool stopIterations = false;
+    double distanceToClosestCenter;
+    double distance; 
+
     while (!stopIterations)
     {
         // Find for each point the closest cluster center.
@@ -214,12 +236,12 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
     
         for (int n = 0; n < Npoints; ++n)
         {
-            double distanceToClosestCenter = DBL_MAX;
-            unsigned int indexOfClosestCenter;
+            distanceToClosestCenter = DBL_MAX;
         
             for (int i = 0; i < Nclusters; ++i)
             {
-                const double distance = metric.distance(sample.col(n), centers.col(i));
+                double distance = metric.distance(sample.col(n), centers.col(i));
+                
                 if (distance < distanceToClosestCenter)
                 {
                     indexOfClosestCenter = i;
@@ -233,22 +255,25 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
             clusterIndices(n) = indexOfClosestCenter;        
         }
     
+
         // Assert that all clusters contain at least 2 points. If not we probably started
         // with an unfortunate set of initial cluster centers. Flag this by immediately 
         // returning false.
-        
+       
         if (!(clusterSizes > 1).all())
         {
             bool convergenceReached = false;
             return convergenceReached;
         }
-        
+       
+
         // Finish computing the new updated centers. Given the check above, we are sure
         // that none of the clusters is empty. 
         
         updatedCenters.rowwise() /= clusterSizes.transpose();
         centers = updatedCenters;
     
+
         // A new set of clusters has been determined.
         // Decide whether the algorithm has converged. Convergence occurs when
         // the sum of all distances of all points to their cluster center does
@@ -300,10 +325,11 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
 
 
 
-// KmeansClusterer::evaluateBICvalueOfCluster()
+// KmeansClusterer::evaluateBICvalue()
 //
-// PURPOSE: given a cluster configuration, evaluate its Bayesian Information Criterion value
-//          assuming that the clusters are a gaussian mixture of spherical gaussians.
+// PURPOSE:
+//      Given a cluster configuration, evaluate its Bayesian Information Criterion value
+//      assuming that the clusters are a gaussian mixture of spherical Gaussians.
 //
 // INPUT:
 //      sample(Ndimensions, Npoints): sample of N-dimensional points
@@ -323,6 +349,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
     unsigned int Ndimensions = sample.rows();
     unsigned int Nclusters = centers.cols();
         
+
     // Compute the intra-cluster variance for each cluster, assuming that each cluster 
     // is spherical, making it a one-dimensional problem.
     
@@ -336,19 +363,23 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
     
     intraClusterVariances /= (clusterSizes-1); 
     
+
     // Initialize the cluster priors, i.e. the prior probability that a point belongs 
     // to a particular cluster, which we set to the relative cluster size.
     
     ArrayXd clusterPriors = clusterSizes / double(Npoints);
    
+
     // Compute the log-likelihood (up to constant terms) which we assume is a mixture
     // of spherical gaussians. The log-likelihood of the entire sample is the sum of the
     // log-likelihood of each of the points.
     
     double logLikelihood = 0.0;
+    int cluster;
+
     for (int n = 0; n < Npoints; ++n)
     {
-        int cluster = clusterIndices(n); 
+        cluster = clusterIndices(n); 
         logLikelihood +=   log(clusterPriors(cluster))
                          - Ndimensions / 2.0 * log(intraClusterVariances(cluster))
                          - metric.distance(sample.col(n), centers.col(cluster)) / 2.0 / intraClusterVariances(cluster);
@@ -383,13 +414,15 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 
 
 
-
 // KmeansClusterer::cluster()
 //
-// PURPOSE: given a sample of N-dimensional points, use the k-means clustering algorithm + BIC
-//          to determine the optimal number of clusters that can be fitted to the data.
+// PURPOSE: 
+//      Given a sample of N-dimensional points, use the k-means clustering algorithm + BIC
+//      to determine the optimal number of clusters that can be fitted to the data.
 //
 // INPUT:
+//      printFlag: a boolean value specifying whether the BIC values and corresponding number of clusters 
+//      are to be printed on the screen while the process is running.
 //      sample(Ndimensions, Npoints): sample of N-dimensional points
 //      optimalClusterIndices(Npoints): for each point the index of the cluster it belongs to. This index
 //                                      runs from 0 to Nclusters-1.
@@ -398,15 +431,23 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 //      The optimal number of clusters
 //
 
-int KmeansClusterer::cluster(RefArrayXXd sample, RefArrayXi optimalClusterIndices)
+int KmeansClusterer::cluster(const bool printFlag, RefArrayXXd sample, RefArrayXi optimalClusterIndices)
 {
+    bool convergedSuccessfully;
     unsigned int Npoints = sample.cols();
     unsigned int Ndimensions = sample.rows();
     unsigned int optimalNclusters;    
     double bestBICvalue = DBL_MAX;
+    double BICvalue; 
+    double sumOfDistancesToClosestCenter;
+    double bestSumOfDistancesToClosestCenter = DBL_MAX;
     ArrayXi clusterIndices(Npoints);            // for each point the index of the cluster to ...
     ArrayXi bestClusterIndices(Npoints);        // ... which it belongs
- 
+    ArrayXd clusterSizes;
+    ArrayXd bestClusterSizes;
+    ArrayXXd centers;
+    ArrayXXd bestCenters;
+    
 
     // As we don't know a prior the optimal number of clusters, loop over a
     // user-specified range of clusters, and determine which number gives the
@@ -414,32 +455,31 @@ int KmeansClusterer::cluster(RefArrayXXd sample, RefArrayXi optimalClusterIndice
     
     for (unsigned int Nclusters = minNclusters; Nclusters <= maxNclusters; ++Nclusters)
     {
-        ArrayXXd centers = ArrayXXd::Zero(Ndimensions, Nclusters);          // coordinates of each of the old cluster centers
-        ArrayXXd bestCenters = ArrayXXd::Zero(Ndimensions, Nclusters);      // coordinates of the best centers (over all trials)
-        ArrayXd clusterSizes = ArrayXd::Zero(Nclusters);                    // # of points belonging to each cluster...
-        ArrayXd bestClusterSizes = ArrayXd::Zero(Nclusters);                // ... 'double', to avoid casting problems.               
-        
+        centers = ArrayXXd::Zero(Ndimensions, Nclusters);          // coordinates of each of the old cluster centers
+        bestCenters = ArrayXXd::Zero(Ndimensions, Nclusters);      // coordinates of the best centers (over all trials)
+        clusterSizes = ArrayXd::Zero(Nclusters);                    // # of points belonging to each cluster...
+        bestClusterSizes = ArrayXd::Zero(Nclusters);                // ... 'double', to avoid casting problems.               
+       
+
         // The k-means algorithm is sensitive to the choice of the initial centers. 
         // We therefore run the algorithm 'Ntrial' times, and take the best clustering.
         
-        double bestSumOfDistancesToClosestCenter = DBL_MAX;
+        bestSumOfDistancesToClosestCenter = DBL_MAX;
                     
         for (int m = 0; m < Ntrials; ++m)
         {
-            bool convergedSuccessfully;
-            double sumOfDistancesToClosestCenter;
-            
             chooseInitialClusterCenters(sample, centers, Nclusters);
-            
             convergedSuccessfully = updateClusterCentersUntilConverged(sample, centers, clusterSizes, clusterIndices, 
                                                                        sumOfDistancesToClosestCenter, relTolerance);
-            
+   
+
             // If the convergence was not successfull (e.g. because some clusters contain 0 or 1 points),
             // we likely had an unfortunate set of initial cluster centers. In this case, simply continue
             // with the next 'trial'.
             
             if (!convergedSuccessfully) continue;
-            
+   
+
             // If we did obtain a successful convergence, compare it with the previous clusterings 
             // (all of them with the same number of clusters), and keep the best one.
             
@@ -451,14 +491,16 @@ int KmeansClusterer::cluster(RefArrayXXd sample, RefArrayXi optimalClusterIndice
                 bestClusterSizes = clusterSizes;  
             }               
         } // end loop over Ntrials to determine the best clustering trying different initial centers
-        
+       
+
         // Evaluate the current number of clusters, using the BIC value. Note that this is only necessary 
         // if the user selected more than one particular number of clusters.
         
         if (maxNclusters - minNclusters > 1)
         {
-            double BICvalue = evaluateBICvalue(sample, bestCenters, bestClusterSizes, bestClusterIndices);
+            BICvalue = evaluateBICvalue(sample, bestCenters, bestClusterSizes, bestClusterIndices);
             
+            if (printFlag == true)
             cerr << Nclusters << " " << BICvalue << endl;
                         
             if (BICvalue < bestBICvalue)
