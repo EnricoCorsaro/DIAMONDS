@@ -232,18 +232,20 @@ void NestedSampler::run(const bool printFlag, const double terminationFactor, co
 
         if ((Niterations % NiterationsBeforeClustering)  == 0)
         {
-            Nclusters = clusterer.cluster(nestedSampleOfParameters, clusterIndices);
+            Nclusters = clusterer.cluster(printFlag, nestedSampleOfParameters, clusterIndices);
             
             if (printFlag == true)
             {
                 cout << "------------------------------------" << endl;
-                cout << "Skilling's logEvidence: " << setprecision(12) << logEvidence << endl;
-                cout << "Keeton's log(<Evidence>): " << logMeanEvidence << endl;
-                cout << "Keeton's log(<Evidence_Live>): " << logMeanLiveEvidence << endl;
-                cout << "Keeton's log(<Total Evidence>): " << logMeanTotalEvidence << endl;
+                cout << "Optimal Number of Clusters: " << Nclusters << endl;
                 cout << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
                 cout << "Termination Factor: " << actualTerminationFactor << endl;
                 cout << "Niterations: " << Niterations << endl;
+                cout << "------------------------------------" << endl;
+                cout << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
+                cout << "Keeton's log(Evidence): " << logMeanEvidence << endl;
+                cout << "Keeton's log(Live Evidence): " << logMeanLiveEvidence << endl;
+                cout << "Keeton's log(Total Evidence): " << logMeanTotalEvidence << endl;
                 cout << "------------------------------------" << endl;
             }
         }
@@ -575,9 +577,9 @@ void NestedSampler::computeKeetonEvidenceError(const bool printFlag, const doubl
 
     if (printFlag == true)
     {
-        cout << "Keeton's Error log(Evidence): " << logMeanEvidenceError << endl; 
-        cout << "Keeton's Total Error log(Evidence): " << logMeanTotalEvidenceError << endl; 
         cout << "Skilling Error log(Evidence): " << logEvidenceError << endl; 
+        cout << "Keeton's Error log(Evidence): " << logMeanEvidenceError << endl; 
+        cout << "Keeton's Error log(Total Evidence): " << logMeanTotalEvidenceError << endl; 
     }
 }
 
