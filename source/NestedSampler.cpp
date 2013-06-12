@@ -9,6 +9,8 @@
 //      Increases the number of active nested processes.
 //
 // INPUT:
+//      printOnTheScreen: a boolean value specifying whether the results are to 
+//      be printed on the screen or not.
 //      Nobjects: an integer containing the number of objects to be
 //      used in the nested sampling process.
 //      ptrPriorsVector: a vector of Prior class objects containing the priors used in the inference.
@@ -22,12 +24,14 @@
 //      nested sampling process.
 //
 
-NestedSampler::NestedSampler(const int Nobjects, vector<Prior*> ptrPriorsVector, Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
+NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, vector<Prior*> ptrPriorsVector, 
+                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
 : ptrPriorsVector(ptrPriorsVector),
   likelihood(likelihood),
   metric(metric),
   clusterer(clusterer),
   engine(time(0)),
+  printOnTheScreen(printOnTheScreen),
   Nobjects(Nobjects),
   Niterations(0),
   informationGain(0.0), 
@@ -84,12 +88,11 @@ NestedSampler::~NestedSampler()
 //      logWeightOfPosteriorSample.
 //
 // INPUT:
-//      printFlag: a boolean value specifying whether the results are to 
-//      be printed on the screen or not.
 //      terminationFactor: a double specifying the amount of exceeding information to
 //      terminate nested iterations. Default is 1.
 //      NiterationsBeforeClustering: number of nested iterations required to recompute
 //      the clustering of the points in the sample.
+//      NloopMaximum: the maximum number of attempts allowed when drawing from a single ellipsoid.
 //
 // OUTPUT:
 //      void
@@ -100,7 +103,7 @@ NestedSampler::~NestedSampler()
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(const bool printFlag, const double terminationFactor, const int NiterationsBeforeClustering)
+void NestedSampler::run(const double terminationFactor, const int NiterationsBeforeClustering, const int NloopMaximum)
 {
     int copy = 0;
     int worst;
@@ -164,8 +167,8 @@ void NestedSampler::run(const bool printFlag, const double terminationFactor, co
     
     // Identify the clusters contained in the initial sample of nested objects
 
-    ArrayXi clusterIndices(Nobjects);
     int Nclusters;
+    ArrayXi clusterIndices(Nobjects);
 
 
     // Nested sampling loop
@@ -199,9 +202,9 @@ void NestedSampler::run(const bool printFlag, const double terminationFactor, co
         // Save the actual posterior sample and its corresponding likelihood and weights
         
         posteriorSample.col(Niterations) = nestedSampleOfParameters.col(worst);      // save coordinates of worst nested object
-        logLikelihoodOfPosteriorSample(Niterations) = actualLogLikelihoodConstraint;       // save corresponding likelihood
-        logWeightOfPosteriorSample(Niterations) = logWeight;                         // save corresponding weight ->
-                                                                                     // proportional to posterior probability density
+        logLikelihoodOfPosteriorSample(Niterations) = actualLogLikelihoodConstraint; // save corresponding likelihood
+        logWeightOfPosteriorSample(Niterations) = logWeight;                         // save corresponding weight...
+                                                                                     // ...proportional to posterior probability density
 
         // Compute average likelihood of the actual set of live points
         
@@ -232,22 +235,26 @@ void NestedSampler::run(const bool printFlag, const double terminationFactor, co
 
         if ((Niterations % NiterationsBeforeClustering)  == 0)
         {
-            Nclusters = clusterer.cluster(printFlag, nestedSampleOfParameters, clusterIndices);
-            
-            if (printFlag == true)
+            if (printOnTheScreen)
             {
-                cout << "------------------------------------" << endl;
-                cout << "Optimal Number of Clusters: " << Nclusters << endl;
-                cout << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
-                cout << "Termination Factor: " << actualTerminationFactor << endl;
-                cout << "Niterations: " << Niterations << endl;
-                cout << "------------------------------------" << endl;
-                cout << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
-                cout << "Keeton's log(Evidence): " << logMeanEvidence << endl;
-                cout << "Keeton's log(Live Evidence): " << logMeanLiveEvidence << endl;
-                cout << "Keeton's log(Total Evidence): " << logMeanTotalEvidence << endl;
-                cout << "------------------------------------" << endl;
+                cerr << "=========================================" << endl;
+                cerr << "Information on Nesting process" << endl;
+                cerr << "=========================================" << endl;
+                cerr << "Niterations: " << Niterations << endl;
+                cerr << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
+                cerr << "Actual Termination Factor: " << actualTerminationFactor << endl;
+                cerr << endl;
+                cerr << "=========================================" << endl;
+                cerr << "Information on Evidence" << endl;
+                cerr << "=========================================" << endl;
+                cerr << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
+                cerr << "Keeton's log(Evidence): " << logMeanEvidence << endl;
+                cerr << "Keeton's log(Live Evidence): " << logMeanLiveEvidence << endl;
+                cerr << "Keeton's log(Total Evidence): " << logMeanTotalEvidence << endl;
+                cerr << endl;
             }
+            
+            Nclusters = clusterer.cluster(printOnTheScreen, nestedSampleOfParameters, clusterIndices);
         }
 
 
@@ -255,7 +262,7 @@ void NestedSampler::run(const bool printFlag, const double terminationFactor, co
         // Compute approximate sampling to find new point verifying the likelihood constraint
 
         ArrayXXd drawnSampleOfParameters = ArrayXXd::Zero(Ndimensions, 1);
-        drawWithConstraint(nestedSampleOfParameters, Nclusters, clusterIndices, logTotalWidthInPriorMass, drawnSampleOfParameters); 
+        drawWithConstraint(nestedSampleOfParameters, Nclusters, clusterIndices, logTotalWidthInPriorMass, drawnSampleOfParameters, NloopMaximum); 
        
         
         // Replace worst object in favour of a copy of different survivor
@@ -300,7 +307,7 @@ void NestedSampler::run(const bool printFlag, const double terminationFactor, co
 
     // Compute Keeton's errors on the log(Evidence)
 
-    computeKeetonEvidenceError(printFlag, logMeanLiveEvidence);
+    computeKeetonEvidenceError(printOnTheScreen, logMeanLiveEvidence);
 
 
     // Compute and print total computational time
@@ -534,7 +541,7 @@ double NestedSampler::getComputationalTime()
 //      description by Keeton C. 2011, MNRAS, 414,1418.
 //
 // INPUT:
-//      printFlag: a boolean value specifying whether the results are to 
+//      printOnTheScreen: a boolean value specifying whether the results are to 
 //      be printed on the screen or not.
 //      logMeanLiveEvidence: a double containing the logarithm of the live evidence
 //      compure by means of Keeton's equations.
@@ -543,7 +550,7 @@ double NestedSampler::getComputationalTime()
 //      void
 //
 
-void NestedSampler::computeKeetonEvidenceError(const bool printFlag, const double logMeanLiveEvidence)
+void NestedSampler::computeKeetonEvidenceError(const bool printOnTheScreen, const double logMeanLiveEvidence)
 {
     double logAdditionalEvidenceError;
     double errorTerm1 = -DBL_MAX;
@@ -575,11 +582,15 @@ void NestedSampler::computeKeetonEvidenceError(const bool printFlag, const doubl
     logMeanTotalEvidenceError = sqrt(exp(logMeanEvidenceError) + exp(logAdditionalEvidenceError))/(exp(logMeanLiveEvidence) + exp(logMeanEvidence));
     logMeanEvidenceError = sqrt(exp(logMeanEvidenceError))/exp(logMeanEvidence);
 
-    if (printFlag == true)
+    if (printOnTheScreen)
     {
-        cout << "Skilling Error log(Evidence): " << logEvidenceError << endl; 
-        cout << "Keeton's Error log(Evidence): " << logMeanEvidenceError << endl; 
-        cout << "Keeton's Error log(Total Evidence): " << logMeanTotalEvidenceError << endl; 
+        cerr << "=========================================" << endl;
+        cout << "Final information on Evidence Uncertainty" << endl;
+        cout << "=========================================" << endl;
+        cerr << "Skilling's Uncertainty log(Evidence): " << logEvidenceError << endl; 
+        cerr << "Keeton's Uncertainty log(Evidence): " << logMeanEvidenceError << endl; 
+        cerr << "Keeton's Uncertainty log(Total Evidence): " << logMeanTotalEvidenceError << endl; 
+        cerr << endl;
     }
 }
 
@@ -612,24 +623,24 @@ void NestedSampler::printComputationalTime(const double startTime)
     
     if (computationalTime < 60)
     {
-        cout << "------------------------------------" << endl;
-        cout << "Computational Time: " << computationalTime << " seconds" << endl;
-        cout << "------------------------------------" << endl;
+        cerr << "=========================================" << endl;
+        cerr << "Total Computational Time: " << computationalTime << " seconds" << endl;
+        cerr << "=========================================" << endl;
     }
     else 
         if ((computationalTime >= 60) && (computationalTime < 60*60))
         {
             computationalTime = computationalTime/60.;
-            cout << "------------------------------------" << endl;
-            cout << "Computational Time: " << computationalTime << " minutes" << endl;
-            cout << "------------------------------------" << endl;
+            cerr << "=========================================" << endl;
+            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " minutes" << endl;
+            cerr << "=========================================" << endl;
         }
     else 
         if (computationalTime >= 60*60)
         {
             computationalTime = computationalTime/(60.*60.);
-            cout << "------------------------------------" << endl;
-            cout << "Computational Time: " << computationalTime << " hours" << endl;
-            cout << "------------------------------------" << endl;
+            cerr << "=========================================" << endl;
+            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " hours" << endl;
+            cerr << "=========================================" << endl;
         }
 }
