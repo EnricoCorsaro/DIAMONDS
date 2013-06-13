@@ -217,8 +217,9 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
 
     // Perform the k-means clustering iteration, each time improving the cluster centers,
     // and redetermining which points belongs to which cluster
-
+    
     bool stopIterations = false;
+    bool convergenceReached;
     unsigned int indexOfClosestCenter;
     double oldSumOfDistances = 0.0;
     double newSumOfDistances = 0.0;
@@ -240,7 +241,7 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
         
             for (int i = 0; i < Nclusters; ++i)
             {
-                double distance = metric.distance(sample.col(n), centers.col(i));
+                distance = metric.distance(sample.col(n), centers.col(i));
                 
                 if (distance < distanceToClosestCenter)
                 {
@@ -262,7 +263,7 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
        
         if (!(clusterSizes > 1).all())
         {
-            bool convergenceReached = false;
+            convergenceReached = false;
             return convergenceReached;
         }
        
@@ -311,7 +312,8 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
     
     // Convergence was properly reached, so return
     
-    bool convergenceReached = true;
+    convergenceReached = true;
+    
     return convergenceReached;  
 }
 
@@ -421,7 +423,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 //      to determine the optimal number of clusters that can be fitted to the data.
 //
 // INPUT:
-//      printFlag: a boolean value specifying whether the BIC values and corresponding number of clusters 
+//      printOnTheScreen: a boolean value specifying whether the BIC values and corresponding number of clusters 
 //      are to be printed on the screen while the process is running.
 //      sample(Ndimensions, Npoints): sample of N-dimensional points
 //      optimalClusterIndices(Npoints): for each point the index of the cluster it belongs to. This index
@@ -431,7 +433,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 //      The optimal number of clusters
 //
 
-int KmeansClusterer::cluster(const bool printFlag, RefArrayXXd sample, RefArrayXi optimalClusterIndices)
+int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, RefArrayXi optimalClusterIndices)
 {
     bool convergedSuccessfully;
     unsigned int Npoints = sample.cols();
@@ -453,6 +455,13 @@ int KmeansClusterer::cluster(const bool printFlag, RefArrayXXd sample, RefArrayX
     // user-specified range of clusters, and determine which number gives the
     // optimal clustering
     
+    if (printOnTheScreen)
+    {
+        cerr << "=========================================" << endl; 
+        cerr << "Information on X-means clustering" << endl;
+        cerr << "=========================================" << endl; 
+    }
+
     for (unsigned int Nclusters = minNclusters; Nclusters <= maxNclusters; ++Nclusters)
     {
         centers = ArrayXXd::Zero(Ndimensions, Nclusters);          // coordinates of each of the old cluster centers
@@ -465,6 +474,7 @@ int KmeansClusterer::cluster(const bool printFlag, RefArrayXXd sample, RefArrayX
         // We therefore run the algorithm 'Ntrial' times, and take the best clustering.
         
         bestSumOfDistancesToClosestCenter = DBL_MAX;
+        
                     
         for (int m = 0; m < Ntrials; ++m)
         {
@@ -495,13 +505,13 @@ int KmeansClusterer::cluster(const bool printFlag, RefArrayXXd sample, RefArrayX
 
         // Evaluate the current number of clusters, using the BIC value. Note that this is only necessary 
         // if the user selected more than one particular number of clusters.
-        
+
         if (maxNclusters - minNclusters > 1)
         {
             BICvalue = evaluateBICvalue(sample, bestCenters, bestClusterSizes, bestClusterIndices);
             
-            if (printFlag == true)
-            cerr << Nclusters << " " << BICvalue << endl;
+            if (printOnTheScreen)
+                cerr << "Nclusters: " << Nclusters << " " << "BIC: " << BICvalue << endl;
                         
             if (BICvalue < bestBICvalue)
             {
@@ -527,7 +537,13 @@ int KmeansClusterer::cluster(const bool printFlag, RefArrayXXd sample, RefArrayX
     } // end loop over Nclusters
     
     // That's it!
-    
+
+    if (printOnTheScreen)
+    {
+        cerr << "Optimal Nclusters: " << optimalNclusters << endl;
+        cerr << endl;
+    }
+
     return optimalNclusters;
 }
 
