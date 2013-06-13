@@ -6,6 +6,8 @@
 //      Base class constructor.
 //
 // INPUT:
+//      printOnTheScreen: a boolean value specifying whether the results are to 
+//      be printed on the screen.
 //      ptrPriorsVector: a vector of Prior class objects containing the priors used in the problem.
 //      likelihood: a Likelihood class object used for likelihood sampling.
 //      metric: a Metric class object to contain the metric used in the problem.
@@ -15,8 +17,10 @@
 //      alpha: a value between 0 and 1 that defines the shrinking rate of the enlargement factors
 //
 
-MultiEllipsoidSampler::MultiEllipsoidSampler(vector<Prior*> ptrPriorsVector, Likelihood &likelihood, Metric &metric, Clusterer &clusterer, const int Nobjects, const double initialEnlargementFactor, const double alpha)
-: NestedSampler(Nobjects, ptrPriorsVector, likelihood, metric, clusterer),
+MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriorsVector, 
+                                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
+                                             const int Nobjects, const double initialEnlargementFactor, const double alpha)
+: NestedSampler(printOnTheScreen, Nobjects, ptrPriorsVector, likelihood, metric, clusterer),
   uniform(0.0,1.0),
   normal(0.0,1.0),
   initialEnlargementFactor(initialEnlargementFactor),
@@ -73,13 +77,15 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      coordinates of the drawn point to be used for the next nesting loop. When used
 //      for the first time, the array contains the coordinates of the worst nested
 //      object to be updated.
+//      NloopMaximum: the maximum number of attempts allowed when drawing from a single ellipsoid.
 //      
 //
 // OUTPUT:
 //      void
 //
 
-void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices, const double logTotalWidthInPriorMass, RefArrayXXd drawnSampleOfParameters)
+void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices, 
+                                               const double logTotalWidthInPriorMass, RefArrayXXd drawnSampleOfParameters, const int NloopMaximum)
 {    
     assert(totalSampleOfParameters.cols() == clusterIndices.size());
     assert(drawnSampleOfParameters.rows() == totalSampleOfParameters.rows());
@@ -94,7 +100,15 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     logRemainingWidthInPriorMass = log(1.0 - exp(logTotalWidthInPriorMass));
     computeEllipsoids(totalSampleOfParameters, Nclusters, clusterIndices, logRemainingWidthInPriorMass);
     
-    
+    if (printOnTheScreen)
+    {   
+        cerr << "=========================================" << endl;
+        cerr << "Information on Ellipsoidal Sampler" << endl;
+        cerr << "=========================================" << endl;
+        cerr << "Nellipsoids computed: " << Nellipsoids << endl;
+    }
+
+
     // Find which ellipsoids are overlapping and which are not
     
     findOverlappingEllipsoids();
@@ -102,43 +116,44 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 
     // Define some variables to be used in the sampling process
 
-    bool ellipsoidsOverlap; 
-    bool ellipsoidsNonOverlap;
-    bool ellipsoidIsInOverlap;
-    bool pointIsRejectedFromPrior;
+    bool ellipsoidsOverlap = false;       // True if overlapping ellipsoids exist
+    bool ellipsoidsNonOverlap = false;    // True if non-overlapping ellipsoids exist
+    bool ellipsoidIsInOverlap = false;    // True if selected ellipsoid is overlapping
+    bool pointIsRejectedFromPrior;        // True if drawn point does not verify prior conditions
+    bool overlapIsFound;                  // True if overlapping with another ellipsoid has been detected                   
     int ellipsoidIndex;                   // Ellipsoid index
-    int ellipsoidIndex2;
-    int NoverlappingEllipsoids;
-    int NnonOverlappingEllipsoids;
-    int NdimensionsPerPrior;                // Number of dimensions having same type of prior 
-    int Nloops;
-    int NloopMaximum = 200;              // Maximum number of iterations for likelihood constraint
+    int ellipsoidIndex2;                  // Ellipsoid index #2
+    int mergedUniformIndex;               // Ellipsoid index among all ellipsoids (overlapping + non-overlapping)
+    int NoverlappingEllipsoids;           // Number of overlapping ellipsoids
+    int NnonOverlappingEllipsoids;        // Number of non-overlapping ellipsoids
+    int NdimensionsPerPrior;              // Number of dimensions having same type of prior 
+    int Nloops;                           // Number of attempts when checking likelihood constraint
+    int Noverlaps;                        // Number of detected overlaps
     int actualNdimensions;
     double volumeProbability;
     double actualProbability; 
     double rejectProbability;
-    double totalVolume1;
-    double totalVolume2;
+    double totalVolume1 = 0;              // Total volume of overlapping ellipsoids
+    double totalVolume2 = 0;              // Total volume of non-overlapping ellipsoids
     double logLikelihood;
-    ArrayXi mergedEllipsoidsIndices;
+    ArrayXi mergedEllipsoidsIndices;      // Total vector of ellipsoids indices (overlapping + non-overlapping)
     ArrayXd drawnParametersPerObject(Ndimensions);       // Coordinates for the drawn point
     ArrayXd drawnParametersPerPrior;                     // Coordinates for the drawn point corresponding to one type of prior
     ArrayXd referenceParametersPerObject(Ndimensions);   // Coordinates for reference point
     ArrayXd referenceParametersPerPrior;                 // Coordinates for reference point corresponding to one type of prior
     ArrayXXd drawnAndReferenceParametersPerPrior;        // Coordinates for drawn and reference point in case of non-uniform priors   
 
-    ellipsoidsOverlap = false;
-    ellipsoidsNonOverlap = false;
-    ellipsoidIsInOverlap = false;
-    totalVolume1 = 0;        // For overlapping ellipsoids
-    totalVolume2 = 0;        // For non-overlapping ellipsoids
     
-    
-    // Choose one ellipsoid with probability according to its volume fraction
+    // Compute total volumes for overlapping and non-overlapping ellipsoids, if any
 
     if (overlappingEllipsoidsIndices(0) != -1)
     {
         NoverlappingEllipsoids = overlappingEllipsoidsIndices.size();
+        
+        if (printOnTheScreen)
+        {    
+            cerr << "Nellipsoids OVERLAPPING: " << NoverlappingEllipsoids << endl;
+        }
     
         for (int m = 0; m < NoverlappingEllipsoids; m++)
         {   
@@ -159,6 +174,11 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     {
         NnonOverlappingEllipsoids = nonOverlappingEllipsoidsIndices.size();
         
+        if (printOnTheScreen)
+        {    
+            cerr << "Nellipsoids NON-OVERLAPPING: " << NnonOverlappingEllipsoids << endl;
+        }
+        
         for (int m = 0; m < NnonOverlappingEllipsoids; m++)
         {   
             ellipsoidIndex = nonOverlappingEllipsoidsIndices(m);
@@ -173,27 +193,32 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
         ellipsoidsNonOverlap = false;
     }
 
-   
-    do 
+    
+    do  // Start DO..WHILE loop for checking maximum number of attempts when drawing from ellipsoids 
     {
         // Pick up one ellipsoid with probability according to its volume
 
-        if (ellipsoidsOverlap && ellipsoidsNonOverlap)
+        if (ellipsoidsOverlap && ellipsoidsNonOverlap) // If both overlapping and non-overlapping ellipsoids exist then...
         {
             mergedEllipsoidsIndices.resize(NoverlappingEllipsoids+NnonOverlappingEllipsoids);
             mergedEllipsoidsIndices.head(NoverlappingEllipsoids) = overlappingEllipsoidsIndices;
             mergedEllipsoidsIndices.segment(NoverlappingEllipsoids, NnonOverlappingEllipsoids) = nonOverlappingEllipsoidsIndices;
             uniform_int_distribution<int> uniformIndex(0, NoverlappingEllipsoids+NnonOverlappingEllipsoids-1);
 
-            int mergedUniformIndex;
-
             do
             {
                 mergedUniformIndex = uniformIndex(engine);
-                ellipsoidIndex = mergedEllipsoidsIndices(mergedUniformIndex);      // Pick up one ellipsoid randomly
-                volumeProbability = ellipsoidsVector[ellipsoidIndex].getHyperVolume()/(totalVolume1+totalVolume2);// Compute probability for the selected ellipsoid
+                ellipsoidIndex = mergedEllipsoidsIndices(mergedUniformIndex);   // Pick up one ellipsoid randomly
+                
+                
+                // Compute probability for the selected ellipsoid
+                
+                volumeProbability = ellipsoidsVector[ellipsoidIndex].getHyperVolume()/(totalVolume1+totalVolume2);
                 actualProbability = uniform(engine);    // Give a probability value between 0 and 1
-            
+           
+
+                // Determine if selected ellipsoid is among overlapping ones
+
                 if (mergedUniformIndex < NoverlappingEllipsoids)
                 {
                     ellipsoidIsInOverlap = true;
@@ -203,76 +228,67 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                     ellipsoidIsInOverlap = false;
                 }
             }
-            while (actualProbability > volumeProbability);      // If actualProbability < volumeProbability then pick the corresponding ellipsoid
+            while (actualProbability > volumeProbability);    // If actualProbability < volumeProbability then pick the corresponding ellipsoid
         }
-        else if (ellipsoidsOverlap && !ellipsoidsNonOverlap)
-        {
-            mergedEllipsoidsIndices.resize(NoverlappingEllipsoids);
-            mergedEllipsoidsIndices = overlappingEllipsoidsIndices;
-            uniform_int_distribution<int> uniformIndex1(0, NoverlappingEllipsoids-1);
-            ellipsoidIsInOverlap = true;
-        
-            do
+        else 
+            if (ellipsoidsOverlap && !ellipsoidsNonOverlap)    // If only overlapping ellipsoids exist then...
             {
-                ellipsoidIndex = mergedEllipsoidsIndices(uniformIndex1(engine));      // Pick up one ellipsoid randomly
-                volumeProbability = ellipsoidsVector[ellipsoidIndex].getHyperVolume()/totalVolume1;    // Compute probability for the selected ellipsoid
-                actualProbability = uniform(engine);                                // Give a probability value between 0 and 1
-            }
-            while (actualProbability > volumeProbability);      // If actualProbability < volumeProbability then pick the corresponding ellipsoid
-        }
-        else if (!ellipsoidsOverlap && ellipsoidsNonOverlap)
-        {
-            mergedEllipsoidsIndices.resize(NnonOverlappingEllipsoids);
-            mergedEllipsoidsIndices = nonOverlappingEllipsoidsIndices;
-            uniform_int_distribution<int> uniformIndex2(0, NnonOverlappingEllipsoids-1);
-            ellipsoidIsInOverlap = false;
+                mergedEllipsoidsIndices.resize(NoverlappingEllipsoids);
+                mergedEllipsoidsIndices = overlappingEllipsoidsIndices;
+                uniform_int_distribution<int> uniformIndex1(0, NoverlappingEllipsoids-1);
+                ellipsoidIsInOverlap = true;
         
-            do
-            {
-                ellipsoidIndex = mergedEllipsoidsIndices(uniformIndex2(engine));      // Pick up one ellipsoid randomly
-                volumeProbability = ellipsoidsVector[ellipsoidIndex].getHyperVolume()/totalVolume2;    // Compute probability for the selected ellipsoid
-                actualProbability = uniform(engine);                                // Give a probability value between 0 and 1
+                do
+                {
+                    ellipsoidIndex = mergedEllipsoidsIndices(uniformIndex1(engine));    // Pick up one ellipsoid randomly
+                    
+                    
+                    // Compute probability for the selected ellipsoid
+                    
+                    volumeProbability = ellipsoidsVector[ellipsoidIndex].getHyperVolume()/totalVolume1;    
+                    actualProbability = uniform(engine);    // Give a probability value between 0 and 1
+                }
+                while (actualProbability > volumeProbability);    // If actualProbability < volumeProbability then pick the corresponding ellipsoid
             }
-            while (actualProbability > volumeProbability);      // If actualProbability < volumeProbability then pick the corresponding ellipsoid
-        }
+        else 
+            if (!ellipsoidsOverlap && ellipsoidsNonOverlap)    // If only non-overlapping ellipsoids exist then...
+            {
+                if (NnonOverlappingEllipsoids == 1)    // If only one non-overlapping ellipsoid exist, select it directly.
+                    ellipsoidIndex = nonOverlappingEllipsoidsIndices(0);
+                else
+                {
+                    mergedEllipsoidsIndices.resize(NnonOverlappingEllipsoids);
+                    mergedEllipsoidsIndices = nonOverlappingEllipsoidsIndices;
+                    uniform_int_distribution<int> uniformIndex2(0, NnonOverlappingEllipsoids-1);
+                    ellipsoidIsInOverlap = false;
+        
+                    do
+                    {
+                        ellipsoidIndex = mergedEllipsoidsIndices(uniformIndex2(engine));    // Pick up one ellipsoid randomly
+                    
+                    
+                        // Compute probability for the selected ellipsoid
+                    
+                        volumeProbability = ellipsoidsVector[ellipsoidIndex].getHyperVolume()/totalVolume2;    
+                        actualProbability = uniform(engine);    // Give a probability value between 0 and 1
+                    }
+                    while (actualProbability > volumeProbability);    // If actualProbability < volumeProbability then pick the corresponding ellipsoid
+                }
+            }
 
         actualNdimensions = 0;
         Nloops = 0;
 
-        if (!ellipsoidIsInOverlap)    // Isolated ellipsoid sampling
+        for (int m = 0; m < Ndraws; m++)    // FOR loop over the total number of points to be drawn from one ellipsoid - Default is Ndraws = 1
         {
-            /* START OF TO BE FIXED IN FUTURE 
-            // If non-overlapping ellipsoids exist start separate nested sampling 
-            // from each non overlapping enlarged ellipsoid 
-    
-            int NobjectsInEllipsoid;              // Number of objects for the nested sampling within the identified ellipsoid
-            double logRemainingWidthInPriorMassReduced;      // Shrinked prior volume for separate nesting of ellipsoid
-            double logTotalEvidenceFromIsolatedEllipsoids = -DBL_MAX;  // The log value of the total contribute of local evidences from isolated ellipsoids
-            double logLocalEvidence;
-            END OF TO BE FIXED IN FUTURE */ 
-        
-            for (int m = 0; m < Ndraws; m++)
-            {
-                drawnParametersPerObject = drawnSampleOfParameters.col(m);
+            drawnParametersPerObject = drawnSampleOfParameters.col(m);
             
-                do
+            if (!ellipsoidIsInOverlap)    // Isolated ellipsoid sampling
+            {
+                do  // Start DO..WHILE loop for checking likelihood constraint when drawing from ellipsoids 
                 {
-                    do
+                    do  // Start DO..WHILE loop for checking prior distribution when drawing from ellipsoids 
                     {
-                        /* START OF TO BE FIXED IN FUTURE 
-                        NobjectsInEllipsoid = ellipsoidsVector[ellipsoidIndex].getNobjects();       // Find the number of live points inside the chosen ellipsoid
-                        logRemainingWidthInPriorMassReduced = logRemainingWidthInPriorMass + log(NobjectsInEllipsoid/Nobjects); // Set reduced remaining prior mass
-                        cout << "Start separate nesting loop for ellipsoid #" << ellipsoidIndex << endl;
-
-
-                        // Perform separate nesting iteration for the actual ellipsoid
-
-                        logLocalEvidence = -DBL_MAX;            // Set initial local evidence to zero
-                        nestFromIsolatedEllipsoid(ellipsoidIndex, logLocalEvidence);
-                        logTotalEvidenceFromIsolatedEllipsoids = Functions::logExpSum(logTotalEvidenceFromIsolatedEllipsoids,logLocalEvidence)
-                        END OF TO BE FIXED IN FUTURE */
-                
-
                         // Draw one point from the chosen ellipsoid
 
                         drawFromHyperSphere(ellipsoidsVector[ellipsoidIndex], drawnParametersPerObject);
@@ -314,6 +330,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                             actualNdimensions += NdimensionsPerPrior;       // Move to next prior dimensions
                         }
 
+
                         // If sampling is not verified for at least one type of prior, repeat the drawing of the new object 
                         
                         actualNdimensions = 0;
@@ -321,143 +338,143 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                     } 
                     while (pointIsRejectedFromPrior);        // Rejection according to prior distribution
                 
-                    Nloops++;
-        
-                    if ((Nloops >= NloopMaximum) && (NnonOverlappingEllipsoids != 1))
-                        break;
-                
+                    cout << "From isolated: " << Nloops << endl;
                     logLikelihood = likelihood.logValue(drawnParametersPerObject);
+                    Nloops++;     
                 }
-                while (logLikelihood <= actualLogLikelihoodConstraint);         // Rejection according to likelihood constraint
-
-                if (Nloops >= NloopMaximum)
-                    break;
-            
-                drawnSampleOfParameters.col(m) = drawnParametersPerObject;  // Update set of parameters for one object into total sample
-            }
-        }
-        else if (ellipsoidIsInOverlap)        // Overlapping ellipsoid sampling
-        {
-            // Create arrays for a second ellipsoid to check for overlap
-
-            actualNdimensions = 0;
-
-
-            // Sample uniformly from chosen ellipsoid until new parameter with logLikelihood > actualLogLikelihoodConstraint is found
-            // If parameter is contained in Noverlaps ellipsoids, then accept parameter with probability 1/Noverlaps
+                while ((logLikelihood <= actualLogLikelihoodConstraint) && (Nloops <= NloopMaximum)); // Rejection according to likelihood constraint
         
-            for (int m = 0; m < Ndraws; m++)
-            {
-                drawnParametersPerObject = drawnSampleOfParameters.col(m);
-            
-                do
+            }   // End sampling from isolated ellipsoid
+            else 
+                if (ellipsoidIsInOverlap)        // Overlapping ellipsoid sampling
                 {
-                    do
+                    // Sample uniformly from chosen overlapping ellipsoid until new parameter with 
+                    // logLikelihood > actualLogLikelihoodConstraint is found.
+                    // If parameter is contained in Noverlaps ellipsoids, then accept parameter with probability 1/Noverlaps.
+        
+                    do  // Start DO..WHILE loop for sampling from overlapping ellipsoids 
                     {
-                        do
+                        do  // Start DO..WHILE loop for checking likelihood constraint when drawing from ellipsoids 
                         {
-                            // Draw one point from the chosen ellipsoid
+                            do  // Start DO..WHILE loop for checking prior distribution when drawing from ellipsoids 
+                            {
+                                // Draw one point from the chosen ellipsoid
 
-                            drawFromHyperSphere(ellipsoidsVector[ellipsoidIndex], drawnParametersPerObject);
-                            pointIsRejectedFromPrior = false;
+                                drawFromHyperSphere(ellipsoidsVector[ellipsoidIndex], drawnParametersPerObject);
+                                pointIsRejectedFromPrior = false;
                       
 
-                            // Split the sample of drawn parameters according to type of priors and check if prior
-                            // conditions are verified
+                                // Split the sample of drawn parameters according to type of priors and check if prior
+                                // conditions are verified
 
-                            for (int i = 0; i < ptrPriorsVector.size(); i++)
-                            {
-                                NdimensionsPerPrior = ptrPriorsVector[i]->getNdimensions();
-                                drawnParametersPerPrior.resize(NdimensionsPerPrior);
-                                drawnParametersPerPrior = drawnParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);      
-                            
-
-                                // Check if the prior type selected is uniform. In case it is not, draw a second
-                                // point from the ellipsoid for accomplishing the sampling from the prior.
-
-                                if (ptrPriorsVector[i]->priorIsUniform())
+                                for (int i = 0; i < ptrPriorsVector.size(); i++)
                                 {
-                                    // Only for uniform priors
-
-                                    pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnParametersPerPrior);
-                                }
-                                else 
-                                    if (!(ptrPriorsVector[i]->priorIsUniform()))
-                                    {
-                                        // Only for non-uniform priors
-
-                                        drawFromHyperSphere(ellipsoidsVector[ellipsoidIndex], referenceParametersPerObject);
-                                        drawnAndReferenceParametersPerPrior.resize(NdimensionsPerPrior,2);
-                                        referenceParametersPerPrior = referenceParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);      
-                                        drawnAndReferenceParametersPerPrior.col(0) = drawnParametersPerPrior;      
-                                        drawnAndReferenceParametersPerPrior.col(1) = referenceParametersPerPrior;
-                                        pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnAndReferenceParametersPerPrior);
-                                    }
+                                    NdimensionsPerPrior = ptrPriorsVector[i]->getNdimensions();
+                                    drawnParametersPerPrior.resize(NdimensionsPerPrior);
+                                    drawnParametersPerPrior = drawnParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);      
                             
-                                actualNdimensions += NdimensionsPerPrior;       // Move to next prior dimensions
-                            }
+
+                                    // Check if the prior type selected is uniform. In case it is not, draw a second
+                                    // point from the ellipsoid for accomplishing the sampling from the prior.
+
+                                    if (ptrPriorsVector[i]->priorIsUniform())
+                                    {
+                                        // Only for uniform priors
+
+                                        pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnParametersPerPrior);
+                                    }
+                                    else 
+                                        if (!(ptrPriorsVector[i]->priorIsUniform()))
+                                        {
+                                            // Only for non-uniform priors
+
+                                            drawFromHyperSphere(ellipsoidsVector[ellipsoidIndex], referenceParametersPerObject);
+                                            drawnAndReferenceParametersPerPrior.resize(NdimensionsPerPrior,2);
+                                            referenceParametersPerPrior = referenceParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);
+                                            drawnAndReferenceParametersPerPrior.col(0) = drawnParametersPerPrior;      
+                                            drawnAndReferenceParametersPerPrior.col(1) = referenceParametersPerPrior;
+                                            pointIsRejectedFromPrior += ptrPriorsVector[i]->pointIsRejected(drawnAndReferenceParametersPerPrior);
+                                        }
+                            
+                                    actualNdimensions += NdimensionsPerPrior;       // Move to next prior dimensions
+                                }
                     
 
-                            // If sampling is not verified for at least one type of prior, repeat the drawing of the new object 
+                                // If sampling is not verified for at least one type of prior, repeat the drawing of the new object 
                         
-                            actualNdimensions = 0;
-                            pointIsRejectedFromPrior = static_cast<bool>(pointIsRejectedFromPrior);
-                        } 
-                        while (pointIsRejectedFromPrior);        // Rejection according to prior distribution
-                   
-                        Nloops++;
+                                actualNdimensions = 0;
+                                pointIsRejectedFromPrior = static_cast<bool>(pointIsRejectedFromPrior);
+                            } 
+                            while (pointIsRejectedFromPrior);        // Rejection according to prior distribution
+                         
+                            cout << "From overlapping: " << Nloops << endl;
+                            logLikelihood = likelihood.logValue(drawnParametersPerObject);
+                            Nloops++;    
                     
-                        if (Nloops >= NloopMaximum)
+                        }
+                        while ((logLikelihood <= actualLogLikelihoodConstraint) && (Nloops <= NloopMaximum));         
+                
+                        if ((Nloops >= NloopMaximum) && (logLikelihood <= actualLogLikelihoodConstraint))
                             break;
-                    
-                        logLikelihood = likelihood.logValue(drawnParametersPerObject);
-                    }
-                    while (logLikelihood <= actualLogLikelihoodConstraint);         // Rejection according to likelihood constraint
                 
-                    if (Nloops >= NloopMaximum)
-                        break;
-                
-                    int Noverlaps = 1;        // Start with self-overlap only
-                    bool overlapFlag = false;
+                        Noverlaps = 1;        // Start with self-overlap only
+                        overlapIsFound = false;
 
-                    for (int i = 0; i < NoverlappingEllipsoids; i++)        // Check other possibile overlapping ellipsoids
-                    {
-                        if (overlappingEllipsoidsIndices(i) == ellipsoidIndex)     // Skip if self-overlap
-                            continue;
+                        for (int i = 0; i < NoverlappingEllipsoids; i++)        // Check other possibile overlapping ellipsoids
+                        {
+                            if (overlappingEllipsoidsIndices(i) == ellipsoidIndex)     // Skip if self-overlap
+                                continue;
+                            else
+                            {
+                                // Check if point belongs to ellipsoid #2
+
+                                ellipsoidIndex2 = overlappingEllipsoidsIndices(i);
+                                overlapIsFound = pointIsInOverlap(ellipsoidsVector[ellipsoidIndex2], drawnParametersPerObject);
+                
+                                if (overlapIsFound)
+                                    Noverlaps++;
+                                else
+                                    continue;
+                            }
+                        }
+
+                        if (Noverlaps == 1)                             // If no overlaps found, go to next point m
+                            break;
                         else
                         {
-                            // Check if point belongs to ellipsoid 2
-
-                            ellipsoidIndex2 = overlappingEllipsoidsIndices(i);
-                            overlapFlag = pointIsInOverlap(ellipsoidsVector[ellipsoidIndex2], drawnParametersPerObject);
-                
-                            if (overlapFlag)
-                                Noverlaps++;
-                            else
-                                continue;
+                            rejectProbability = 1./Noverlaps;           // Set rejection probability value
+                            actualProbability = uniform(engine);        // Evaluate actual probability value
                         }
-                    }
-
-
-                    if (Noverlaps == 1)                             // If no overlaps found, go to next point m
-                        break;
-                    else
-                    {
-                        rejectProbability = 1./Noverlaps;           // Set rejection probability value
-                        actualProbability = uniform(engine);        // Evaluate actual probability value
-                    }
                 
-                }
-                while (actualProbability > rejectProbability);      // If actual probability value < rejection probability then accept point and end function
+                    }
+                    while (actualProbability > rejectProbability);      // If actual probability value < rejection probability then...
+                                                                        // ...accept point and end function
+                } // End sampling from overlapping ellipsoids
  
-                if (Nloops >= NloopMaximum)
+            if ((Nloops >= NloopMaximum) && (logLikelihood <= actualLogLikelihoodConstraint))
+            {
+                if ((NnonOverlappingEllipsoids == 1) && (NoverlappingEllipsoids == 0))
+                {
+                    cerr << "Drawing from single ellipsoid stuck into flat likelihood region." << endl; 
+                    cerr << "Quitting program." << endl;
+                    exit(EXIT_FAILURE);
+                }
+                else
                     break;
-       
-                drawnSampleOfParameters.col(m) = drawnParametersPerObject;  // Update set of parameters for one object into total sample
             }
-        } // END sampling from overlapping ellipsoids
+       
+            drawnSampleOfParameters.col(m) = drawnParametersPerObject;  // Update set of parameters for one object into total sample
+        } // End FOR loop
     }
-    while (Nloops >= NloopMaximum);     // Select ellipsoid again if Nloops exceeds the limit
+    while ((Nloops >= NloopMaximum) && (logLikelihood <= actualLogLikelihoodConstraint));     // Restart selection of ellipsoid in case...
+                                                                                              // ...the number of attempts (Nloops) exceeds the limit
+    if (printOnTheScreen)
+    {
+        for (int l=0; l < 20; l++)
+        {
+            cerr << endl;
+        }
+    }
 
 }
 
@@ -756,7 +773,7 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
 
     nonOverlappingEllipsoidsIndices(0) = -1;        // Start with no non-overlapping ellipsoids found
 
-    bool overlapFlag = false;
+    bool overlapIsFound = false;
     bool saveFlagI = true;
     bool saveFlagJ = true;
     int countOverlap;
@@ -773,9 +790,9 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
         for (int j = i + 1; j < Nellipsoids; j++)
         {   
             saveFlagJ = true;        // Reset save index flag for j
-            overlapFlag = intersection(ellipsoidsVector[i], ellipsoidsVector[j]);
+            overlapIsFound = intersection(ellipsoidsVector[i], ellipsoidsVector[j]);
 
-            if (overlapFlag)    // If overlap occurred
+            if (overlapIsFound)    // If overlap occurred
             {
                 countOverlap++;
 
