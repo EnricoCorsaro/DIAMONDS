@@ -15,8 +15,9 @@
 #include "Prior.h"
 #include "UniformPrior.h"
 #include "NormalPrior.h"
-#include "NormalLikelihood.h"
+#include "ExponentialLikelihood.h"
 #include "LorentzianModel.h"
+#include "RegularPatternModel.h"
 #include "Results.h"
 #include "Ellipsoid.h"
 
@@ -54,19 +55,19 @@ int main(int argc, char *argv[])
     
     ArrayXd covariates = data.col(0);
     ArrayXd observations = data.col(1);
-    ArrayXd uncertainties = data.col(2);
    
 
     // First step - Setting Prior distribution and parameter space
 
-    int Ndimensions = 3;        // Number of free parameters (dimensions) of the problem
+    int Norders = 4;            // Number of radial orders expected in the PSD
+    int Ndimensions = 4;        // Number of free parameters (dimensions) of the problem
     vector<Prior*> ptrPriorsVector(1);
     
     ///*
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
-    parametersMinima <<  4.0, 0.5, 1.0;         // Centroid, Amplitude, Gamma
-    parametersMaxima << 20.0, 1.5, 3.0;
+    parametersMinima <<  223.0, 14.0, 1.5, -1.0;         // nuMax, DeltaNu, deltaNu02, deltaNu01
+    parametersMaxima << 230.0, 20.0, 4.5, 1.0;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriorsVector[0] = &uniformPrior;
     //*/
@@ -83,12 +84,12 @@ int main(int argc, char *argv[])
 
     // Second step - Set up a model for the inference problem
     
-    LorentzianModel model(covariates);
+    RegularPatternModel model(covariates, Norders);
     
 
     // Third step - Set up the likelihood function to be used
     
-    NormalLikelihood likelihood(observations, uncertainties, model);
+    ExponentialLikelihood likelihood(observations, model);
     
 
     // Fourth step - Set up the K-means clusterer using an Euclidean metric
@@ -104,15 +105,18 @@ int main(int argc, char *argv[])
 
     // Fifth step - Start nested sampling process
     
-    bool printFlag = true;                      // Print results on the screen 
-    int Nobjects = 200;
-    int NiterationsBeforeClustering = 2;        // Number of nesting iterations before executing clustering algorithm again
-    double initialEnlargementFactor = 2.0;  
-    double alpha = 1.0;                         // Exponent for remaining prior mass in ellipsoid enlargement factor
-    double terminationFactor = 0.05;             // Termination factor for nesting loop
+    bool printOnTheScreen = true;               // Print results on the screen 
+    int NloopMaximum = 5000;                    // Maximum number of attempts when drawing a new active point subject to likelihood constraint
+    int Nobjects = 300;                        // Number of active points used in the nesting process
+    int NiterationsBeforeClustering = 50;        // Number of nesting iterations before executing clustering algorithm again
+    double initialEnlargementFactor = 3.0;      // The initial value for the enlargement factor of the ellipsoids
+    double alpha = 0.6;                         // Exponent for shrinkage rate of the ellipsoid enlargement factor
+    double terminationFactor = 0.05;            // Termination factor for nesting process
 
-    MultiEllipsoidSampler nestedSampler(ptrPriorsVector, likelihood, myMetric, kmeans, Nobjects, initialEnlargementFactor, alpha);
-    nestedSampler.run(printFlag, terminationFactor, NiterationsBeforeClustering);
+    MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriorsVector, 
+                                        likelihood, myMetric, kmeans, 
+                                        Nobjects, initialEnlargementFactor, alpha);
+    nestedSampler.run(terminationFactor, NiterationsBeforeClustering, NloopMaximum);
 
 
     // Save the results in output files
