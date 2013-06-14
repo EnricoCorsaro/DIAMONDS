@@ -175,6 +175,15 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
 
     do 
     {
+        if (printOnTheScreen && (Niterations !=0))
+        {
+            for (int l=0; l < 20; l++)
+            {
+                cerr << endl;
+            }
+        }
+
+
         // Resizing array dimensions to the actual number of nested iterations
         // conservativeResize allows dinamic resizing of Eigen Arrays, while keeping the previous values untouched
     
@@ -231,28 +240,32 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         actualTerminationFactor = exp(logMeanLiveEvidence - logMeanEvidence);
         
         
+        // Print current information on the screen, if required
+
+        if (printOnTheScreen)
+        {
+            cerr << "=========================================" << endl;
+            cerr << "Information on Nesting process" << endl;
+            cerr << "=========================================" << endl;
+            cerr << "Niterations: " << Niterations << endl;
+            cerr << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
+            cerr << "Actual Termination Factor: " << actualTerminationFactor << endl;
+            cerr << endl;
+            cerr << "=========================================" << endl;
+            cerr << "Information on Evidence" << endl;
+            cerr << "=========================================" << endl;
+            cerr << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
+            cerr << "Keeton's log(Evidence): " << logMeanEvidence << endl;
+            cerr << "Keeton's log(Live Evidence): " << logMeanLiveEvidence << endl;
+            cerr << "Keeton's log(Total Evidence): " << logMeanTotalEvidence << endl;
+            cerr << endl;
+        }
+        
+
         // If condition is verified, identify the clusters contained in the actual sample of nested objects
 
-        if ((Niterations % NiterationsBeforeClustering)  == 0)
+        if ((Niterations % NiterationsBeforeClustering) == 0)
         {
-            if (printOnTheScreen)
-            {
-                cerr << "=========================================" << endl;
-                cerr << "Information on Nesting process" << endl;
-                cerr << "=========================================" << endl;
-                cerr << "Niterations: " << Niterations << endl;
-                cerr << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
-                cerr << "Actual Termination Factor: " << actualTerminationFactor << endl;
-                cerr << endl;
-                cerr << "=========================================" << endl;
-                cerr << "Information on Evidence" << endl;
-                cerr << "=========================================" << endl;
-                cerr << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
-                cerr << "Keeton's log(Evidence): " << logMeanEvidence << endl;
-                cerr << "Keeton's log(Live Evidence): " << logMeanLiveEvidence << endl;
-                cerr << "Keeton's log(Total Evidence): " << logMeanTotalEvidence << endl;
-                cerr << endl;
-            }
             
             Nclusters = clusterer.cluster(printOnTheScreen, nestedSampleOfParameters, clusterIndices);
         }

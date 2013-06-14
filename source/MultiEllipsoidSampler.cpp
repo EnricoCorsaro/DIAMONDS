@@ -338,7 +338,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                     } 
                     while (pointIsRejectedFromPrior);        // Rejection according to prior distribution
                 
-                    cout << "From isolated: " << Nloops << endl;
+                    //cout << "From isolated: " << Nloops << endl;
                     logLikelihood = likelihood.logValue(drawnParametersPerObject);
                     Nloops++;     
                 }
@@ -407,7 +407,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                             } 
                             while (pointIsRejectedFromPrior);        // Rejection according to prior distribution
                          
-                            cout << "From overlapping: " << Nloops << endl;
+                            //cout << "From overlapping: " << Nloops << endl;
                             logLikelihood = likelihood.logValue(drawnParametersPerObject);
                             Nloops++;    
                     
@@ -468,14 +468,6 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     }
     while ((Nloops >= NloopMaximum) && (logLikelihood <= actualLogLikelihoodConstraint));     // Restart selection of ellipsoid in case...
                                                                                               // ...the number of attempts (Nloops) exceeds the limit
-    if (printOnTheScreen)
-    {
-        for (int l=0; l < 20; l++)
-        {
-            cerr << endl;
-        }
-    }
-
 }
 
 
