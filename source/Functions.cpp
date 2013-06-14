@@ -4,26 +4,64 @@
 // Functions::lorentzProfile()
 //
 // PURPOSE: 
-//      Computes a simple Lorentzian profile given the centroid and the width.
-//      Saves the dependent variable values into a vector y accessible as
-//      public data member.
+//      Computes a simple Lorentzian profile given the centroid, the amplitude and the width.
 //
 // INPUT:
 //      predictions : vector containing the result
 //      covariates : vector containing independent variable values
 //      centroid : centroid of the Lorentzian profile (default = 0)
 //      amplitude : maximum height of the Lorentzian profile (default = 1)
-//      gamma : width of the Lorentzian profile (mode linewidth) (default = 1)
+//      gamma : width of the Lorentzian profile (default = 1)
 //
 // OUTPUT:
 //      void
 //
+// REMARKS:
+//      Saves the predictions into the input vector predictions.
+//
 
-void Functions::lorentzProfile(RefArrayXd predictions, const RefArrayXd covariates, double centroid, double amplitude, double gamma)
+void Functions::lorentzProfile(RefArrayXd predictions, const RefArrayXd covariates, 
+                               const double centroid, const double amplitude, const double gamma)
 {
-        predictions = (amplitude*amplitude)/((covariates-centroid)*(covariates-centroid) + (gamma/2.)*(gamma/2.));
+    predictions = (amplitude*amplitude)/((covariates-centroid)*(covariates-centroid) + (gamma/2.)*(gamma/2.));
+}
 
-} // END Functions::lorentzProfile()
+
+
+
+
+
+
+
+
+
+
+// Functions::modeProfile()
+//
+// PURPOSE: 
+//      Computes a single Lorentzian profile that models an oscillation mode in a power spectrum.
+//      The profile is computed given the centroid, the height and the linewidth.
+//
+// INPUT:
+//      predictions : vector containing the result
+//      covariates : vector containing independent variable values
+//      centroid : centroid of the Lorentzian profile (default = 0)
+//      height : maximum height of the Lorentzian profile (default = 1)
+//      linewidth : width of the Lorentzian profile (mode linewidth) (default = 1)
+//
+// OUTPUT:
+//      void
+//
+// REMARKS:
+//      Saves the predictions into the input vector predictions.
+//
+
+void Functions::modeProfile(RefArrayXd predictions, const RefArrayXd covariates, 
+                               const double centroid, const double height, const double linewidth)
+{
+    predictions = height/(1.0 + (4.0*(covariates-centroid)*(covariates-centroid)/(linewidth*linewidth)));
+}
+
 
 
 
@@ -50,13 +88,14 @@ void Functions::lorentzProfile(RefArrayXd predictions, const RefArrayXd covariat
 //      The natural logarithm of the Gaussian profile value of the independent variable.
 //
 
-double Functions::logGaussProfile(const double covariate, const double mu, const double sigma, const double amplitude)
+double Functions::logGaussProfile(const double covariate, const double mu, 
+                                  const double sigma, const double amplitude)
 {
     const double prefactor = log(amplitude) - 0.5 * log(2*Functions::PI) - log(sigma);
 
     return prefactor - 0.5 * (covariate - mu) * (covariate - mu) / (sigma * sigma);
 
-} // END Functions::logGaussProfile() 
+} 
 
 
 
@@ -82,12 +121,13 @@ double Functions::logGaussProfile(const double covariate, const double mu, const
 //      void
 //
 
-void Functions::logGaussProfile(RefArrayXd predictions, const RefArrayXd covariates, const double mu, const double sigma, const double amplitude)
+void Functions::logGaussProfile(RefArrayXd predictions, const RefArrayXd covariates, const double mu, 
+                                const double sigma, const double amplitude)
 {
     const double prefactor = log(amplitude) - 0.5 * log(2*Functions::PI) - log(sigma);
     predictions = prefactor - 0.5 * (covariates - mu) * (covariates - mu) / (sigma * sigma);
     
-} // END MathExra::logGaussProfile()
+}
 
 
 
@@ -130,7 +170,7 @@ double Functions::logGaussLikelihood(const RefArrayXd observations, const RefArr
     
     return lambda.sum();
 
-} // END Functions::logGaussLikelihood()
+}
 
 
 
@@ -158,7 +198,8 @@ double Functions::logGaussLikelihood(const RefArrayXd observations, const RefArr
 //      void
 //
 
-void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd covarianceMatrix, RefArrayXd centerCoordinates)
+void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd covarianceMatrix, 
+                                  RefArrayXd centerCoordinates)
 {    
     int Ndimensions = clusterSample.rows();
     int Npoints = clusterSample.cols();
@@ -208,7 +249,8 @@ void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd c
 //      void
 //
 
-void Functions::selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenvalues, RefArrayXXd eigenvectorsMatrix)
+void Functions::selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenvalues, 
+                                               RefArrayXXd eigenvectorsMatrix)
 {
     assert(covarianceMatrix.cols() == covarianceMatrix.rows());
     assert(eigenvalues.size() == covarianceMatrix.cols());
@@ -247,7 +289,7 @@ void Functions::selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatri
 inline double Functions::product(const vector<double> &vec)
 {
     return accumulate(vec.begin(), vec.end(), 1.0, multiplies<double>());
-} // END Functions::product()
+}
 
 
 
@@ -272,7 +314,7 @@ inline double Functions::product(const vector<double> &vec)
 inline double Functions::sum(const vector<double> &vec)
 {
     return accumulate(vec.begin(), vec.end(), 0.0);
-} // END Functions::sum()
+}
 
 
 
@@ -299,7 +341,7 @@ inline double Functions::sum(const vector<double> &vec)
 double Functions::logExpSum(const double x, const double y)
 {
     return (x >= y ? x + log(1.+exp(y-x)) : y + log(1.+exp(x-y)));
-} // END Functions::logExpSum()
+}
 
 
 
@@ -370,7 +412,7 @@ void Functions::sortElementsDouble(RefArrayXd array1, RefArrayXd array2)
         }
     }
     
-} // END Functions::sortElementsDouble()
+}
 
 
 
@@ -416,7 +458,7 @@ void Functions::sortElementsInt(RefArrayXi array1, RefArrayXd array2)
         }
     }
     
-} // END Functions::sortElementsInt()
+}
 
 
 

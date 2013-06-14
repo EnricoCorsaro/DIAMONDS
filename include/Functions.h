@@ -39,9 +39,14 @@ namespace Functions
 
     // Profile functions
     
-    void lorentzProfile(RefArrayXd predictions, const RefArrayXd covariates, const double centroid = 0.0, const double amplitude = 1.0, const double gamma = 1.0);
-    double logGaussProfile(const double covariate, const double mu = 0.0, const double sigma = 1.0, const double amplitude = 1.0);
-    void logGaussProfile(RefArrayXd y, const RefArrayXd x, const double mu = 0.0, const double sigma = 1.0, const double amplitude = 1.0);
+    void lorentzProfile(RefArrayXd predictions, const RefArrayXd covariates, 
+                        const double centroid = 0.0, const double amplitude = 1.0, const double gamma = 1.0);
+    void modeProfile(RefArrayXd predictions, const RefArrayXd covariates, 
+                        const double centroid = 0.0, const double height = 1.0, const double linewidth = 1.0);
+    double logGaussProfile(const double covariate, const double mu = 0.0, 
+                           const double sigma = 1.0, const double amplitude = 1.0);
+    void logGaussProfile(RefArrayXd predictions, const RefArrayXd covariates, const double mu = 0.0, 
+                         const double sigma = 1.0, const double amplitude = 1.0);
     
     
     // Likelihood functions
@@ -51,8 +56,10 @@ namespace Functions
     
     // Matrix algebra functions
 
-    void clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd covarianceMatrix, RefArrayXd centerCoordinates);
-    void selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenvalues, RefArrayXXd eigenvectorsMatrix);
+    void clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd covarianceMatrix, 
+                           RefArrayXd centerCoordinates);
+    void selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenvalues, 
+                                        RefArrayXXd eigenvectorsMatrix);
     
 
     // Array algebra functions
