@@ -66,25 +66,25 @@ Ellipsoid::~Ellipsoid()
 //      Compute covariance matrix, center coordinates, 
 //      eigenvalues and eigenvectors matrix of the ellipsoid.
 //      Eigenvalues are automatically enlarged according to the
-//      enlargeConstant term.
+//      enlargementFactor term.
 //
 // INPUT:
-//      enlargeConstant: a double to contain the enlargement
+//      enlargementFactor: a double to contain the enlargement
 //      factor to be used for the chosen ellipsoid.
 //
 // OUTPUT:
 //      void
 
-void Ellipsoid::build(const double enlargeConstant)
+void Ellipsoid::build(const double enlargementFactor)
 {
     Functions::clusterCovariance(sampleOfParameters, covarianceMatrix, centerCoordinates);
     Functions::selfAdjointMatrixDecomposition(covarianceMatrix, eigenvalues, eigenvectorsMatrix);
 
     ArrayXd enlargedEigenvalues(Ndimensions);
-    enlargedEigenvalues = eigenvalues.sqrt() + enlargeConstant*eigenvalues.sqrt();
+    enlargedEigenvalues = eigenvalues.sqrt() + enlargementFactor*eigenvalues.sqrt();
     eigenvalues = enlargedEigenvalues * enlargedEigenvalues;
     hyperVolume = enlargedEigenvalues.prod();                       // Save quantity proportional to proper hyper-volume
-    enlargementFactor = enlargeConstant;
+    this->enlargementFactor = enlargementFactor;
 
 
     // Update existing covariance matrix with the one computed from the enlarged eigenvalues
