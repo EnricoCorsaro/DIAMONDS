@@ -50,7 +50,7 @@ LorentzianModel::~LorentzianModel()
 // INPUT:
 //      predictions: one-dimensional array to contain the predictions
 //      from the model
-//      nestedSampleOfParameters: one-dimensional array where each element
+//      modelParameters: one-dimensional array where each element
 //      contains the value of one free parameter of the model
 //
 // OUTPUT:
@@ -58,28 +58,28 @@ LorentzianModel::~LorentzianModel()
 //
 // NOTE:
 //      The free parameters are to be given in the order
-//      (1) centroid of the peak (frequency)
-//      (2) amplitude of the peak (observed flux)
-//      (3) mode linewidth (related to the lifetime of the mode)
+//      (1) centroid of the Lorentz profile
+//      (2) amplitude of the Lorentz profile (defaulted to 1.0 if not given)
+//      (3) width of the Lorentz profile (defaulted to 1.0 if not given)
 //
 
-void LorentzianModel::predict(RefArrayXd predictions, const RefArrayXd nestedSampleOfParameters)
+void LorentzianModel::predict(RefArrayXd predictions, const RefArrayXd modelParameters)
 {
-    Nparameters = nestedSampleOfParameters.size();
+    Nparameters = modelParameters.size();
 
     if (Nparameters == 1)
     {
-        Functions::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0));
+        Functions::lorentzProfile(predictions, covariates, modelParameters(0));
     }
     else 
         if (Nparameters == 2)
         {
-            Functions::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0), nestedSampleOfParameters(1));
+            Functions::lorentzProfile(predictions, covariates, modelParameters(0), modelParameters(1));
         }
     else 
         if (Nparameters == 3)
         {
-            Functions::lorentzProfile(predictions, covariates, nestedSampleOfParameters(0), nestedSampleOfParameters(1), nestedSampleOfParameters(2));
+            Functions::lorentzProfile(predictions, covariates, modelParameters(0), modelParameters(1), modelParameters(2));
         }
     else
     {

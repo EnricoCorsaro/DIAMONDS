@@ -52,7 +52,7 @@ RegularPatternModel::~RegularPatternModel()
 // INPUT:
 //      predictions: one-dimensional array to contain the predictions
 //      from the model
-//      nestedSampleOfParameters: one-dimensional array where each element
+//      modelParameters: one-dimensional array where each element
 //      contains the value of one free parameter of the model
 //
 // OUTPUT:
@@ -66,14 +66,14 @@ RegularPatternModel::~RegularPatternModel()
 //      (4) First small frequency separation 01 (deltaNu01)
 //      (5) ...
 
-void RegularPatternModel::predict(RefArrayXd predictions, const RefArrayXd nestedSampleOfParameters)
+void RegularPatternModel::predict(RefArrayXd predictions, const RefArrayXd modelParameters)
 {
-    Nparameters = nestedSampleOfParameters.size();
+    Nparameters = modelParameters.size();
 
-    double nuMax = nestedSampleOfParameters(0);
-    double DeltaNu = nestedSampleOfParameters(1);
-    double deltaNu02 = nestedSampleOfParameters(2);
-    double deltaNu01 = nestedSampleOfParameters(3);
+    double nuMax = modelParameters(0);
+    double DeltaNu = modelParameters(1);
+    double deltaNu02 = modelParameters(2);
+    double deltaNu01 = modelParameters(3);
 
     /*
     ArrayXd DeltaNu(Norders);
@@ -82,9 +82,9 @@ void RegularPatternModel::predict(RefArrayXd predictions, const RefArrayXd neste
     
     for (int i = 0; i < Norders; i++)
     {
-        DeltaNu = nestedSampleOfParameters(i);
-        deltaNu02 = nestedSampleOfParameters(Norders + i);
-        deltaNu01 = nestedSampleOfParameters(2*Norders + i);
+        DeltaNu = modelParameters(i);
+        deltaNu02 = modelParameters(Norders + i);
+        deltaNu01 = modelParameters(2*Norders + i);
     }
     */
 
