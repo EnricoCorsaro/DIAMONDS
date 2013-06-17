@@ -30,7 +30,7 @@ class TestLikelihood2 : public Likelihood
         TestLikelihood2(const RefArrayXd observations, Model &model);
         ~TestLikelihood2();
 
-        virtual double logValue(RefArrayXd nestedSampleOfParameters);
+        virtual double logValue(RefArrayXd modelParameters);
 
 
     private:
