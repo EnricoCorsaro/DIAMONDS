@@ -32,7 +32,7 @@ class UniformPrior : public Prior
 
         virtual double getNormalizingFactor();
         virtual void draw(RefArrayXXd nestedSampleOfParameters);
-        virtual void drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood);
+        virtual void drawWithConstraint(RefArrayXd parameters, Likelihood &likelihood);
         virtual bool pointIsRejected(RefArrayXXd drawnSampleOfParameters);
 
 
