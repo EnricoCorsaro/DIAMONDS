@@ -7,21 +7,35 @@
 //      Class constructor.
 //
 // INPUT:
-//      sampleOfParameters: an Eigen Array matrix of
-//      size (Ndimensions, Nobjects), containing the
-//      coordinates of the objects inside the ellipsoid.
+//      sampleOfParameters: an Eigen Array matrix of size (Ndimensions, Nobjects), 
+//                          containing the coordinates of the objects inside the ellipsoid.
+//      enlargementFactor: TODO
 //
 
-Ellipsoid::Ellipsoid(RefArrayXXd sampleOfParameters, const int index)
+Ellipsoid::Ellipsoid(RefArrayXXd sampleOfParameters, const double enlargementFactor)
 : sampleOfParameters(sampleOfParameters),
   Nobjects(sampleOfParameters.cols()),
-  index(index),
   Ndimensions(sampleOfParameters.rows())
 {
-    eigenvalues.resize(Ndimensions);
+    // Resize the matrices to their proper size
+
+    originalEigenvalues.resize(Ndimensions);
+    enlargedEigenvalues.resize(Ndimensions);
     centerCoordinates.resize(Ndimensions);
-    eigenvectorsMatrix.resize(Ndimensions,Ndimensions);
-    covarianceMatrix.resize(Ndimensions,Ndimensions);
+    eigenvectors.resize(Ndimensions, Ndimensions);
+    covarianceMatrix.resize(Ndimensions, Ndimensions);
+
+    // Compute the covariance matrix of the sample of points
+
+    Functions::clusterCovariance(sampleOfParameters, covarianceMatrix, centerCoordinates);
+
+    // Compute the eigenvectors and eigenvalues of this covariance matrix
+
+    Functions::selfAdjointMatrixDecomposition(covarianceMatrix, originalEigenvalues, eigenvectors);
+
+    // Set the enlargement factor, and (re)compute the corresponding eigenvalues, eigenvectors etc.
+
+    resetEnlargementFactor(enlargementFactor);
 }
 
 
@@ -60,7 +74,7 @@ Ellipsoid::~Ellipsoid()
 
 
 
-// Ellipsoid::build()
+// Ellipsoid::resetEnlargementFactor()
 //
 // PURPOSE: 
 //      Compute covariance matrix, center coordinates, 
@@ -70,26 +84,29 @@ Ellipsoid::~Ellipsoid()
 //
 // INPUT:
 //      enlargementFactor: a double to contain the enlargement
-//      factor to be used for the chosen ellipsoid.
+//                         factor to be used for the chosen ellipsoid.
 //
 // OUTPUT:
 //      void
 
-void Ellipsoid::build(const double enlargementFactor)
+void Ellipsoid::resetEnlargementFactor(const double newEnlargementFactor)
 {
-    Functions::clusterCovariance(sampleOfParameters, covarianceMatrix, centerCoordinates);
-    Functions::selfAdjointMatrixDecomposition(covarianceMatrix, eigenvalues, eigenvectorsMatrix);
+    // Save the new user-specified enlargement factor
 
-    ArrayXd enlargedEigenvalues(Ndimensions);
-    enlargedEigenvalues = eigenvalues.sqrt() + enlargementFactor*eigenvalues.sqrt();
-    eigenvalues = enlargedEigenvalues * enlargedEigenvalues;
-    hyperVolume = enlargedEigenvalues.prod();                       // Save quantity proportional to proper hyper-volume
-    this->enlargementFactor = enlargementFactor;
+    this->enlargementFactor = newEnlargementFactor;
+    
+    // Enlarge the eigenvalues with the user-specified factor
 
+    enlargedEigenvalues = originalEigenvalues.sqrt() + enlargementFactor * originalEigenvalues.sqrt();
+    enlargedEigenvalues = enlargedEigenvalues * enlargedEigenvalues;
 
-    // Update existing covariance matrix with the one computed from the enlarged eigenvalues
+    // Recompute the hypervolume contained in the enlarged ellipsoid
 
-    covarianceMatrix = eigenvectorsMatrix.matrix() * eigenvalues.matrix().asDiagonal() * eigenvectorsMatrix.matrix().transpose();
+    hyperVolume = enlargedEigenvalues.prod();
+    
+    // Recompute the covariance matrix with the enlarged eigenvalues
+
+    covarianceMatrix = eigenvectors.matrix() * enlargedEigenvalues.matrix().asDiagonal() * eigenvectors.matrix().transpose();
 }
 
 
@@ -140,13 +157,12 @@ ArrayXd Ellipsoid::getCenterCoordinates()
 //      Gets the protected data member eigenvalues.      
 //
 // OUTPUT:
-//      An Eigen Array of dimensions (Ndimensions),
-//      containing all original eigenvalues of the ellipsoid.
+//      An Eigen Array of dimensions (Ndimensions), containing all enlarged eigenvalues of the ellipsoid.
 //
 
 ArrayXd Ellipsoid::getEigenvalues()
 {
-    return eigenvalues;
+    return enlargedEigenvalues;
 }
 
 
@@ -197,11 +213,11 @@ ArrayXXd Ellipsoid::getSampleOfParameters()
 // Ellipsoid::getCovarianceMatrix()
 //
 // PURPOSE: 
-//      Gets the protected data member covarianceMatrix.      
+//      Gets the protected data member enlargedCovarianceMatrix.      
 //
 // OUTPUT:
 //      An Eigen Array matrix of dimensions (Ndimensions, Ndimensions) 
-//      containing the covariance matrix of the ellipsoid.
+//      containing the (enlarged) covariance matrix of the ellipsoid.
 //
 
 ArrayXXd Ellipsoid::getCovarianceMatrix()
@@ -221,7 +237,7 @@ ArrayXXd Ellipsoid::getCovarianceMatrix()
 
 
 
-// Ellipsoid::getEigenvectorsMatrix()
+// Ellipsoid::getEigenvectors()
 //
 // PURPOSE: 
 //      Gets the protected data member enlargedEigenvectors.      
@@ -231,9 +247,9 @@ ArrayXXd Ellipsoid::getCovarianceMatrix()
 //      containing all eigenvectors of the ellipsoid.
 //
 
-ArrayXXd Ellipsoid::getEigenvectorsMatrix()
+ArrayXXd Ellipsoid::getEigenvectors()
 {
-    return eigenvectorsMatrix;
+    return eigenvectors;
 }
 
 
@@ -261,35 +277,6 @@ int Ellipsoid::getNobjects()
 {
     return Nobjects;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Ellipsoid::getIndex()
-//
-// PURPOSE: 
-//      Gets the protected data member index.      
-//
-// OUTPUT:
-//      An integer containing the reference number of the ellipsoid.
-//
-
-int Ellipsoid::getIndex()
-{
-    return index;
-}
-
 
 
 

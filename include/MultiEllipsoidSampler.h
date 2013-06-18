@@ -23,9 +23,9 @@ class MultiEllipsoidSampler : public NestedSampler
 
     public:
        
-        MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriorsVector, 
+        MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriors, 
                               Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
-                              const int Nobjects, const double initialEnlargementFactor, const double alpha);
+                              const int Nobjects, const double initialEnlargementFactor, const double shrinkingRate);
         ~MultiEllipsoidSampler();
         
         virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices,
@@ -47,7 +47,7 @@ class MultiEllipsoidSampler : public NestedSampler
 
     private:
 
-        vector<Ellipsoid> ellipsoidsVector;
+        vector<Ellipsoid> ellipsoids;
         ArrayXi NobjectsPerCluster;
         ArrayXi nonOverlappingEllipsoidsIndices;
         ArrayXi overlappingEllipsoidsIndices;
@@ -55,7 +55,7 @@ class MultiEllipsoidSampler : public NestedSampler
         normal_distribution<> normal;           
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFactor;        // Initial factor for enlargement of ellipsoids
-        double alpha;                           // Prior volume shrinkage rate (between 0 and 1)
+        double shrinkingRate;                   // Prior volume shrinkage rate (between 0 and 1)
         double logRemainingWidthInPriorMass;    // log value of the total remaining prior mass at the actual nested iteration
         
 };

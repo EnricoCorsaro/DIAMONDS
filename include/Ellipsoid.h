@@ -30,16 +30,15 @@ class Ellipsoid
 
     public:
 
-        Ellipsoid(RefArrayXXd sampleOfParameters, const int index);
+        Ellipsoid(RefArrayXXd sampleOfParameters, const double enlargementFactor=1.0);
         ~Ellipsoid();
 
-        void build(const double enlargementFactor);
+        void resetEnlargementFactor(const double newEnlargementFactor);
         ArrayXd getCenterCoordinates();
         ArrayXd getEigenvalues();
         ArrayXXd getSampleOfParameters();
         ArrayXXd getCovarianceMatrix();
-        ArrayXXd getEigenvectorsMatrix();
-        int getIndex();
+        ArrayXXd getEigenvectors();
         int getNobjects();
         double getHyperVolume();
         double getEnlargementFactor();
@@ -48,12 +47,12 @@ class Ellipsoid
     protected:
 
         ArrayXd centerCoordinates;
-        ArrayXd eigenvalues;
+        ArrayXd originalEigenvalues;        // non-enlarged eigenvalues
+        ArrayXd enlargedEigenvalues;        // enlarged eigenvalues
         ArrayXXd sampleOfParameters;
-        ArrayXXd covarianceMatrix;
-        ArrayXXd eigenvectorsMatrix;
+        ArrayXXd covarianceMatrix;  
+        ArrayXXd eigenvectors;
         int Nobjects;
-        int index;
         double hyperVolume;
         double enlargementFactor;
 
