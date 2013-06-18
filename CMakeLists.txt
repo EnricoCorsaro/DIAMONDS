@@ -48,8 +48,11 @@ elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 endif()
 
-# Create an executable target
+# Create a shared library target
 
-add_executable(multinest ${sourceFiles})
+add_library(multinest SHARED ${sourceFiles})
 
+# Install the library in the lib/ folder
+
+install(TARGETS multinest LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 
