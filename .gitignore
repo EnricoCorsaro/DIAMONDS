@@ -1,13 +1,10 @@
 lib/
 build/
-test/
-macro/
 source/.*swo
 source/.*swp
 include/.*swo
 include/.*swp
-results/
-demos/
+demos/demo*.txt
 
 # Compiled source 
 

@@ -85,7 +85,7 @@ ArrayXd MeanNormalLikelihood::getNormalizedUncertainties()
 //      For more details cf. Froehlich H.-E. et al. 2009, A&A, 506, 263.
 //
 // INPUT:
-//      nestedSampleOfParameters: a one-dimensional array containing the actual
+//      modelParameters: a one-dimensional array containing the actual
 //      values of the free parameters that describe the model.
 //
 // OUTPUT:
@@ -93,7 +93,7 @@ ArrayXd MeanNormalLikelihood::getNormalizedUncertainties()
 //      mean likelihood
 //
 
-double MeanNormalLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
+double MeanNormalLikelihood::logValue(RefArrayXd modelParameters)
 {
     unsigned long n = observations.size();
     double lambda0;
@@ -102,7 +102,7 @@ double MeanNormalLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
     ArrayXd predictions;
 
     predictions.resize(n);
-    model.predict(predictions, nestedSampleOfParameters);
+    model.predict(predictions, modelParameters);
     argument = (observations - predictions);
     argument = argument*argument*weights;
 

@@ -1,7 +1,43 @@
-#include "TestLikelihood1.h"
+
+#ifndef MULTIPLE2DGAUSSIANSLIKELIHOOD_H
+#define MULTIPLE2DGAUSSIANSLIKELIHOOD_H
+
+#include <cmath>
+#include <iostream>
+#include <cstdlib>
+#include <cassert>
+#include "Functions.h"
+#include <Eigen/Core>
+#include "Likelihood.h"
 
 
-// TestLikelihood1::TestLikelihood1()
+using namespace std;
+using Eigen::ArrayXd;
+typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
+
+
+// Definition of the class
+
+class Multiple2DGaussiansLikelihood : public Likelihood
+{
+    public:
+
+        Multiple2DGaussiansLikelihood(const RefArrayXd observations, Model &model);
+        ~Multiple2DGaussiansLikelihood();
+
+        virtual double logValue(RefArrayXd modelParameters);
+
+
+    private:
+}; 
+
+
+
+
+
+
+
+// Multiple2DGaussiansLikelihood::Multiple2DGaussiansLikelihood()
 //
 // PURPOSE: 
 //      Derived class onstructor.
@@ -9,7 +45,7 @@
 // INPUT:
 // 
 
-TestLikelihood1::TestLikelihood1(const RefArrayXd observations, Model &model)
+Multiple2DGaussiansLikelihood::Multiple2DGaussiansLikelihood(const RefArrayXd observations, Model &model)
 : Likelihood(observations, model)
 {
 }
@@ -22,13 +58,13 @@ TestLikelihood1::TestLikelihood1(const RefArrayXd observations, Model &model)
 
 
 
-// TestLikelihood1::~TestLikelihood1()
+// Multiple2DGaussiansLikelihood::~Multiple2DGaussiansLikelihood()
 //
 // PURPOSE: 
 //      Derived class destructor.
 //
 
-TestLikelihood1::~TestLikelihood1()
+Multiple2DGaussiansLikelihood::~Multiple2DGaussiansLikelihood()
 {
 }
 
@@ -39,20 +75,20 @@ TestLikelihood1::~TestLikelihood1()
 
 
 
-// TestLikelihood1::logValue()
+// Multiple2DGaussiansLikelihood::logValue()
 //
 // PURPOSE:
 //      Compute the Toy Likelihood example #1 by Feroz et al. 2008, MNRAS, 384, 449.
 //
 // INPUT:
 //      nestedSampleOfParameters: a one-dimensional array containing the actual
-//      values of the free parameters that describe the model.
+//                                values of the free parameters that describe the model.
 //
 // OUTPUT:
 //      a double number containing the log-likelihood value.
 //
 
-double TestLikelihood1::logValue(RefArrayXd nestedSampleOfParameters)
+double Multiple2DGaussiansLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
 {
     ArrayXd xCentroid(5);
     xCentroid << -0.400, -0.350, -0.200, 0.100, 0.450;
@@ -82,7 +118,7 @@ double TestLikelihood1::logValue(RefArrayXd nestedSampleOfParameters)
     
 
     return logTotalLikelihood;
-} // END TestLikelihood1::logValue()
+} 
 
 
-
+#endif

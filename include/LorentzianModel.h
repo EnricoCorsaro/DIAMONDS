@@ -16,7 +16,6 @@ using namespace std;
 using Eigen::ArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 
-
 class LorentzianModel : public Model
 {
     public:
@@ -24,7 +23,7 @@ class LorentzianModel : public Model
         LorentzianModel(const RefArrayXd covariates);
         ~LorentzianModel();
 
-        virtual void predict(RefArrayXd predictions, const RefArrayXd nestedSampleOfParameters);
+        virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
         int getNparameters();
        
 

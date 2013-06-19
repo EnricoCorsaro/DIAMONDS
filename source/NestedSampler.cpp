@@ -9,14 +9,14 @@
 //      Increases the number of active nested processes.
 //
 // INPUT:
-//      printOnTheScreen: a boolean value specifying whether the results are to 
-//      be printed on the screen or not.
-//      Nobjects: an integer containing the number of objects to be
-//      used in the nested sampling process.
-//      ptrPriorsVector: a vector of Prior class objects containing the priors used in the inference.
-//      likelihood: a Likelihood class object used for likelihood sampling.
-//      metric: a Metric class object to contain the metric used in the problem.
-//      clusterer: a Clusterer class object specifying the type of clustering algorithm to be used.
+//      printOnTheScreen: Boolean value specifying whether the results are to 
+//                         be printed on the screen or not.
+//      Nobjects:         Integer containing the number of objects to be
+//                         used in the nested sampling process.
+//      ptrPriors:        Vector of pointers to Prior class objects
+//      likelihood:       Likelihood class object used for likelihood sampling.
+//      metric:           Metric class object to contain the metric used in the problem.
+//      clusterer:        Clusterer class object specifying the type of clustering algorithm to be used.
 //
 // REMARK:
 //      The desired model for predictions is to be given initially to 
@@ -24,9 +24,9 @@
 //      nested sampling process.
 //
 
-NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, vector<Prior*> ptrPriorsVector, 
+NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, vector<Prior*> ptrPriors, 
                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
-: ptrPriorsVector(ptrPriorsVector),
+: ptrPriors(ptrPriors),
   likelihood(likelihood),
   metric(metric),
   clusterer(clusterer),
@@ -40,9 +40,11 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, ve
 {
     int totalNdimensions = 0;
     
-    for (int i = 0; i < ptrPriorsVector.size(); i++)
+    for (int i = 0; i < ptrPriors.size(); i++)
     {
-        totalNdimensions = ptrPriorsVector[i]->getNdimensions();        // Get the number of dimensions from each type of prior
+        // Get the number of dimensions from each type of prior
+
+        totalNdimensions = ptrPriors[i]->getNdimensions(); 
     }
 
     Ndimensions = totalNdimensions;
@@ -92,7 +94,7 @@ NestedSampler::~NestedSampler()
 //      terminate nested iterations. Default is 1.
 //      NiterationsBeforeClustering: number of nested iterations required to recompute
 //      the clustering of the points in the sample.
-//      NloopMaximum: the maximum number of attempts allowed when drawing from a single ellipsoid.
+//      maxNdrawAttempts: the maximum number of attempts allowed when drawing from a single ellipsoid.
 //
 // OUTPUT:
 //      void
@@ -103,7 +105,7 @@ NestedSampler::~NestedSampler()
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(const double terminationFactor, const int NiterationsBeforeClustering, const int NloopMaximum)
+void NestedSampler::run(const double terminationFactor, const int NiterationsBeforeClustering, const int maxNdrawAttempts)
 {
     int copy = 0;
     int worst;
@@ -138,11 +140,11 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
     // The first initialization is done by coordinates according to their corresponding prior distribution
     // This process ensures that each object is drawn uniformly from the prior PDF
 
-    for (int i = 0; i < ptrPriorsVector.size(); i++)
+    for (int i = 0; i < ptrPriors.size(); i++)
     {
-        NdimensionsPerPrior = ptrPriorsVector[i]->getNdimensions();
+        NdimensionsPerPrior = ptrPriors[i]->getNdimensions();
         priorSampleOfParameters.resize(NdimensionsPerPrior, Nobjects);
-        ptrPriorsVector[i]->draw(priorSampleOfParameters);
+        ptrPriors[i]->draw(priorSampleOfParameters);
         nestedSampleOfParameters.block(actualNdimensions,0,NdimensionsPerPrior,Nobjects) = priorSampleOfParameters;      
         actualNdimensions += NdimensionsPerPrior;
     }
@@ -275,7 +277,7 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         // Compute approximate sampling to find new point verifying the likelihood constraint
 
         ArrayXXd drawnSampleOfParameters = ArrayXXd::Zero(Ndimensions, 1);
-        drawWithConstraint(nestedSampleOfParameters, Nclusters, clusterIndices, logTotalWidthInPriorMass, drawnSampleOfParameters, NloopMaximum); 
+        drawWithConstraint(nestedSampleOfParameters, Nclusters, clusterIndices, logTotalWidthInPriorMass, drawnSampleOfParameters, maxNdrawAttempts); 
        
         
         // Replace worst object in favour of a copy of different survivor

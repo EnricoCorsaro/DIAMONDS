@@ -24,7 +24,7 @@ class RegularPatternModel : public Model
         RegularPatternModel(const RefArrayXd covariates, const int Norders);
         ~RegularPatternModel();
 
-        virtual void predict(RefArrayXd predictions, const RefArrayXd nestedSampleOfParameters);
+        virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
         int getNparameters();
        
 

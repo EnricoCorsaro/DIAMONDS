@@ -168,7 +168,7 @@ void UniformPrior::draw(RefArrayXXd nestedSampleOfParameters)
 //      having higher likelihood value.
 //
 // INPUT:
-//      nestedSampleOfParameters: one-dimensional Eigen Array containing the set of 
+//      parameters: one-dimensional Eigen Array containing the set of 
 //      parameters values to be updated.
 //      likelihood: an object to compute the corresponding likelihood value.
 //
@@ -176,14 +176,14 @@ void UniformPrior::draw(RefArrayXXd nestedSampleOfParameters)
 //      void
 //
 // NOTE:
-//      nestedSampleOfParameters refers to the worst object identified in the nested
+//      parameters refers to the worst object identified in the nested
 //      sampling loop. Thus, the array contains Ndimensions elements.
 //
 
-void UniformPrior::drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likelihood &likelihood)
+void UniformPrior::drawWithConstraint(RefArrayXd parameters, Likelihood &likelihood)
 {
     double logLikelihood;
-    double logLikelihoodConstraint = likelihood.logValue(nestedSampleOfParameters);
+    double logLikelihoodConstraint = likelihood.logValue(parameters);
 
 
     // Uniform sampling to find new parameter with logLikelihood > logLikelihoodConstraint
@@ -192,10 +192,10 @@ void UniformPrior::drawWithConstraint(RefArrayXd nestedSampleOfParameters, Likel
     {
         for (int i = 0; i < Ndimensions; i++)
             {
-                nestedSampleOfParameters(i) = uniform(engine)*(maxima(i) - minima(i)) + minima(i);
+                parameters(i) = uniform(engine)*(maxima(i) - minima(i)) + minima(i);
             }
     
-        logLikelihood = likelihood.logValue(nestedSampleOfParameters);
+        logLikelihood = likelihood.logValue(parameters);
     }
     while (logLikelihood <= logLikelihoodConstraint);
     

@@ -1,7 +1,44 @@
-#include "TestLikelihood3.h"
+
+#ifndef DEMOTWOCIRCLES_H
+#define DEMOTWOCIRCLES_H
+
+#include <cmath>
+#include <iostream>
+#include <cstdlib>
+#include <cassert>
+#include "Functions.h"
+#include <Eigen/Core>
+#include "Likelihood.h"
 
 
-// TestLikelihood3::TestLikelihood3()
+using namespace std;
+using Eigen::ArrayXd;
+typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
+
+
+// Definition of the Likelihood
+
+class TwoCirclesLikelihood : public Likelihood
+{
+
+    public:
+
+        TwoCirclesLikelihood(const RefArrayXd observations, Model &model);
+        ~TwoCirclesLikelihood();
+
+        virtual double logValue(RefArrayXd modelParameters);
+
+
+    private:
+
+}; // END class TwoCirclesLikelihood
+
+
+
+
+
+
+// TwoCirclesLikelihood::TwoCirclesLikelihood()
 //
 // PURPOSE: 
 //      Derived class onstructor.
@@ -9,7 +46,7 @@
 // INPUT:
 // 
 
-TestLikelihood3::TestLikelihood3(const RefArrayXd observations, Model &model)
+TwoCirclesLikelihood::TwoCirclesLikelihood(const RefArrayXd observations, Model &model)
 : Likelihood(observations, model)
 {
 }
@@ -22,13 +59,13 @@ TestLikelihood3::TestLikelihood3(const RefArrayXd observations, Model &model)
 
 
 
-// TestLikelihood3::~TestLikelihood3()
+// TwoCirclesLikelihood::~TwoCirclesLikelihood()
 //
 // PURPOSE: 
 //      Derived class destructor.
 //
 
-TestLikelihood3::~TestLikelihood3()
+TwoCirclesLikelihood::~TwoCirclesLikelihood()
 {
 }
 
@@ -39,20 +76,20 @@ TestLikelihood3::~TestLikelihood3()
 
 
 
-// TestLikelihood3::logValue()
+// TwoCirclesLikelihood::logValue()
 //
 // PURPOSE:
-//      Compute the Toy Likelihood example #2 by Feroz et al. 2008, MNRAS, 384, 449.
+//      Compute the Toy Likelihood example #3 by Feroz et al. 2008, MNRAS, 384, 449.
 //
 // INPUT:
 //      nestedSampleOfParameters: a one-dimensional array containing the actual
-//      values of the free parameters that describe the model.
+//                                values of the free parameters that describe the model.
 //
 // OUTPUT:
 //      a double number containing the log-likelihood value.
 //
 
-double TestLikelihood3::logValue(RefArrayXd nestedSampleOfParameters)
+double TwoCirclesLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
 {
     double logLikelihood;
     double xCenter1 = -3.5;
@@ -76,3 +113,7 @@ double TestLikelihood3::logValue(RefArrayXd nestedSampleOfParameters)
     return logLikelihood;
 }
 
+
+
+
+#endif

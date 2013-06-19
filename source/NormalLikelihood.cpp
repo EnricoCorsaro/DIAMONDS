@@ -75,7 +75,7 @@ ArrayXd NormalLikelihood::getUncertainties()
 //      a given set of observations, uncertainties and predictions.
 //
 // INPUT:
-//      nestedSampleOfParameters: a one-dimensional array containing the actual
+//      modelParameters: a one-dimensional array containing the actual
 //      values of the free parameters that describe the model.
 //
 // OUTPUT:
@@ -83,14 +83,14 @@ ArrayXd NormalLikelihood::getUncertainties()
 //      normal likelihood
 //
 
-double NormalLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
+double NormalLikelihood::logValue(RefArrayXd modelParameters)
 {
     ArrayXd predictions;
     ArrayXd lambda;
     ArrayXd lambda0;
     
     predictions.resize(observations.size());
-    model.predict(predictions, nestedSampleOfParameters);
+    model.predict(predictions, modelParameters);
     
     lambda0 = -0.5 * observations.size() * log(2.0*Functions::PI) -1.0 * uncertainties.log(); 
     lambda = lambda0 - 0.5 * ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);

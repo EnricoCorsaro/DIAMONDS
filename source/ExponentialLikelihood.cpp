@@ -46,7 +46,7 @@ ExponentialLikelihood::~ExponentialLikelihood()
 //      s a generalized chi-square distribution with 2 d.o.f.
 //
 // INPUT:
-//      nestedSampleOfParameters: a one-dimensional array containing the actual
+//      modelParameters: a one-dimensional array containing the actual
 //      values of the free parameters that describe the model.
 //
 // OUTPUT:
@@ -54,13 +54,13 @@ ExponentialLikelihood::~ExponentialLikelihood()
 //      exponential likelihood
 //
 
-double ExponentialLikelihood::logValue(RefArrayXd nestedSampleOfParameters)
+double ExponentialLikelihood::logValue(RefArrayXd modelParameters)
 {
     ArrayXd predictions;
     ArrayXd lambda;
     
     predictions.resize(observations.size());
-    model.predict(predictions, nestedSampleOfParameters);
+    model.predict(predictions, modelParameters);
     
     lambda = -1.0*(predictions.log() + observations/predictions);
     
