@@ -1,11 +1,9 @@
 
 build/
-test/
 source/.*swo
 source/.*swp
 include/.*swo
 include/.*swp
-demos/
 
 # Compiled source 
 
