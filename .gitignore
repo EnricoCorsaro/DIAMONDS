@@ -4,6 +4,7 @@ source/.*swo
 source/.*swp
 include/.*swo
 include/.*swp
+demos/demo*.txt
 
 # Compiled source 
 
