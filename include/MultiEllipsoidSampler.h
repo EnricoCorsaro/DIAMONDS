@@ -29,12 +29,14 @@ class MultiEllipsoidSampler : public NestedSampler
                               const int Nobjects, const double initialEnlargementFactor, const double shrinkingRate);
         ~MultiEllipsoidSampler();
         
-        virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices,
+        virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const vector<int> &clusterIndices,
                                         const double logTotalWidthInPriorMass, RefArrayXXd drawnSampleOfParameters, const int NloopMaximum); 
-        void computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, 
-                               const RefArrayXi clusterIndices, const double logRemainingWidthInPrioMass);
-        ArrayXi getNonOverlappingEllipsoidsIndices();
-        ArrayXi getOverlappingEllipsoidsIndices();
+
+        void computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const vector<int> &clusterIndices, 
+                               const double logRemainingWidthInPriorMass);
+        
+        vector<int> getNonOverlappingEllipsoidsIndices();
+        vector<int> getOverlappingEllipsoidsIndices();
         vector<Ellipsoid> getEllipsoidsVector();
    
 
@@ -46,9 +48,9 @@ class MultiEllipsoidSampler : public NestedSampler
     private:
 
         vector<Ellipsoid> ellipsoids;
-        ArrayXi NobjectsPerCluster;
-        ArrayXi nonOverlappingEllipsoidsIndices;
-        ArrayXi overlappingEllipsoidsIndices;
+        vector<int> NobjectsPerCluster;
+        vector<int> nonOverlappingEllipsoidsIndices;
+        vector<int> overlappingEllipsoidsIndices;
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFactor;        // Initial factor for enlargement of ellipsoids
         double shrinkingRate;                   // Prior volume shrinkage rate (between 0 and 1)

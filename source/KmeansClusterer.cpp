@@ -206,7 +206,7 @@ void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXX
 
 
 bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, RefArrayXXd centers, 
-                                                         RefArrayXd clusterSizes, RefArrayXi clusterIndices,
+                                                         RefArrayXd clusterSizes, vector<int> &clusterIndices,
                                                          double &sumOfDistancesToClosestCenter, double relTolerance)
 {
     unsigned int Npoints = sample.cols();
@@ -253,7 +253,7 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
             newSumOfDistances += distanceToClosestCenter;
             updatedCenters.col(indexOfClosestCenter) += sample.col(n);
             clusterSizes(indexOfClosestCenter) += 1; 
-            clusterIndices(n) = indexOfClosestCenter;        
+            clusterIndices[n] = indexOfClosestCenter;        
         }
     
 
@@ -345,7 +345,7 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
 //
 
 double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers, 
-                                         RefArrayXd clusterSizes, RefArrayXi clusterIndices)
+                                         RefArrayXd clusterSizes, vector<int> &clusterIndices)
 {
     unsigned int Npoints = sample.cols();
     unsigned int Ndimensions = sample.rows();
@@ -360,7 +360,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
     
     for (int n = 0; n < Npoints; ++n)
     {
-        intraClusterVariances(clusterIndices(n)) += metric.distance(sample.col(n), centers.col(clusterIndices(n)));
+        intraClusterVariances(clusterIndices[n]) += metric.distance(sample.col(n), centers.col(clusterIndices[n]));
     }
     
     intraClusterVariances /= (clusterSizes-1); 
@@ -381,7 +381,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 
     for (int n = 0; n < Npoints; ++n)
     {
-        cluster = clusterIndices(n); 
+        cluster = clusterIndices[n]; 
         logLikelihood +=   log(clusterPriors(cluster))
                          - Ndimensions / 2.0 * log(intraClusterVariances(cluster))
                          - metric.distance(sample.col(n), centers.col(cluster)) / 2.0 / intraClusterVariances(cluster);
@@ -424,7 +424,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 //
 // INPUT:
 //      printOnTheScreen: a boolean value specifying whether the BIC values and corresponding number of clusters 
-//      are to be printed on the screen while the process is running.
+//                        are to be printed on the screen while the process is running.
 //      sample(Ndimensions, Npoints): sample of N-dimensional points
 //      optimalClusterIndices(Npoints): for each point the index of the cluster it belongs to. This index
 //                                      runs from 0 to Nclusters-1.
@@ -433,7 +433,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 //      The optimal number of clusters
 //
 
-int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, RefArrayXi optimalClusterIndices)
+int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, vector<int> &optimalClusterIndices)
 {
     bool convergedSuccessfully;
     unsigned int Npoints = sample.cols();
@@ -443,8 +443,8 @@ int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, Re
     double BICvalue; 
     double sumOfDistancesToClosestCenter;
     double bestSumOfDistancesToClosestCenter = DBL_MAX;
-    ArrayXi clusterIndices(Npoints);            // for each point the index of the cluster to ...
-    ArrayXi bestClusterIndices(Npoints);        // ... which it belongs
+    vector<int> clusterIndices(Npoints);            // for each point the index of the cluster to ...
+    vector<int> bestClusterIndices(Npoints);        // ... which it belongs
     ArrayXd clusterSizes;
     ArrayXd bestClusterSizes;
     ArrayXXd centers;

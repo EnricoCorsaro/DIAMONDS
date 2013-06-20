@@ -172,7 +172,7 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
     // Identify the clusters contained in the initial sample of nested objects
 
     int Nclusters;
-    ArrayXi clusterIndices(Nobjects);
+    vector<int> clusterIndices(Nobjects);
 
 
     // Nested sampling loop
@@ -274,14 +274,12 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
             Nclusters = clusterer.cluster(printOnTheScreen, nestedSampleOfParameters, clusterIndices);
         }
 
-
         // Evolve worst object with the new constraint logLikelihood > actualLogLikelihoodConstraint
         // Compute approximate sampling to find new point verifying the likelihood constraint
 
         ArrayXXd drawnSampleOfParameters = ArrayXXd::Zero(Ndimensions, 1);
         drawWithConstraint(nestedSampleOfParameters, Nclusters, clusterIndices, logTotalWidthInPriorMass, drawnSampleOfParameters, maxNdrawAttempts); 
        
-        
         // Replace worst object in favour of a copy of different survivor
         // No replacement if Nobjects == 1. Fundamental step to preserve
         // the randomness of the process

@@ -434,26 +434,26 @@ void Functions::sortElementsDouble(RefArrayXd array1, RefArrayXd array2)
 //      sorting of the first array.
 //
 // INPUT: 
-//      array1: a first Eigen Array of integer values to be sorted in increasing order 
+//      array1: vector of integer values to be sorted in increasing order 
 //      array2: a second Eigen Array to be sorted according to array1
 //
 // OUTPUT: 
 //      void
 //
 
-void Functions::sortElementsInt(RefArrayXi array1, RefArrayXd array2)
+void Functions::sortElementsInt(vector<int> &array1, RefArrayXd array2)
 {
     for (int i = 0; i < array1.size(); i++)
     {
         for (int j = 1; j < (array1.size()-i); j++)
         {
-            if (array1(j-1) > array1(j))
+            if (array1[j-1] > array1[j])
             {
-                SWAPINT(array1(j-1),array1(j));         // SWAP array1 elements in increasing order
-                SWAPDOUBLE(array2(j-1),array2(j));      // SWAP array2 elements accordingly
+                SWAPINT(array1[j-1], array1[j]);         // SWAP array1 elements in increasing order
+                SWAPDOUBLE(array2(j-1), array2(j));      // SWAP array2 elements accordingly
             }
             else
-                if (array1(j-1) == array1(j))
+                if (array1[j-1] == array1[j])
                     continue;
         }
     }
@@ -461,54 +461,4 @@ void Functions::sortElementsInt(RefArrayXi array1, RefArrayXd array2)
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-// Functions::BoxMullerDistribution()
-//
-// PURPOSE: 
-//      Generates a 2D normal distribution from a uniform distribution by
-//      means of the Box-Muller algorithm.
-//
-// INPUT:
-//      Npoints: number of samples in the distribution.
-//      sampleDistribution: an Eigen Array of size (2, Npoints) to contain the
-//      points normally distributed.
-//
-// OUTPUT:
-//      void
-//
-// REMARKS:
-//      THe two normal distributions generated have both zero mean and unit standard deviation.
-//
-
-void Functions::BoxMullerDistribution(RefArrayXXd sampleDistribution, const int Npoints)
-{
-    mt19937 engine(time(0));
-    uniform_real_distribution<double> uniform_dist(0.0,1.0);
-    auto uniform = bind(uniform_dist, engine);
-    ArrayXd u;
-    ArrayXd v;
-
-    sampleDistribution.resize(2, Npoints);
-
-    for (int i = 0; i < Npoints; i++)
-    {
-        u(i) = uniform();
-        v(i) = uniform();
-        sampleDistribution(0,i) = sqrt(-2*log(u(i))) * cos(2*PI*v(i));
-        sampleDistribution(1,i) = sqrt(-2*log(u(i))) * sin(2*PI*v(i));
-    }
-
-}
 

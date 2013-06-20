@@ -82,7 +82,7 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      void
 //
 
-void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices, 
+void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const vector<int> &clusterIndices, 
                                                const double logTotalWidthInPriorMass, RefArrayXXd drawnSampleOfParameters, const int maxNdrawAttempts)
 {    
     assert(totalSampleOfParameters.cols() == clusterIndices.size());
@@ -131,10 +131,10 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     double volumeProbability;
     double actualProbability; 
     double rejectProbability;
-    double totalVolume1 = 0;              // Total volume of overdlapping ellipsoids
-    double totalVolume2 = 0;              // Total volume of non-overlapping ellipsoids
+    double totalVolume1 = 0;                             // Total volume of overdlapping ellipsoids
+    double totalVolume2 = 0;                             // Total volume of non-overlapping ellipsoids
     double logLikelihood;
-    ArrayXi mergedEllipsoidsIndices;      // Total vector of ellipsoids indices (overlapping + non-overlapping)
+    vector<int> mergedEllipsoidsIndices;                 // Total vector of ellipsoids indices (overlapping + non-overlapping)
     ArrayXd drawnParametersPerObject(Ndimensions);       // Coordinates for the drawn point
     ArrayXd drawnParametersPerPrior;                     // Coordinates for the drawn point corresponding to one type of prior
     ArrayXd referenceParametersPerObject(Ndimensions);   // Coordinates for reference point
@@ -144,7 +144,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     
     // Compute total volumes for overlapping and non-overlapping ellipsoids, if any
 
-    if (overlappingEllipsoidsIndices(0) != -1)
+    if (overlappingEllipsoidsIndices[0] != -1)
     {
         NoverlappingEllipsoids = overlappingEllipsoidsIndices.size();
         
@@ -155,7 +155,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     
         for (int m = 0; m < NoverlappingEllipsoids; m++)
         {   
-            ellipsoidIndex = overlappingEllipsoidsIndices(m);
+            ellipsoidIndex = overlappingEllipsoidsIndices[m];
             totalVolume1 += ellipsoids[ellipsoidIndex].getHyperVolume();           // Compute total volume of overlapping ellipsoids
         }
 
@@ -168,7 +168,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     }
     
     
-    if (nonOverlappingEllipsoidsIndices(0) != -1)
+    if (nonOverlappingEllipsoidsIndices[0] != -1)
     {
         NnonOverlappingEllipsoids = nonOverlappingEllipsoidsIndices.size();
         
@@ -179,7 +179,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
         
         for (int m = 0; m < NnonOverlappingEllipsoids; m++)
         {   
-            ellipsoidIndex = nonOverlappingEllipsoidsIndices(m);
+            ellipsoidIndex = nonOverlappingEllipsoidsIndices[m];
             totalVolume2 += ellipsoids[ellipsoidIndex].getHyperVolume();           // Compute total volume of non-overlapping ellipsoids
         }
 
@@ -191,7 +191,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
         someEllipsoidsDoNotOverlap = false;
     }
 
-    
+
     // Start the do-while loop for checking maximum number of attempts when drawing from ellipsoids 
 
     do 
@@ -200,15 +200,28 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 
         if (someEllipsoidsOverlap && someEllipsoidsDoNotOverlap) // If both overlapping and non-overlapping ellipsoids exist then...
         {
-            mergedEllipsoidsIndices.resize(NoverlappingEllipsoids+NnonOverlappingEllipsoids);
-            mergedEllipsoidsIndices.head(NoverlappingEllipsoids) = overlappingEllipsoidsIndices;
-            mergedEllipsoidsIndices.segment(NoverlappingEllipsoids, NnonOverlappingEllipsoids) = nonOverlappingEllipsoidsIndices;
-            uniform_int_distribution<int> uniformIndex(0, NoverlappingEllipsoids+NnonOverlappingEllipsoids-1);
+            // Copy the indices of the overlapping and nonoverlapping ellipsoids into 'mergedEllipsoidsIndices'
+
+            mergedEllipsoidsIndices.resize(NoverlappingEllipsoids + NnonOverlappingEllipsoids);
+
+            for (int i = 0; i < NoverlappingEllipsoids; ++i)
+            {
+                mergedEllipsoidsIndices[i] = overlappingEllipsoidsIndices[i];
+            }
+            
+            for (int i = 0; i < NnonOverlappingEllipsoids; ++i)
+            {
+                mergedEllipsoidsIndices[i+NoverlappingEllipsoids] = nonOverlappingEllipsoidsIndices[i];
+            }
+
+            // Define an discrete uniform random generator
+
+            uniform_int_distribution<int> uniformIndex(0, NoverlappingEllipsoids + NnonOverlappingEllipsoids - 1);
 
             do
             {
                 mergedUniformIndex = uniformIndex(engine);
-                ellipsoidIndex = mergedEllipsoidsIndices(mergedUniformIndex);   // Pick up one ellipsoid randomly
+                ellipsoidIndex = mergedEllipsoidsIndices[mergedUniformIndex];   // Pick up one ellipsoid randomly
                 
                 
                 // Compute probability for the selected ellipsoid
@@ -240,7 +253,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
         
                 do
                 {
-                    ellipsoidIndex = mergedEllipsoidsIndices(uniformIndex1(engine));    // Pick up one ellipsoid randomly
+                    ellipsoidIndex = mergedEllipsoidsIndices[uniformIndex1(engine)];    // Pick up one ellipsoid randomly
                     
                     
                     // Compute probability for the selected ellipsoid
@@ -254,7 +267,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
             if (!someEllipsoidsOverlap && someEllipsoidsDoNotOverlap)    // If only non-overlapping ellipsoids exist then...
             {
                 if (NnonOverlappingEllipsoids == 1)    // If only one non-overlapping ellipsoid exist, select it directly.
-                    ellipsoidIndex = nonOverlappingEllipsoidsIndices(0);
+                    ellipsoidIndex = nonOverlappingEllipsoidsIndices[0];
                 else
                 {
                     mergedEllipsoidsIndices.resize(NnonOverlappingEllipsoids);
@@ -264,7 +277,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
         
                     do
                     {
-                        ellipsoidIndex = mergedEllipsoidsIndices(uniformIndex2(engine));    // Pick up one ellipsoid randomly
+                        ellipsoidIndex = mergedEllipsoidsIndices[uniformIndex2(engine)];    // Pick up one ellipsoid randomly
                     
                     
                         // Compute probability for the selected ellipsoid
@@ -432,13 +445,13 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 
                         for (int i = 0; i < NoverlappingEllipsoids; i++)        // Check other possibile overlapping ellipsoids
                         {
-                            if (overlappingEllipsoidsIndices(i) == ellipsoidIndex)     // Skip if self-overlap
+                            if (overlappingEllipsoidsIndices[i] == ellipsoidIndex)     // Skip if self-overlap
                                 continue;
                             else
                             {
                                 // Check if point belongs to ellipsoid #2
 
-                                ellipsoidIndex2 = overlappingEllipsoidsIndices(i);
+                                ellipsoidIndex2 = overlappingEllipsoidsIndices[i];
 
                                 if (ellipsoids[ellipsoidIndex2].containsPoint(drawnParametersPerObject))
                                     Noverlaps++;
@@ -509,13 +522,12 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 //      void
 //
 
-void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const RefArrayXi clusterIndices, const double logRemainingWidthInPriorMass)
+void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const vector<int> &clusterIndices, const double logRemainingWidthInPriorMass)
 {
     assert(totalSampleOfParameters.cols() == clusterIndices.size());
     assert(totalSampleOfParameters.cols() > Ndimensions + 1);            // At least Ndimensions + 1 points are required.
  
-    NobjectsPerCluster.resize(Nclusters);
-    NobjectsPerCluster.setZero();
+    NobjectsPerCluster.assign(Nclusters, 0);
 
     // Divide the sample according to the clustering done
 
@@ -523,13 +535,12 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfPar
 
     for (int i = 0; i < Nobjects; i++) 
     {
-        NobjectsPerCluster(clusterIndices(i))++;
+        NobjectsPerCluster[clusterIndices[i]]++;
     }
 
     ArrayXd oneDimensionSampleOfParameters(Nobjects);
     ArrayXXd totalSampleOfParametersOrdered = totalSampleOfParameters;
-    ArrayXi clusterIndicesCopy(Nobjects);
-    clusterIndicesCopy = clusterIndices;
+    vector<int> clusterIndicesCopy(clusterIndices);
 
     // Order points in each dimension according to increasing cluster indices
 
@@ -557,21 +568,21 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfPar
     {   
         // Skip cluster if number of points is not large enough
 
-        if (NobjectsPerCluster(i) <= Ndimensions + 1) 
+        if (NobjectsPerCluster[i] <= Ndimensions + 1) 
         {
-            actualNobjects += NobjectsPerCluster(i);
+            actualNobjects += NobjectsPerCluster[i];
             continue;
         }
         else
         {
-            clusterSample.resize(Ndimensions, NobjectsPerCluster(i));
-            clusterSample = totalSampleOfParametersOrdered.block(0, actualNobjects, Ndimensions, NobjectsPerCluster(i));
-            actualNobjects += NobjectsPerCluster(i);
+            clusterSample.resize(Ndimensions, NobjectsPerCluster[i]);
+            clusterSample = totalSampleOfParametersOrdered.block(0, actualNobjects, Ndimensions, NobjectsPerCluster[i]);
+            actualNobjects += NobjectsPerCluster[i];
 
             // Compute the enlargement factor
 
             logEnlargementFactor = log(initialEnlargementFactor) + shrinkingRate * logRemainingWidthInPriorMass 
-                                                                 + 0.5 * log(Nobjects/NobjectsPerCluster(i));
+                                                                 + 0.5 * log(Nobjects/NobjectsPerCluster[i]);
             enlargementFactor = exp(logEnlargementFactor);
 
             // Insert ellipsoid in our vector
@@ -611,17 +622,16 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfPar
 //
 void MultiEllipsoidSampler::findOverlappingEllipsoids()
 {
-    overlappingEllipsoidsIndices.resize(1);
-    nonOverlappingEllipsoidsIndices.resize(1);
-    overlappingEllipsoidsIndices(0) = -1;           // Start with no overlapping ellipsoids found
-    
-    if (Nellipsoids == 1)         // If only one ellipsoid is found, then return one non-overlapping ellipsoid
+    overlappingEllipsoidsIndices.assign(1, -1);       // -1: Start with no overlapping ellipsoids found
+    nonOverlappingEllipsoidsIndices.assign(1, -1);    // -1: Start with no non-overlapping ellipsoids found
+
+    // If only one ellipsoid is found, then return one non-overlapping ellipsoid
+
+    if (Nellipsoids == 1) 
     {
-        nonOverlappingEllipsoidsIndices(0) = 0;
+        nonOverlappingEllipsoidsIndices[0] = 0;
         return;
     }
-
-    nonOverlappingEllipsoidsIndices(0) = -1;        // Start with no non-overlapping ellipsoids found
 
     bool saveFlagI = true;
     bool saveFlagJ = true;
@@ -646,7 +656,7 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
 
                 for (int k = 0; k < overlappingEllipsoidsIndices.size(); k++) // Check if j is saved already
                 {
-                    if (j == overlappingEllipsoidsIndices(k))       
+                    if (j == overlappingEllipsoidsIndices[k])       
                     {
                         saveFlagJ = false; // If j is saved already, don't save it again and go to next j
                         break;
@@ -656,8 +666,8 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
                 
                 if (saveFlagJ)      // If j is not saved yet, then save it
                 {
-                    overlappingEllipsoidsIndices.conservativeResize(countIndex+1);
-                    overlappingEllipsoidsIndices(countIndex) = j;
+                    overlappingEllipsoidsIndices.resize(countIndex+1);
+                    overlappingEllipsoidsIndices[countIndex] = j;
                     countIndex++;
                 }
             }
@@ -665,8 +675,8 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
 
         if (i == 0 && countOverlap != 0)   // If first i and at least one overlap is found, save also i and go to next i
         {
-            overlappingEllipsoidsIndices.conservativeResize(countIndex+1);
-            overlappingEllipsoidsIndices(countIndex) = i;
+            overlappingEllipsoidsIndices.resize(countIndex+1);
+            overlappingEllipsoidsIndices[countIndex] = i;
             countIndex++;
             continue;
         }
@@ -675,7 +685,7 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
             {
                 for (int k = 0; k < overlappingEllipsoidsIndices.size(); k++) // Check if i is saved already
                 {
-                    if (i == overlappingEllipsoidsIndices(k))       
+                    if (i == overlappingEllipsoidsIndices[k])       
                     {
                         saveFlagI = false;       // If i is saved already, don't save it again and go to next i
                         break;
@@ -684,8 +694,8 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
 
                 if (saveFlagI)      // If i is not saved yet, then save it
                 {
-                    overlappingEllipsoidsIndices.conservativeResize(countIndex+1);
-                    overlappingEllipsoidsIndices(countIndex) = i;
+                    overlappingEllipsoidsIndices.resize(countIndex+1);
+                    overlappingEllipsoidsIndices[countIndex] = i;
                     countIndex++;
                 }
             }
@@ -693,7 +703,7 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
 
     int Noverlaps;
 
-    if (overlappingEllipsoidsIndices(0) != -1)
+    if (overlappingEllipsoidsIndices[0] != -1)
         Noverlaps = overlappingEllipsoidsIndices.size();
     else
         Noverlaps = 0;
@@ -713,7 +723,7 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
 
             for (int j = 0; j < Noverlaps; j++)     // Check which ellipsoids are already overlapping
             {
-                if (i == overlappingEllipsoidsIndices(j))       // If ellipsoid i-th already overlap, then go to next i-th ellipsoid
+                if (i == overlappingEllipsoidsIndices[j])       // If ellipsoid i-th already overlap, then go to next i-th ellipsoid
                 {
                     saveFlagI = false;
                     break;
@@ -722,7 +732,7 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
 
             if (saveFlagI)      // If ellipsoid is not overlapping, save it among non-overlapping ellipsoids
             {   
-                nonOverlappingEllipsoidsIndices(countIndex) = i;
+                nonOverlappingEllipsoidsIndices[countIndex] = i;
                 countIndex++;
             }
         }
@@ -748,7 +758,7 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
 //      are not overlapping.
 //
 
-ArrayXi MultiEllipsoidSampler::getNonOverlappingEllipsoidsIndices()
+vector<int> MultiEllipsoidSampler::getNonOverlappingEllipsoidsIndices()
 {
     return nonOverlappingEllipsoidsIndices;
 }
@@ -776,7 +786,7 @@ ArrayXi MultiEllipsoidSampler::getNonOverlappingEllipsoidsIndices()
 //      are overlapping.
 //
 
-ArrayXi MultiEllipsoidSampler::getOverlappingEllipsoidsIndices()
+vector<int> MultiEllipsoidSampler::getOverlappingEllipsoidsIndices()
 {
     return overlappingEllipsoidsIndices;
 }

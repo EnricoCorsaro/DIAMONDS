@@ -68,14 +68,10 @@ namespace Functions
     inline double sum(const vector<double> &vec);
     double logExpSum(const double x, const double y);
     double logExpDifference(const double x, const double y);
-    void sortElementsDouble(RefArrayXd array1, RefArrayXd array2);
-    void sortElementsInt(RefArrayXi array1, RefArrayXd array2);
-
-
-    // Sampling Distributions
-
-    void BoxMullerDistribution(RefArrayXXd sampleDistribution, const int Npoints);
+    void sortElementsDouble(RefArrayXd array1, RefArrayXd array2);   // TODO: replace by much more efficient algorithms 
+    void sortElementsInt(vector<int> &array1, RefArrayXd array2);    // Idem
 
 
 } // END namespace Functions
+
 #endif
