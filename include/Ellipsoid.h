@@ -34,6 +34,7 @@ class Ellipsoid
         ~Ellipsoid();
 
         void resetEnlargementFactor(const double newEnlargementFactor);
+        bool overlapsWith(Ellipsoid ellipsoid);
         ArrayXd getCenterCoordinates();
         ArrayXd getEigenvalues();
         ArrayXXd getSampleOfParameters();
