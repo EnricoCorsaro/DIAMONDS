@@ -513,8 +513,9 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfPar
 {
     assert(totalSampleOfParameters.cols() == clusterIndices.size());
     assert(totalSampleOfParameters.cols() > Ndimensions + 1);            // At least Ndimensions + 1 points are required.
+ 
     NobjectsPerCluster.resize(Nclusters);
-    NobjectsPerCluster = ArrayXi::Zero(Nclusters);                      // Fundamental initialization to zero!
+    NobjectsPerCluster.setZero();
 
     // Divide the sample according to the clustering done
 
