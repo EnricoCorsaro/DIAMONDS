@@ -15,7 +15,11 @@
 Ellipsoid::Ellipsoid(RefArrayXXd sampleOfParameters, const double enlargementFactor)
 : sampleOfParameters(sampleOfParameters),
   Nobjects(sampleOfParameters.cols()),
-  Ndimensions(sampleOfParameters.rows())
+  Ndimensions(sampleOfParameters.rows()),
+  engine(time(0)),
+  uniform(0.0, 1.0),
+  normal(0.0, 1.0)
+
 {
     // Resize the matrices to their proper size
 
@@ -211,6 +215,138 @@ bool Ellipsoid::overlapsWith(Ellipsoid ellipsoid)
 
     return ellipsoidsDoOverlap;
 }
+
+
+
+
+
+
+
+
+
+
+// Ellipsoid::containsPoint()
+//
+// PURPOSE:
+//      Determines if this ellipsoid contains the given point
+//
+// INPUT:
+//      pointCoordinates: coordinates of the point to verify.
+//
+// OUTPUT:
+//      'true' if the point falls within the (possibly enlarged) boundaries
+//      of this ellipsoid, 'false' otherwise.
+//
+
+bool Ellipsoid::containsPoint(const RefArrayXd pointCoordinates)
+{
+    // Construct translation matrix
+
+    MatrixXd T = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
+    
+    T.bottomLeftCorner(1,Ndimensions) = (-1.) * this->getCenterCoordinates().transpose();
+
+    // Construct ellipsoid matrix in homogeneous coordinates
+
+    MatrixXd A = MatrixXd::Zero(Ndimensions+1,Ndimensions+1);
+    A(Ndimensions,Ndimensions) = -1;
+    
+    MatrixXd C = MatrixXd::Zero(Ndimensions, Ndimensions);
+    
+    // Compute the covariance matrix
+
+    C =  this->getEigenvectors().matrix() * this->getEigenvalues().matrix().asDiagonal() 
+                                          * this->getEigenvectors().matrix().transpose(); 
+    A.topLeftCorner(Ndimensions,Ndimensions) = C.inverse();
+
+    // Translate to the ellipsoid center
+
+    MatrixXd AT = T * A * T.transpose(); 
+
+    VectorXd X(Ndimensions+1);
+    X.head(Ndimensions) = pointCoordinates.matrix();
+    X(Ndimensions) = 1;
+
+    // Check if the point belongs to this ellipsoid
+
+    bool pointBelongsToThisEllipsoid;
+
+    if (X.transpose() * AT * X <= 0)
+    {
+        pointBelongsToThisEllipsoid = true;
+    }
+    else
+    {
+        pointBelongsToThisEllipsoid = false;
+    }
+        
+    return pointBelongsToThisEllipsoid;
+}
+
+
+
+
+
+
+
+
+
+// Ellipsoid::drawPoint()
+//
+// PURPOSE: 
+//      Draw a random point inside this ellipsoid. The algorithm used is the one 
+//      described by Shaw J. R. et al. (2007; MNRAS, 378, 1365). First a point is
+//      drawn from the unit hypersphere, whose coordinates are then transformed
+//      to land into the ellipsoid.
+//
+//
+// INPUT:
+//      drawnPoint: Eigen Array that will contain the N-dimensional coordinates of the
+//                  newly drawn point.
+//
+// OUTPUT:
+//      void
+//
+
+void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
+{
+     // Set up a some random generators
+    
+    uniform_real_distribution<> uniform(0.0, 1.0);
+    normal_distribution<> normal(0.0, 1.0);
+
+    // Pick a point uniformly from a unit hyper-sphere
+    
+    do
+    {
+        for (int i = 0; i < Ndimensions; i++)
+        {
+            // Sample normally in each coordinate direction
+
+            drawnPoint(i) = normal(engine); 
+        }
+    }
+    while ((drawnPoint == 0.0).all());    // Repeat sampling if point falls in origin
+        
+    // Normalize the point so that it belongs to the unit hyper-sphere
+        
+    drawnPoint = drawnPoint / drawnPoint.matrix().norm(); 
+    
+    // Sample uniformly in the radial direction
+
+    drawnPoint = pow(uniform(engine), 1./Ndimensions) * drawnPoint; 
+    
+    // Transform sphere coordinates to ellipsoid coordinates
+    
+    MatrixXd D = this->getEigenvalues().sqrt().matrix().asDiagonal();
+    MatrixXd T = this->getEigenvectors().matrix().transpose() * D;
+
+    drawnPoint = (T * drawnPoint.matrix()) + this->getCenterCoordinates().matrix();
+}
+
+
+
+
 
 
 

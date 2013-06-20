@@ -30,13 +30,15 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, ve
   likelihood(likelihood),
   metric(metric),
   clusterer(clusterer),
-  engine(time(0)),
   printOnTheScreen(printOnTheScreen),
   Nobjects(Nobjects),
+  engine(time(0)),
+  uniform(0.0, 1.0),
   Niterations(0),
   informationGain(0.0), 
   logEvidence(-DBL_MAX),
   logMeanEvidence(-DBL_MAX)
+
 {
     int totalNdimensions = 0;
     

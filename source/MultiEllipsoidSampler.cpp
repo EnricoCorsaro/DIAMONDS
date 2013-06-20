@@ -21,8 +21,6 @@ MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector
                                              const int Nobjects, const double initialEnlargementFactor, const double shrinkingRate
                                             )
 : NestedSampler(printOnTheScreen, Nobjects, ptrPriors, likelihood, metric, clusterer),
-  uniform(0.0, 1.0),
-  normal(0.0, 1.0),
   initialEnlargementFactor(initialEnlargementFactor),
   shrinkingRate(shrinkingRate)
 {
@@ -297,7 +295,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                     {
                         // Draw one point from the chosen ellipsoid
 
-                        drawFromHyperSphere(ellipsoids[ellipsoidIndex], drawnParametersPerObject);
+                        ellipsoids[ellipsoidIndex].drawPoint(drawnParametersPerObject);
                         pointIsRejectedFromPrior = false;
                       
 
@@ -325,7 +323,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                                 {
                                     // Only for non-uniform priors
 
-                                    drawFromHyperSphere(ellipsoids[ellipsoidIndex], referenceParametersPerObject);
+                                    ellipsoids[ellipsoidIndex].drawPoint(referenceParametersPerObject);
                                     drawnAndReferenceParametersPerPrior.resize(NdimensionsPerPrior,2);
                                     referenceParametersPerPrior = referenceParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);      
                                     drawnAndReferenceParametersPerPrior.col(0) = drawnParametersPerPrior;      
@@ -372,7 +370,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                             {
                                 // Draw one point from the chosen ellipsoid
 
-                                drawFromHyperSphere(ellipsoids[ellipsoidIndex], drawnParametersPerObject);
+                                ellipsoids[ellipsoidIndex].drawPoint(drawnParametersPerObject);
                                 pointIsRejectedFromPrior = false;
                       
 
@@ -400,7 +398,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                                         {
                                             // Only for non-uniform priors
 
-                                            drawFromHyperSphere(ellipsoids[ellipsoidIndex], referenceParametersPerObject);
+                                            ellipsoids[ellipsoidIndex].drawPoint(referenceParametersPerObject);
                                             drawnAndReferenceParametersPerPrior.resize(NdimensionsPerPrior,2);
                                             referenceParametersPerPrior = referenceParametersPerObject.segment(actualNdimensions,NdimensionsPerPrior);
                                             drawnAndReferenceParametersPerPrior.col(0) = drawnParametersPerPrior;      
@@ -441,9 +439,8 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                                 // Check if point belongs to ellipsoid #2
 
                                 ellipsoidIndex2 = overlappingEllipsoidsIndices(i);
-                                overlapIsFound = pointIsInOverlap(ellipsoids[ellipsoidIndex2], drawnParametersPerObject);
-                
-                                if (overlapIsFound)
+
+                                if (ellipsoids[ellipsoidIndex2].containsPoint(drawnParametersPerObject))
                                     Noverlaps++;
                                 else
                                     continue;
@@ -481,6 +478,8 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
     while ((Nloops >= maxNdrawAttempts) && (logLikelihood <= actualLogLikelihoodConstraint));     // Restart selection of ellipsoid in case...
                                                                                                   // ...the number of attempts (Nloops) exceeds the limit
 }
+
+
 
 
 
@@ -594,170 +593,6 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfPar
 
 
 
-
-// MultiEllipsoidSampler::drawFromHyperSphere()
-//
-// PURPOSE: 
-//      Draws one point from the unit hyper-sphere and transforms
-//      its coordinatesinto those of the input ellipsoid. The method is based on the 
-//      approach described by Shaw J. R. et al. (2007; MNRAS, 378, 1365).
-//
-//
-// INPUT:
-//      ellipsoid:                Object of class Ellipsoid that contains all the information
-//                                 related to that ellipsoid.
-//      drawnParametersPerObject: Eigen Array of dimensions (Ndimensions) to contain the new 
-//                                 coordinates for the point drawn from the unit sphere 
-//                                 and transformed into coordinates of the input ellipsoid.
-//
-// OUTPUT:
-//      void
-//
-
-void MultiEllipsoidSampler::drawFromHyperSphere(Ellipsoid &ellipsoid, RefArrayXd drawnParametersPerObject)
-{
-    // Pick a point uniformly from a unit hyper-sphere
-    
-    ArrayXd zeroCoordinates = ArrayXd::Zero(Ndimensions);
-    double vectorNorm;
-
-    do
-    {
-        for (int i = 0; i < Ndimensions; i++)
-        {
-            drawnParametersPerObject(i) = normal(engine);                            // Sample normally each coordinate
-        }
-        
-        vectorNorm = metric.distance(drawnParametersPerObject,zeroCoordinates);
-    }
-    while (vectorNorm == 0);                                                // Repeat sampling if point falls in origin
-        
-    drawnParametersPerObject = drawnParametersPerObject/vectorNorm;                           // Normalize coordinates
-    drawnParametersPerObject = pow(uniform(engine),1./Ndimensions)*drawnParametersPerObject;  // Sample uniformly in radial direction
-    
-
-    // Transform sphere coordinates to ellipsoid coordinates
-    
-    MatrixXd V = ellipsoid.getEigenvectors().matrix();
-    MatrixXd D = ellipsoid.getEigenvalues().sqrt().matrix().asDiagonal();
-    MatrixXd T = V.transpose() * D;
-
-    drawnParametersPerObject = (T * drawnParametersPerObject.matrix()) + ellipsoid.getCenterCoordinates().matrix();
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-// MultiEllipsoidSampler::intersection()
-//
-// PURPOSE:
-//      Determines whether two input ellipsoids are overlapping according to
-//      the algorithm described by Alfano & Greer (2003; Journal of Guidance,
-//      Control and Dynamics, 26, 1).
-//
-// INPUT:
-//      ellipsoid1: Ellipsoid object that contains all the information related to
-//                   the first ellipsoid to be checked for intersection wtih the second ellispoid.
-//      ellipsoid2: Ellipsoid object that contains all the information related to 
-//                   the second ellipsoid to be checked for intersection with the first ellipsoid.
-//
-// OUTPUT:
-//      A boolean value specifying whether the two ellipsoids intersect (true) or not (false)
-//
-// REMARKS:
-//      Coordinates of centers have to coincide in same order of the covariance matrix dimensions.
-//      E.g. if first center coordinate is x, then first row and column in covariance matrix refer to x coordinate.
-//
-
-bool MultiEllipsoidSampler::intersection(Ellipsoid &ellipsoid1, Ellipsoid &ellipsoid2)
-{
-    // Construct translation matrix
-
-    MatrixXd T1 = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
-    MatrixXd T2 = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
-    
-    T1.bottomLeftCorner(1,Ndimensions) = (-1.0) * ellipsoid1.getCenterCoordinates().transpose();
-    T2.bottomLeftCorner(1,Ndimensions) = (-1.0) * ellipsoid2.getCenterCoordinates().transpose();
-
-
-    // Construct ellipsoid matrix in homogeneous coordinates
-
-    MatrixXd A = MatrixXd::Zero(Ndimensions+1,Ndimensions+1);
-    MatrixXd B = A;
-
-    A(Ndimensions,Ndimensions) = -1;
-    B(Ndimensions,Ndimensions) = -1;
-
-    A.topLeftCorner(Ndimensions,Ndimensions) = ellipsoid1.getCovarianceMatrix().matrix().inverse();
-    B.topLeftCorner(Ndimensions,Ndimensions) = ellipsoid2.getCovarianceMatrix().matrix().inverse();
-
-    MatrixXd AT = T1*A*T1.transpose();        // Translating to ellispoid center
-    MatrixXd BT = T2*B*T2.transpose();        // Translating to ellispoid center
-
-
-    // Compute Hyper Quadric Matrix generating from the two ellipsoids 
-    // and derive its eigenvalues decomposition
-
-    MatrixXd C = AT.inverse() * BT;
-    MatrixXcd CC(Ndimensions+1,Ndimensions+1);
-
-    CC.imag() = MatrixXd::Zero(Ndimensions+1,Ndimensions+1); 
-    CC.real() = C;
-    
-    ComplexEigenSolver<MatrixXcd> eigenSolver(CC);
-
-    if (eigenSolver.info() != Success) abort();
-    
-    MatrixXcd E = eigenSolver.eigenvalues();
-    MatrixXcd V = eigenSolver.eigenvectors();
-
-    bool intersection = false;       // Start with no intersection
-    double pointA;              // Point laying in elliposid A
-    double pointB;              // Point laying in ellipsoid B
-    
-    for (int i = 0; i < Ndimensions+1; i++)      // Loop over all eigenvectors
-    {
-        if (V(Ndimensions,i).real() == 0)      // Skip inadmissible eigenvectors
-            continue;                   
-        else if (E(i).imag() != 0)
-            {
-                V.col(i) = V.col(i).array() * (V.conjugate())(Ndimensions,i);      // Multiply eigenvector by complex conjugate of last element
-                V.col(i) = V.col(i).array() / V(Ndimensions,i).real();             // Normalize eigenvector to last component value
-                pointA = V.col(i).transpose().real() * AT * V.col(i).real();        // Evaluate point from elliposid A
-                pointB = V.col(i).transpose().real() * BT * V.col(i).real();        // Evaluate point from ellipsoid B
-
-                if ((pointA <= 0) && (pointB <= 0))     // Accept only if point belongs to both ellipsoids
-                {
-                    intersection = true;                // Exit if intersection is found
-                    break;
-                }
-            }
-    }
-
-    return intersection;
-
-}
-
-
-
-
-
-
-
-
-
-
-
-
 // MultiEllipsoidSampler::findOverlappingEllipsoids()
 //
 // PURPOSE:
@@ -787,7 +622,6 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
 
     nonOverlappingEllipsoidsIndices(0) = -1;        // Start with no non-overlapping ellipsoids found
 
-    bool overlapIsFound = false;
     bool saveFlagI = true;
     bool saveFlagJ = true;
     int countOverlap;
@@ -804,9 +638,8 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
         for (int j = i + 1; j < Nellipsoids; j++)
         {   
             saveFlagJ = true;        // Reset save index flag for j
-            overlapIsFound = intersection(ellipsoids[i], ellipsoids[j]);
 
-            if (overlapIsFound)    // If overlap occurred
+            if (ellipsoids[i].overlapsWith(ellipsoids[j]))  
             {
                 countOverlap++;
 
@@ -895,79 +728,6 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids()
     }
 
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// MultiEllipsoidSampler::pointIsInOverlap()
-//
-// PURPOSE:
-//      Determines if the input point belongs to the input enlarged ellipsoid.
-//
-// INPUT:
-//      ellipsoid: an Ellipsoid class object containing the information related
-//      to the ellipsoid we want to check.
-//      pointCoordinates: coordinates of the point to verify.
-//
-// OUTPUT:
-//      A boolean value specifying whether the point belongs to the input
-//      enlarged ellipsoid.
-//
-
-bool MultiEllipsoidSampler::pointIsInOverlap(Ellipsoid &ellipsoid, const RefArrayXd pointCoordinates)
-{
-    // Construct translation matrix
-
-    MatrixXd T = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
-    
-    T.bottomLeftCorner(1,Ndimensions) = -1.*ellipsoid.getCenterCoordinates().transpose();
-
-
-    // Construct ellipsoid matrix in homogeneous coordinates
-
-    MatrixXd A = MatrixXd::Zero(Ndimensions+1,Ndimensions+1);
-    A(Ndimensions,Ndimensions) = -1;
-    
-    MatrixXd V = ellipsoid.getEigenvectors().matrix();
-    MatrixXd C = MatrixXd::Zero(Ndimensions, Ndimensions);
-    
-    C = V * ellipsoid.getEigenvalues().matrix().asDiagonal() * V.transpose();      // Covariance matrix
-    A.topLeftCorner(Ndimensions,Ndimensions) = C.inverse();
-
-    MatrixXd AT = T*A*T.transpose();        // Translating to ellispoid center
-
-    VectorXd X(Ndimensions+1);
-    X.head(Ndimensions) = pointCoordinates.matrix();
-    X(Ndimensions) = 1;
-
-    bool overlap;
-    overlap = false;        // Start with no overlap
-
-    if (X.transpose() * AT * X <= 0)
-        overlap = true;
-        
-    return overlap;
-}
-
-
-
-
-
 
 
 

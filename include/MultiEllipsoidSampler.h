@@ -11,6 +11,7 @@
 #ifndef MULTIELLIPSOIDSAMPLER_H
 #define MULTIELLIPSOIDSAMPLER_H
 
+#include <random>
 #include <Eigen/Dense>
 #include "NestedSampler.h"
 #include "Ellipsoid.h"
@@ -39,10 +40,7 @@ class MultiEllipsoidSampler : public NestedSampler
 
     protected:
       
-        void drawFromHyperSphere(Ellipsoid &ellipsoid, RefArrayXd drawnParameters);
-        bool intersection(Ellipsoid &ellipsoid1, Ellipsoid &ellipsoid2);
         void findOverlappingEllipsoids();
-        bool pointIsInOverlap(Ellipsoid &ellipsoid, const RefArrayXd pointCoordinates);
 
 
     private:
@@ -51,13 +49,11 @@ class MultiEllipsoidSampler : public NestedSampler
         ArrayXi NobjectsPerCluster;
         ArrayXi nonOverlappingEllipsoidsIndices;
         ArrayXi overlappingEllipsoidsIndices;
-        uniform_real_distribution<> uniform;
-        normal_distribution<> normal;           
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFactor;        // Initial factor for enlargement of ellipsoids
         double shrinkingRate;                   // Prior volume shrinkage rate (between 0 and 1)
         double logRemainingWidthInPriorMass;    // log value of the total remaining prior mass at the actual nested iteration
-        
+
 };
 
 #endif

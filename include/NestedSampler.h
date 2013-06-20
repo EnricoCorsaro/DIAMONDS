@@ -10,7 +10,6 @@
 #include <iostream>
 #include <iomanip>
 #include <cfloat>
-#include <random>
 #include <ctime>
 #include <cmath>
 #include <vector>
@@ -63,13 +62,15 @@ class NestedSampler
         Likelihood &likelihood;
         Metric &metric;
         Clusterer &clusterer;
-        mt19937 engine;
         bool printOnTheScreen;
         int Ndimensions;
         int Nobjects;                           // Total number of objects
         double actualLogLikelihoodConstraint;   // Likelihood constraining value at each nested iteration
         double logTotalWidthInPriorMass;        // The remaining width in prior mass at a given nested iteration (log X_k)
 
+        mt19937 engine;
+        uniform_real_distribution<> uniform;  
+        
 
 	private:
 
@@ -93,7 +94,6 @@ class NestedSampler
         void computeKeetonEvidenceError(const bool printFlag, const double logMeanLiveEvidence);
         void printComputationalTime(const double startTime);
 
-
-}; // END class NestedSampler
+}; 
 
 #endif

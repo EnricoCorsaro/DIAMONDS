@@ -35,6 +35,8 @@ class Ellipsoid
 
         void resetEnlargementFactor(const double newEnlargementFactor);
         bool overlapsWith(Ellipsoid ellipsoid);
+        bool containsPoint(const RefArrayXd pointCoordinates);
+        void drawPoint(RefArrayXd drawnPoint);
         ArrayXd getCenterCoordinates();
         ArrayXd getEigenvalues();
         ArrayXXd getSampleOfParameters();
@@ -61,6 +63,10 @@ class Ellipsoid
     private:
 
         int Ndimensions;
+        mt19937 engine;
+        uniform_real_distribution<> uniform;
+        normal_distribution<> normal;  
+
 
 };
 
