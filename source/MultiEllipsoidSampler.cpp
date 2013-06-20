@@ -203,16 +203,8 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
             // Copy the indices of the overlapping and nonoverlapping ellipsoids into 'mergedEllipsoidsIndices'
 
             mergedEllipsoidsIndices.resize(NoverlappingEllipsoids + NnonOverlappingEllipsoids);
-
-            for (int i = 0; i < NoverlappingEllipsoids; ++i)
-            {
-                mergedEllipsoidsIndices[i] = overlappingEllipsoidsIndices[i];
-            }
-            
-            for (int i = 0; i < NnonOverlappingEllipsoids; ++i)
-            {
-                mergedEllipsoidsIndices[i+NoverlappingEllipsoids] = nonOverlappingEllipsoidsIndices[i];
-            }
+            copy(overlappingEllipsoidsIndices.begin(), overlappingEllipsoidsIndices.end(), mergedEllipsoidsIndices.begin());
+            copy(nonOverlappingEllipsoidsIndices.begin(), nonOverlappingEllipsoidsIndices.end(), mergedEllipsoidsIndices.begin()+NoverlappingEllipsoids);
 
             // Define an discrete uniform random generator
 
