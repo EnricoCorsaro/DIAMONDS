@@ -43,8 +43,8 @@ class NestedSampler
         
         void run(const double terminationFactor = 0.5, const int NiterationsBeforeClustering = 10, const int maxNdrawAttempts = 200);
 
-        virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const vector<int> &clusterIndices,
-                                        const double logWidthInPriorMass, RefArrayXXd drawnSampleOfParameters, const int maxNdrawAttempts) = 0;
+        virtual void drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
+                                        const double logWidthInPriorMass, RefArrayXXd drawnSample, const int maxNdrawAttempts) = 0;
         
         int getNiterations();
         double getLogEvidence();
@@ -90,7 +90,7 @@ class NestedSampler
         double constant2;
         double constant3;
         ArrayXd logLikelihood;                   // log-likelihood values of the actual set of live points
-        ArrayXXd nestedSampleOfParameters;       // parameters values (the free parameters of the problem) of the actual set of live points
+        ArrayXXd nestedSample;                   // parameters values (the free parameters of the problem) of the actual set of live points
 
         void computeKeetonEvidenceError(const bool printFlag, const double logMeanLiveEvidence);
         void printComputationalTime(const double startTime);

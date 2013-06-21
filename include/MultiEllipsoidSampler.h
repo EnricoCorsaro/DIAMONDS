@@ -12,6 +12,7 @@
 #define MULTIELLIPSOIDSAMPLER_H
 
 #include <random>
+#include <vector>
 #include <algorithm>
 #include <Eigen/Dense>
 #include "NestedSampler.h"
@@ -30,10 +31,10 @@ class MultiEllipsoidSampler : public NestedSampler
                               const int Nobjects, const double initialEnlargementFactor, const double shrinkingRate);
         ~MultiEllipsoidSampler();
         
-        virtual void drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const vector<int> &clusterIndices,
-                                        const double logTotalWidthInPriorMass, RefArrayXXd drawnSampleOfParameters, const int NloopMaximum); 
+        virtual void drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
+                                        const double logTotalWidthInPriorMass, RefArrayXXd drawnSample, const int NloopMaximum); 
 
-        void computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const vector<int> &clusterIndices, 
+        void computeEllipsoids(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, 
                                const double logRemainingWidthInPriorMass);
 
         vector<int> getNonOverlappingEllipsoidsIndices();

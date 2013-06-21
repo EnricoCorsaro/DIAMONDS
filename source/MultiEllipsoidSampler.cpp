@@ -67,11 +67,11 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      ellipsoid which is isolated, i.e. non-overlapping.
 //
 // INPUT:
-//      totalSampleOfParameters:  Eigen Array matrix of size (Ndimensions, Nobjects)
+//      totalSample:              Eigen Array matrix of size (Ndimensions, Nobjects)
 //      Nclusters:                Optimal number of clusters found by clustering algorithm
 //      clusterIndices:           Indices of clusters for each point of the sample
 //      logTotalWidthInPriorMass: Log Value of total prior volume from beginning to the actual nested iteration.
-//      drawnSampleOfParameters:  Eigen Array matrix of size (Ndimensions,Ndraws) to contain the
+//      drawnSample:              Eigen Array matrix of size (Ndimensions,Ndraws) to contain the
 //                                 coordinates of the drawn point to be used for the next nesting loop. 
 //                                 When used for the first time, the array contains the coordinates of the 
 //                                 worst nested object to be updated.
@@ -82,21 +82,21 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      void
 //
 
-void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const vector<int> &clusterIndices, 
-                                               const double logTotalWidthInPriorMass, RefArrayXXd drawnSampleOfParameters, const int maxNdrawAttempts)
+void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, 
+                                               const double logTotalWidthInPriorMass, RefArrayXXd drawnSample, const int maxNdrawAttempts)
 {    
-    assert(totalSampleOfParameters.cols() == clusterIndices.size());
-    assert(drawnSampleOfParameters.rows() == totalSampleOfParameters.rows());
+    assert(totalSample.cols() == clusterIndices.size());
+    assert(drawnSample.rows() == totalSample.rows());
     assert(Nclusters > 0);
 
-    int Ndraws = drawnSampleOfParameters.cols();
+    int Ndraws = drawnSample.cols();
 
 
     // Compute covariance matrices and centers for ellipsoids associated with each cluster.
     // Compute eigenvalues and eigenvectors, enlarge eigenvalues and compute their hyper volumes.
 
     logRemainingWidthInPriorMass = log(1.0 - exp(logTotalWidthInPriorMass));
-    computeEllipsoids(totalSampleOfParameters, Nclusters, clusterIndices, logRemainingWidthInPriorMass);
+    computeEllipsoids(totalSample, Nclusters, clusterIndices, logRemainingWidthInPriorMass);
     
     if (printOnTheScreen)
     {   
@@ -286,7 +286,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 
         for (int m = 0; m < Ndraws; m++)    // FOR loop over the total number of points to be drawn from one ellipsoid - Default is Ndraws = 1
         {
-            drawnParametersPerObject = drawnSampleOfParameters.col(m);
+            drawnParametersPerObject = drawnSample.col(m);
             
             if (!ellipsoidIsOverlapping)    // Isolated ellipsoid sampling
             {
@@ -477,7 +477,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
                     break;
             }
        
-            drawnSampleOfParameters.col(m) = drawnParametersPerObject;  // Update set of parameters for one object into total sample
+            drawnSample.col(m) = drawnParametersPerObject;  // Update set of parameters for one object into total sample
         } // End FOR loop
     }
     while ((Nloops >= maxNdrawAttempts) && (logLikelihood <= actualLogLikelihoodConstraint));     // Restart selection of ellipsoid in case...
@@ -504,7 +504,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 //      are stored in the private data members.
 //
 // INPUT:
-//      totalSampleOfParameters:      Eigen Array matrix of size (Ndimensions, Nobjects)
+//      totalSample:      Eigen Array matrix of size (Ndimensions, Nobjects)
 //                                     containing the total sample of points to be split into clusters.
 //      clusterIndices:               One dimensional Eigen Array containing the integer indices
 //                                     of the clusters as obtained from the clustering algorithm.
@@ -514,10 +514,10 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSampleOfPa
 //      void
 //
 
-void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfParameters, const int Nclusters, const vector<int> &clusterIndices, const double logRemainingWidthInPriorMass)
+void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, const double logRemainingWidthInPriorMass)
 {
-    assert(totalSampleOfParameters.cols() == clusterIndices.size());
-    assert(totalSampleOfParameters.cols() > Ndimensions + 1);            // At least Ndimensions + 1 points are required.
+    assert(totalSample.cols() == clusterIndices.size());
+    assert(totalSample.cols() > Ndimensions + 1);            // At least Ndimensions + 1 points are required.
  
     NobjectsPerCluster.assign(Nclusters, 0);
 
@@ -525,22 +525,22 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfPar
 
     // Find number of points (objects) per cluster
 
-    for (int i = 0; i < Nobjects; i++) 
+    for (int i = 0; i < Nobjects; i++)        // possible with count() in <algorithms>??
     {
         NobjectsPerCluster[clusterIndices[i]]++;
     }
 
-    ArrayXd oneDimensionSampleOfParameters(Nobjects);
-    ArrayXXd totalSampleOfParametersOrdered = totalSampleOfParameters;
+    ArrayXd oneDimensionSample(Nobjects);
+    ArrayXXd totalSampleOrdered = totalSample;
     vector<int> clusterIndicesCopy(clusterIndices);
 
     // Order points in each dimension according to increasing cluster indices
 
     for (int i = 0; i < Ndimensions; i++)     
     {
-        oneDimensionSampleOfParameters = totalSampleOfParameters.row(i);
-        Functions::sortElementsInt(clusterIndicesCopy, oneDimensionSampleOfParameters);
-        totalSampleOfParametersOrdered.row(i) = oneDimensionSampleOfParameters;
+        oneDimensionSample = totalSample.row(i);
+        Functions::sortElementsInt(clusterIndicesCopy, oneDimensionSample);
+        totalSampleOrdered.row(i) = oneDimensionSample;
         clusterIndicesCopy = clusterIndices;
     }
 
@@ -568,7 +568,7 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSampleOfPar
         else
         {
             clusterSample.resize(Ndimensions, NobjectsPerCluster[i]);
-            clusterSample = totalSampleOfParametersOrdered.block(0, actualNobjects, Ndimensions, NobjectsPerCluster[i]);
+            clusterSample = totalSampleOrdered.block(0, actualNobjects, Ndimensions, NobjectsPerCluster[i]);
             actualNobjects += NobjectsPerCluster[i];
 
             // Compute the enlargement factor

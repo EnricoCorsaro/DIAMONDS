@@ -103,7 +103,7 @@ NestedSampler::~NestedSampler()
 //
 // REMARKS: 
 //      Eigen Matrices are defaulted column-major. Hence the 
-//      nestedSampleOfParameters and posteriorSample are resized as 
+//      nestedSample and posteriorSample are resized as 
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
@@ -130,24 +130,24 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
     uniform_int_distribution<int> uniform(0, Nobjects-1);
 
 
-    // Set the sizes of the Eigen Arrays logLikelihood and nestedSampleOfParameters
+    // Set the sizes of the Eigen Arrays logLikelihood and nestedSample
 
     logLikelihood.resize(Nobjects);
-    nestedSampleOfParameters.resize(Ndimensions, Nobjects);
-    ArrayXXd priorSampleOfParameters;
+    nestedSample.resize(Ndimensions, Nobjects);
+    ArrayXXd priorSample;
 
 
     // Initialize all the objects of the process.
-    // nestedSampleOfParameters will then contain the sample of coordinates for all the nested objects
+    // nestedSample will then contain the sample of coordinates for all the nested objects
     // The first initialization is done by coordinates according to their corresponding prior distribution
     // This process ensures that each object is drawn uniformly from the prior PDF
 
     for (int i = 0; i < ptrPriors.size(); i++)
     {
         NdimensionsPerPrior = ptrPriors[i]->getNdimensions();
-        priorSampleOfParameters.resize(NdimensionsPerPrior, Nobjects);
-        ptrPriors[i]->draw(priorSampleOfParameters);
-        nestedSampleOfParameters.block(actualNdimensions,0,NdimensionsPerPrior,Nobjects) = priorSampleOfParameters;      
+        priorSample.resize(NdimensionsPerPrior, Nobjects);
+        ptrPriors[i]->draw(priorSample);
+        nestedSample.block(actualNdimensions,0,NdimensionsPerPrior,Nobjects) = priorSample;      
         actualNdimensions += NdimensionsPerPrior;
     }
 
@@ -158,7 +158,7 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
     
     for (int i = 0; i < Nobjects; i++)
     {
-        nestedSamplePerObject = nestedSampleOfParameters.col(i);
+        nestedSamplePerObject = nestedSample.col(i);
         logLikelihood(i) = likelihood.logValue(nestedSamplePerObject);
     }
 
@@ -214,7 +214,7 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         
         // Save the actual posterior sample and its corresponding likelihood and weights
         
-        posteriorSample.col(Niterations) = nestedSampleOfParameters.col(worst);      // save coordinates of worst nested object
+        posteriorSample.col(Niterations) = nestedSample.col(worst);      // save coordinates of worst nested object
         logLikelihoodOfPosteriorSample(Niterations) = actualLogLikelihoodConstraint; // save corresponding likelihood
         logWeightOfPosteriorSample(Niterations) = logWeight;                         // save corresponding weight...
                                                                                      // ...proportional to posterior probability density
@@ -271,14 +271,14 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         if ((Niterations % NiterationsBeforeClustering) == 0)
         {
             
-            Nclusters = clusterer.cluster(printOnTheScreen, nestedSampleOfParameters, clusterIndices);
+            Nclusters = clusterer.cluster(printOnTheScreen, nestedSample, clusterIndices);
         }
 
         // Evolve worst object with the new constraint logLikelihood > actualLogLikelihoodConstraint
         // Compute approximate sampling to find new point verifying the likelihood constraint
 
-        ArrayXXd drawnSampleOfParameters = ArrayXXd::Zero(Ndimensions, 1);
-        drawWithConstraint(nestedSampleOfParameters, Nclusters, clusterIndices, logTotalWidthInPriorMass, drawnSampleOfParameters, maxNdrawAttempts); 
+        ArrayXXd drawnSample = ArrayXXd::Zero(Ndimensions, 1);
+        drawWithConstraint(nestedSample, Nclusters, clusterIndices, logTotalWidthInPriorMass, drawnSample, maxNdrawAttempts); 
        
         // Replace worst object in favour of a copy of different survivor
         // No replacement if Nobjects == 1. Fundamental step to preserve
@@ -293,9 +293,9 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
             while (copy == worst);
         }
 
-        nestedSampleOfParameters.col(worst) = nestedSampleOfParameters.col(copy);
+        nestedSample.col(worst) = nestedSample.col(copy);
         logLikelihood(worst) = logLikelihood(copy);
-        nestedSampleOfParameters.col(worst) = drawnSampleOfParameters;     // Update new set of parameters in the overall nested sample coordinates
+        nestedSample.col(worst) = drawnSample;     // Update new set of parameters in the overall nested sample coordinates
 
 
         // Shrink prior mass interval
