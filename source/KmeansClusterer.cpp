@@ -433,7 +433,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 //      The optimal number of clusters
 //
 
-int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, vector<int> &optimalClusterIndices)
+int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, vector<int> &optimalClusterIndices, const bool sortSample)
 {
     bool convergedSuccessfully;
     unsigned int Npoints = sample.cols();
