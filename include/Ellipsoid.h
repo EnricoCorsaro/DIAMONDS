@@ -39,10 +39,10 @@ class Ellipsoid
         void drawPoint(RefArrayXd drawnPoint);
         ArrayXd getCenterCoordinates();
         ArrayXd getEigenvalues();
-        ArrayXXd getSampleOfParameters();
+        ArrayXXd getSample();
         ArrayXXd getCovarianceMatrix();
         ArrayXXd getEigenvectors();
-        int getNobjects();
+        int getSampleSize();
         double getHyperVolume();
         double getEnlargementFactor();
 
@@ -52,10 +52,10 @@ class Ellipsoid
         ArrayXd centerCoordinates;
         ArrayXd originalEigenvalues;        // non-enlarged eigenvalues
         ArrayXd enlargedEigenvalues;        // enlarged eigenvalues
-        ArrayXXd sampleOfParameters;
+        ArrayXXd sample;
         ArrayXXd covarianceMatrix;  
         ArrayXXd eigenvectors;
-        int Nobjects;
+        int sampleSize;
         double hyperVolume;
         double enlargementFactor;
 

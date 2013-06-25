@@ -7,15 +7,15 @@
 //      Class constructor.
 //
 // INPUT:
-//      sampleOfParameters: an Eigen Array matrix of size (Ndimensions, Nobjects), 
-//                          containing the coordinates of the objects inside the ellipsoid.
+//      sample:            Eigen Array of size (Ndimensions, sampleSize), 
+//                          containing the coordinates of the points inside the ellipsoid.
 //      enlargementFactor: TODO
 //
 
-Ellipsoid::Ellipsoid(RefArrayXXd sampleOfParameters, const double enlargementFactor)
-: sampleOfParameters(sampleOfParameters),
-  Nobjects(sampleOfParameters.cols()),
-  Ndimensions(sampleOfParameters.rows()),
+Ellipsoid::Ellipsoid(RefArrayXXd sample, const double enlargementFactor)
+: sample(sample),
+  sampleSize(sample.cols()),
+  Ndimensions(sample.rows()),
   engine(time(0)),
   uniform(0.0, 1.0),
   normal(0.0, 1.0)
@@ -31,7 +31,7 @@ Ellipsoid::Ellipsoid(RefArrayXXd sampleOfParameters, const double enlargementFac
 
     // Compute the covariance matrix of the sample of points
 
-    Functions::clusterCovariance(sampleOfParameters, covarianceMatrix, centerCoordinates);
+    Functions::clusterCovariance(sample, covarianceMatrix, centerCoordinates);
 
     // Compute the eigenvectors and eigenvalues of this covariance matrix
 
@@ -147,7 +147,7 @@ bool Ellipsoid::overlapsWith(Ellipsoid ellipsoid)
     MatrixXd T1 = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
     MatrixXd T2 = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
     
-    T1.bottomLeftCorner(1,Ndimensions) = (-1.0) * this->getCenterCoordinates().transpose();
+    T1.bottomLeftCorner(1,Ndimensions) = (-1.0) * centerCoordinates.transpose();
     T2.bottomLeftCorner(1,Ndimensions) = (-1.0) * ellipsoid.getCenterCoordinates().transpose();
 
 
@@ -159,7 +159,7 @@ bool Ellipsoid::overlapsWith(Ellipsoid ellipsoid)
     A(Ndimensions,Ndimensions) = -1;
     B(Ndimensions,Ndimensions) = -1;
 
-    A.topLeftCorner(Ndimensions,Ndimensions) = this->getCovarianceMatrix().matrix().inverse();
+    A.topLeftCorner(Ndimensions,Ndimensions) = covarianceMatrix.matrix().inverse();
     B.topLeftCorner(Ndimensions,Ndimensions) = ellipsoid.getCovarianceMatrix().matrix().inverse();
 
     MatrixXd AT = T1*A*T1.transpose();        // Translating to ellipsoid center
@@ -244,7 +244,7 @@ bool Ellipsoid::containsPoint(const RefArrayXd pointCoordinates)
 
     MatrixXd T = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
     
-    T.bottomLeftCorner(1,Ndimensions) = (-1.) * this->getCenterCoordinates().transpose();
+    T.bottomLeftCorner(1,Ndimensions) = (-1.) * centerCoordinates.transpose();
 
     // Construct ellipsoid matrix in homogeneous coordinates
 
@@ -255,8 +255,8 @@ bool Ellipsoid::containsPoint(const RefArrayXd pointCoordinates)
     
     // Compute the covariance matrix
 
-    C =  this->getEigenvectors().matrix() * this->getEigenvalues().matrix().asDiagonal() 
-                                          * this->getEigenvectors().matrix().transpose(); 
+    C =  eigenvectors.matrix() * enlargedEigenvalues.matrix().asDiagonal() 
+                               * eigenvectors.matrix().transpose(); 
     A.topLeftCorner(Ndimensions,Ndimensions) = C.inverse();
 
     // Translate to the ellipsoid center
@@ -338,10 +338,10 @@ void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
     
     // Transform sphere coordinates to ellipsoid coordinates
     
-    MatrixXd D = this->getEigenvalues().sqrt().matrix().asDiagonal();
-    MatrixXd T = this->getEigenvectors().matrix().transpose() * D;
+    MatrixXd D = enlargedEigenvalues.sqrt().matrix().asDiagonal();
+    MatrixXd T = eigenvectors.matrix().transpose() * D;
 
-    drawnPoint = (T * drawnPoint.matrix()) + this->getCenterCoordinates().matrix();
+    drawnPoint = (T * drawnPoint.matrix()) + centerCoordinates.matrix();
 }
 
 
@@ -415,20 +415,20 @@ ArrayXd Ellipsoid::getEigenvalues()
 
 
 
-// Ellipsoid::getSampleOfParameters()
+// Ellipsoid::getSampleOf()
 //
 // PURPOSE: 
-//      Gets the protected data member sampleOfParameters.      
+//      Gets the protected data member sample.      
 //
 // OUTPUT:
-//      An Eigen Array matrix of dimensions (Ndimensions, Nobjects) 
+//      An Eigen Array matrix of dimensions (Ndimensions, sampleSize) 
 //      containing all the coordinates of the objects contained in the
 //      ellipsoid.
 //
 
-ArrayXXd Ellipsoid::getSampleOfParameters()
+ArrayXXd Ellipsoid::getSample()
 {
-    return sampleOfParameters;
+    return sample;
 }
 
 
@@ -499,19 +499,18 @@ ArrayXXd Ellipsoid::getEigenvectors()
 
 
 
-// Ellipsoid::getNobjects()
+// Ellipsoid::getSampleSize()
 //
 // PURPOSE: 
-//      Gets the protected data member Nobjects.      
+//      Gets the number of points of the sample inside the ellipsoid
 //
 // OUTPUT:
-//      An integer containing the number of points (objects)
-//      inside the ellipsoid.
+//      An integer 
 //
 
-int Ellipsoid::getNobjects()
+int Ellipsoid::getSampleSize()
 {
-    return Nobjects;
+    return sampleSize;
 }
 
 
