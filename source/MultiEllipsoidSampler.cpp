@@ -82,8 +82,9 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      void
 //
 
-void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, 
-                                               const double logTotalWidthInPriorMass, RefArrayXXd drawnSample, const int maxNdrawAttempts)
+void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
+                                               const vector<int> &clusterSizes, const double logTotalWidthInPriorMass, 
+                                               RefArrayXXd drawnSample, const int maxNdrawAttempts)
 {    
     assert(totalSample.cols() == clusterIndices.size());
     assert(drawnSample.rows() == totalSample.rows());
@@ -96,7 +97,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
     // Compute eigenvalues and eigenvectors, enlarge eigenvalues and compute their hyper volumes.
 
     logRemainingWidthInPriorMass = log(1.0 - exp(logTotalWidthInPriorMass));
-    computeEllipsoids(totalSample, Nclusters, clusterIndices, logRemainingWidthInPriorMass);
+    computeEllipsoids(totalSample, Nclusters, clusterIndices, clusterSizes, logRemainingWidthInPriorMass);
     
     if (printOnTheScreen)
     {   
@@ -514,22 +515,12 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
 //      void
 //
 
-void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, const double logRemainingWidthInPriorMass)
+void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, 
+                                              const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass)
 {
     assert(totalSample.cols() == clusterIndices.size());
     assert(totalSample.cols() > Ndimensions + 1);            // At least Ndimensions + 1 points are required.
  
-    NobjectsPerCluster.assign(Nclusters, 0);
-
-    // Divide the sample according to the clustering done
-
-    // Find number of points (objects) per cluster
-
-    for (int i = 0; i < Nobjects; i++)        // possible with count() in <algorithms>??
-    {
-        NobjectsPerCluster[clusterIndices[i]]++;
-    }
-
     ArrayXd oneDimensionSample(Nobjects);
     ArrayXXd totalSampleOrdered = totalSample;
     vector<int> clusterIndicesCopy(clusterIndices);
@@ -560,21 +551,21 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSample, con
     {   
         // Skip cluster if number of points is not large enough
 
-        if (NobjectsPerCluster[i] <= Ndimensions + 1) 
+        if (clusterSizes[i] <= Ndimensions + 1) 
         {
-            actualNobjects += NobjectsPerCluster[i];
+            actualNobjects += clusterSizes[i];
             continue;
         }
         else
         {
-            clusterSample.resize(Ndimensions, NobjectsPerCluster[i]);
-            clusterSample = totalSampleOrdered.block(0, actualNobjects, Ndimensions, NobjectsPerCluster[i]);
-            actualNobjects += NobjectsPerCluster[i];
+            clusterSample.resize(Ndimensions, clusterSizes[i]);
+            clusterSample = totalSampleOrdered.block(0, actualNobjects, Ndimensions, clusterSizes[i]);
+            actualNobjects += clusterSizes[i];
 
             // Compute the enlargement factor
 
             logEnlargementFactor = log(initialEnlargementFactor) + shrinkingRate * logRemainingWidthInPriorMass 
-                                                                 + 0.5 * log(Nobjects/NobjectsPerCluster[i]);
+                                                                 + 0.5 * log(Nobjects/clusterSizes[i]);
             enlargementFactor = exp(logEnlargementFactor);
 
             // Insert ellipsoid in our vector

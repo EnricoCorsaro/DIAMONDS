@@ -423,17 +423,19 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 //      to determine the optimal number of clusters that can be fitted to the data.
 //
 // INPUT:
-//      printOnTheScreen: a boolean value specifying whether the BIC values and corresponding number of clusters 
-//                        are to be printed on the screen while the process is running.
 //      sample(Ndimensions, Npoints): sample of N-dimensional points
 //      optimalClusterIndices(Npoints): for each point the index of the cluster it belongs to. This index
 //                                      runs from 0 to Nclusters-1.
+//      optimalClusterSizes(Nclusters): for each of the clusters, this vector contains the number of points
+//      printOnTheScreen: a boolean value specifying whether the BIC values and corresponding number of clusters 
+//                        are to be printed on the screen while the process is running.
 // 
 // OUTPUT:
 //      The optimal number of clusters
 //
 
-int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, vector<int> &optimalClusterIndices, const bool sortSample)
+int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices, 
+                             vector<int> &optimalClusterSizes, const bool printOnTheScreen)
 {
     bool convergedSuccessfully;
     unsigned int Npoints = sample.cols();
@@ -443,9 +445,9 @@ int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, ve
     double BICvalue; 
     double sumOfDistancesToClosestCenter;
     double bestSumOfDistancesToClosestCenter = DBL_MAX;
-    vector<int> clusterIndices(Npoints);            // for each point the index of the cluster to ...
-    vector<int> bestClusterIndices(Npoints);        // ... which it belongs
-    ArrayXd clusterSizes;
+    vector<int> clusterIndices(Npoints);                    // For each point the index of the cluster to ...
+    vector<int> bestClusterIndices(Npoints);                // ... which it belongs
+    ArrayXd clusterSizes;                                   // Not vector<int> because will be used in Eigen array expressions
     ArrayXd bestClusterSizes;
     ArrayXXd centers;
     ArrayXXd bestCenters;
@@ -515,6 +517,7 @@ int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, ve
                         
             if (BICvalue < bestBICvalue)
             {
+                // We found a cluster combination that is better than anything found before. Save it.
                 // In what follows 'best' refers to the best cluster configuration given a specific
                 // number of clusters. 'optimal' refers to the optimal configuration over all possible
                 // values for the number of clusters.
@@ -522,6 +525,11 @@ int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, ve
                 bestBICvalue = BICvalue;
                 optimalNclusters = Nclusters;
                 optimalClusterIndices = bestClusterIndices;
+                optimalClusterSizes.resize(Nclusters);
+                for (int n = 0; n < Nclusters; ++n)
+                {
+                    optimalClusterSizes[n] = bestClusterSizes(n);
+                }
             }
         }
         else
@@ -531,6 +539,11 @@ int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, ve
                          
             optimalNclusters = Nclusters;
             optimalClusterIndices = bestClusterIndices;
+            optimalClusterSizes.resize(Nclusters);
+            for (int n = 0; n < Nclusters; ++n)
+            {
+                optimalClusterSizes[n] = bestClusterSizes(n);
+            }
         }
         
           
@@ -541,6 +554,10 @@ int KmeansClusterer::cluster(const bool printOnTheScreen, RefArrayXXd sample, ve
     if (printOnTheScreen)
     {
         cerr << "Optimal Nclusters: " << optimalNclusters << endl;
+        for (int n = 0; n < optimalNclusters; ++n)
+        {
+            cerr << "Size of cluster #" << n << ": " << optimalClusterSizes[n] << endl;
+        }
         cerr << endl;
     }
 

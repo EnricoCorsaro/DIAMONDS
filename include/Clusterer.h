@@ -19,7 +19,8 @@ class Clusterer
         Clusterer(Metric &metric);
         ~Clusterer(){};
     
-        virtual int cluster(const bool printOnTheScreen, RefArrayXXd sample, vector<int> &clusterIndices, const bool sortSample=false) = 0;
+        virtual int cluster(RefArrayXXd sample, vector<int> &clusterIndices, vector<int> &clusterSizes, 
+        	                const bool printOnTheScreen) = 0;
 
 
     protected:

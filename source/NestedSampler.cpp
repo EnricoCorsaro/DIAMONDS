@@ -173,7 +173,7 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
 
     int Nclusters;
     vector<int> clusterIndices(Nobjects);
-
+    vector<int> clusterSizes;
 
     // Nested sampling loop
 
@@ -271,14 +271,14 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         if ((Niterations % NiterationsBeforeClustering) == 0)
         {
             
-            Nclusters = clusterer.cluster(printOnTheScreen, nestedSample, clusterIndices);
+            Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes, printOnTheScreen);
         }
 
         // Evolve worst object with the new constraint logLikelihood > actualLogLikelihoodConstraint
         // Compute approximate sampling to find new point verifying the likelihood constraint
 
         ArrayXXd drawnSample = ArrayXXd::Zero(Ndimensions, 1);
-        drawWithConstraint(nestedSample, Nclusters, clusterIndices, logTotalWidthInPriorMass, drawnSample, maxNdrawAttempts); 
+        drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, logTotalWidthInPriorMass, drawnSample, maxNdrawAttempts); 
        
         // Replace worst object in favour of a copy of different survivor
         // No replacement if Nobjects == 1. Fundamental step to preserve

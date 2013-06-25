@@ -44,7 +44,8 @@ class NestedSampler
         void run(const double terminationFactor = 0.5, const int NiterationsBeforeClustering = 10, const int maxNdrawAttempts = 200);
 
         virtual void drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
-                                        const double logWidthInPriorMass, RefArrayXXd drawnSample, const int maxNdrawAttempts) = 0;
+                                        const vector<int> &clusterSizes, const double logWidthInPriorMass, RefArrayXXd drawnSample, 
+                                        const int maxNdrawAttempts) = 0;
         
         int getNiterations();
         double getLogEvidence();
