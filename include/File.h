@@ -34,7 +34,7 @@ namespace File
     void twoArrayXdToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, string separator = "  ", string terminator = "\n");
     void arrayXdToFile(ofstream &outputFile, ArrayXd array, string terminator = "\n");
     void arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fileExtension = ".txt", string terminator = "\n");
-    void snifFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char separator = ' ', char commentChar = '#');
+    void sniffFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char separator = ' ', char commentChar = '#');
 
 } // END namespace File
 

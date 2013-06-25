@@ -347,7 +347,7 @@ void File::arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fil
 
 
 
-// File::snifFile()
+// File::sniffFile()
 //
 // PURPOSE: 
 //      Checks a file and derives the number of rows and columns
@@ -366,7 +366,7 @@ void File::arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fil
 //      - the stream is not closed afterwards, but it is rewinded.
 //
 
-void File::snifFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char separator, char commentChar)
+void File::sniffFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char separator, char commentChar)
 {
     string line;
     int iRow = 0;
