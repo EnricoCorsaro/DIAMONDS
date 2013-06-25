@@ -40,7 +40,7 @@ class MultiEllipsoidSampler : public NestedSampler
 
         vector<int> getNonOverlappingEllipsoidsIndices();
         vector<int> getOverlappingEllipsoidsIndices();
-        vector<Ellipsoid> getEllipsoidsVector();
+        vector<Ellipsoid> getEllipsoids();
    
 
     protected:

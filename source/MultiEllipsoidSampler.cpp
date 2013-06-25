@@ -783,7 +783,7 @@ vector<int> MultiEllipsoidSampler::getOverlappingEllipsoidsIndices()
 
 
 
-// MultiEllipsoidSampler::getEllipsoidsVector()
+// MultiEllipsoidSampler::getEllipsoids()
 //
 // PURPOSE:
 //      Gets private data member ellipsoids.
@@ -793,7 +793,7 @@ vector<int> MultiEllipsoidSampler::getOverlappingEllipsoidsIndices()
 //      computed during the sampling process.
 //
 
-vector<Ellipsoid> MultiEllipsoidSampler::getEllipsoidsVector()
+vector<Ellipsoid> MultiEllipsoidSampler::getEllipsoids()
 {
     return ellipsoids;
 }
