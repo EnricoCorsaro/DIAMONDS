@@ -1,5 +1,5 @@
 // Compile with:
-// clang++ -o demoKmeansClusterer demoKmeansClusterer.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++0x
+// clang++ -o demoKmeansClusterer demoKmeansClusterer.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
 //
 
 #include <cstdlib>
