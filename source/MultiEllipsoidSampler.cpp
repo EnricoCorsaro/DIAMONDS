@@ -93,12 +93,14 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
     int Ndraws = drawnSample.cols();
 
 
-    // Compute covariance matrices and centers for ellipsoids associated with each cluster.
-    // Compute eigenvalues and eigenvectors, enlarge eigenvalues and compute their hyper volumes.
+    // Compute the ellipsoids corresponding to the clusters found by the clustering algorithm.
+    // This involves computing the barycenter, covariance matrix, eigenvalues and eigenvectors
+    // for each ellipsoid/cluster.
 
     logRemainingWidthInPriorMass = log(1.0 - exp(logTotalWidthInPriorMass));
     computeEllipsoids(totalSample, Nclusters, clusterIndices, clusterSizes, logRemainingWidthInPriorMass);
     
+
     if (printOnTheScreen)
     {   
         cerr << "=========================================" << endl;
@@ -112,7 +114,6 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
     
     findOverlappingEllipsoids();
     
-
     // Define some variables to be used in the sampling process
 
     bool someEllipsoidsOverlap = false;         // True if overlapping ellipsoids exist
@@ -500,52 +501,38 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
 //
 // PURPOSE:
 //      Computes covariance matrices and center coordinates of all the ellipsoids
-//      associated to each cluster of the sample. The egeivalues decomposition
+//      associated to each cluster of the sample. The eigenvalue decomposition
 //      is also done and eigenvalues are enlarged afterwards. All the results
 //      are stored in the private data members.
 //
 // INPUT:
-//      totalSample:      Eigen Array matrix of size (Ndimensions, Nobjects)
-//                                     containing the total sample of points to be split into clusters.
-//      clusterIndices:               One dimensional Eigen Array containing the integer indices
-//                                     of the clusters as obtained from the clustering algorithm.
-//      logRemainingWidthInPriorMass: Log Value of the remaining prior volume at the actual nested iteration.
+//      sample(Ndimensions, Npoints):       Complete sample (spread over all clusters) of points
+//      clusterIndices(Npoints):            For each point, the integer index of the cluster to which it belongs
+//      logRemainingWidthInPriorMass:       Log Value of the remaining prior volume at the actual nested iteration.
 //
 // OUTPUT:
 //      void
 //
 
-void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, 
+void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices, 
                                               const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass)
 {
-    assert(totalSample.cols() == clusterIndices.size());
-    assert(totalSample.cols() > Ndimensions + 1);            // At least Ndimensions + 1 points are required.
+    assert(sample.cols() == clusterIndices.size());
+    assert(sample.cols() > Ndimensions + 1);            // At least Ndimensions + 1 points are required.
  
-    ArrayXd oneDimensionSample(Nobjects);
-    ArrayXXd totalSampleOrdered = totalSample;
-    vector<int> clusterIndicesCopy(clusterIndices);
+    // Compute "sorted indices" such that clusterIndices[sortedindices[k]] <= clusterIndices[sortedIndices[k+1]]
 
-    // Order points in each dimension according to increasing cluster indices
+    vector<int> sortedIndices = Functions::argsort(clusterIndices);
 
-    for (int i = 0; i < Ndimensions; i++)     
-    {
-        oneDimensionSample = totalSample.row(i);
-        Functions::sortElementsInt(clusterIndicesCopy, oneDimensionSample);
-        totalSampleOrdered.row(i) = oneDimensionSample;
-        clusterIndicesCopy = clusterIndices;
-    }
+    // Build a vector of ellipsoids, one for each cluster found. Only take into account the clusters
+    // that are sufficiently large (# of points >= Ndimensions+1).
 
-
-    // Build vector of ellipsoids objects for all the clusters found in the total sample having 
-    // a number of points not lower than Ndimensions + 1.
-    // In each object, covariance matrix, center coordinates, eigenvalues and eigenvectoes are computed,
-    // according to the corresponding enlargement factor.
     
-    ArrayXXd clusterSample;
-    int actualNobjects = 0;
-    double logEnlargementFactor;
-    double enlargementFactor;
-    Nellipsoids = 0;                    // The total number of ellipsoids computed
+    ArrayXXd sampleOfOneCluster;        // Sample of points in one particular cluster
+    int beginIndex = 0;                 // Indices of 1 cluster are in sortedIndex[beginIndex ... beginIndex + clusterSize[n]]
+    double enlargementFactor;           // Enlargement factor for an ellipsoid, depending on the cluster size
+
+    ellipsoids.clear();
 
     for (int i = 0; i < Nclusters; i++)
     {   
@@ -553,27 +540,36 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd totalSample, con
 
         if (clusterSizes[i] <= Ndimensions + 1) 
         {
-            actualNobjects += clusterSizes[i];
+            beginIndex += clusterSizes[i];
             continue;
         }
         else
         {
-            clusterSample.resize(Ndimensions, clusterSizes[i]);
-            clusterSample = totalSampleOrdered.block(0, actualNobjects, Ndimensions, clusterSizes[i]);
-            actualNobjects += clusterSizes[i];
+            // Copy those points that belong to the current cluster in a separate Array
+            // This is because ellipsoids needs a contiguous arrary of points.
+
+            sampleOfOneCluster.resize(Ndimensions, clusterSizes[i]);
+            for (int n = 0; n < clusterSizes[i]; ++n)
+            {
+                sampleOfOneCluster.col(n) = sample.col(sortedIndices[beginIndex+n]);
+            }
+
+            // Move the beginIndex up to the next cluster
+
+            beginIndex += clusterSizes[i];
 
             // Compute the enlargement factor
 
-            logEnlargementFactor = log(initialEnlargementFactor) + shrinkingRate * logRemainingWidthInPriorMass 
-                                                                 + 0.5 * log(Nobjects/clusterSizes[i]);
-            enlargementFactor = exp(logEnlargementFactor);
+            enlargementFactor = exp( log(initialEnlargementFactor) + shrinkingRate * logRemainingWidthInPriorMass 
+                                                                   + 0.5 * log(static_cast<double>(Nobjects) / clusterSizes[i]) );
 
-            // Insert ellipsoid in our vector
+            // Add ellipsoid at the end of our vector
 
-            ellipsoids.insert(ellipsoids.end(), Ellipsoid(clusterSample, enlargementFactor));
-            Nellipsoids++;
+            ellipsoids.push_back(Ellipsoid(sampleOfOneCluster, enlargementFactor));
         }
     }
+
+    Nellipsoids = ellipsoids.size();
 }
 
 

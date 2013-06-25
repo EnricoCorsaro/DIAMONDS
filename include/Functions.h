@@ -18,6 +18,7 @@
 #include <vector>
 #include <iostream>
 #include <cstdlib>
+#include <algorithm>
 #include <Eigen/Dense>
 #include "Metric.h"
 
@@ -72,6 +73,54 @@ namespace Functions
     void sortElementsInt(vector<int> &array1, RefArrayXd array2);    // Idem
 
 
+    // Utility functions
+
+    template <typename Type>
+    vector<int> argsort(const vector<Type> &myVector);
+
+
 } // END namespace Functions
+
+
+
+
+
+// Functions::argsort()
+//
+// PURPOSE: 
+//      Mimicks Numpy's argsort() function. Given a vector of any type, it returns a
+//      vector of integer indices such that
+//        myVector[indices[0]] <= myVector[indices[1]] <= ... <= myVector[indices[N-1]]
+//
+// INPUT:
+//      myVector[0..N-1]: vector which you want to argsort
+//
+// OUTPUT:
+//      indices[0-N-1]: vector with integer indices
+//
+//
+// REMARKS:
+//      Because of the template, this function needs to be in the header file
+// 
+
+template <typename Type>
+vector<int> Functions::argsort(const vector<Type> &myVector)
+{
+    vector<int> indices(myVector.size());
+
+    // Generate the indices from 0 to N-1
+
+    iota(begin(indices), end(indices), 0);
+
+    // Use the sort() function of the STL, but with a lambda function
+    // that compares the elements of myVector
+
+    sort(begin(indices), end(indices), [&myVector] (int i, int j) {return myVector[i] < myVector[j];} );
+
+    return indices;
+}
+
+
+
 
 #endif
