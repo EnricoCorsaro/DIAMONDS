@@ -546,7 +546,7 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
         else
         {
             // Copy those points that belong to the current cluster in a separate Array
-            // This is because ellipsoids needs a contiguous arrary of points.
+            // This is because Ellipsoid needs a contiguous arrary of points.
 
             sampleOfOneCluster.resize(Ndimensions, clusterSizes[i]);
             for (int n = 0; n < clusterSizes[i]; ++n)
