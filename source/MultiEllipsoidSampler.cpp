@@ -524,15 +524,16 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
 
     vector<int> sortedIndices = Functions::argsort(clusterIndices);
 
-    // Build a vector of ellipsoids, one for each cluster found. Only take into account the clusters
-    // that are sufficiently large (# of points >= Ndimensions+1).
+    // beginIndex will take values such that the indices for 1 particular cluster will be in 
+    // sortedIndex[beginIndex ... beginIndex + clusterSize[n]]      
 
-    
-    ArrayXXd sampleOfOneCluster;        // Sample of points in one particular cluster
-    int beginIndex = 0;                 // Indices of 1 cluster are in sortedIndex[beginIndex ... beginIndex + clusterSize[n]]
-    double enlargementFactor;           // Enlargement factor for an ellipsoid, depending on the cluster size
+    int beginIndex = 0;
+
+    // Clear whatever was in the ellipsoids collection
 
     ellipsoids.clear();
+
+    // Create an Ellipsoid for each cluster (provided it's large enough)
 
     for (int i = 0; i < Nclusters; i++)
     {   
@@ -540,15 +541,23 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
 
         if (clusterSizes[i] <= Ndimensions + 1) 
         {
+            // Move the beginIndex up to the next cluster
+
             beginIndex += clusterSizes[i];
+            
+            // Continue with the next cluster
+
             continue;
         }
         else
         {
-            // Copy those points that belong to the current cluster in a separate Array
-            // This is because Ellipsoid needs a contiguous arrary of points.
+            // The cluster is indeed large enough to compute an Ellipsoid.
 
-            sampleOfOneCluster.resize(Ndimensions, clusterSizes[i]);
+            // Copy those points that belong to the current cluster in a separate Array
+            // This is because Ellipsoid needs a contiguous array of points.
+
+            ArrayXXd sampleOfOneCluster(Ndimensions, clusterSizes[i]);
+
             for (int n = 0; n < clusterSizes[i]; ++n)
             {
                 sampleOfOneCluster.col(n) = sample.col(sortedIndices[beginIndex+n]);
@@ -560,8 +569,8 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
 
             // Compute the enlargement factor
 
-            enlargementFactor = exp( log(initialEnlargementFactor) + shrinkingRate * logRemainingWidthInPriorMass 
-                                                                   + 0.5 * log(static_cast<double>(Nobjects) / clusterSizes[i]) );
+            double enlargementFactor = exp( log(initialEnlargementFactor) + shrinkingRate * logRemainingWidthInPriorMass 
+                                                                          + 0.5 * log(static_cast<double>(Nobjects) / clusterSizes[i]) );
 
             // Add ellipsoid at the end of our vector
 
