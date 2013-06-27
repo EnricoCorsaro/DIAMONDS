@@ -1,0 +1,9 @@
+TODO
+----
+
+- likelihoodConstraint should be an argument of NestedSampler.drawWithConstraint() rather than a class variable.
+
+- printToScreen should (everywhere) be replaced with a proper Logger functionality
+
+- Header file inclusion should be kept to a minimum, so that the whole world is not recompiled when one of them changes.
+
