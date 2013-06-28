@@ -1,5 +1,5 @@
 //
-// Compile with: clang++ -o demoMultiple2DGaussians demoMultiple2DGaussians.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
+// Compile with: clang++ -o demoFive2DGaussians demoFive2DGaussians.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
 // 
 
 #include <cstdlib>
@@ -17,7 +17,7 @@
 #include "Results.h"
 #include "Ellipsoid.h"
 #include "LorentzianModel.h"
-#include "demoMultiple2DGaussians.h"
+#include "demoFive2DGaussians.h"
 
 
 
@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
-    parametersMinima <<  0.0, 10.0;         // Centroid x direction, Centroid y direction
-    parametersMaxima << 20.0, 30.0;
+    parametersMinima << -0.5, -0.5;         // Centroid x direction, Centroid y direction
+    parametersMaxima << +0.5, +0.5;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriors[0] = &uniformPrior;
     
@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     EuclideanMetric myMetric;
     int minNclusters = 1;
     int maxNclusters = 5;
-    int Ntrials = 10;
+    int Ntrials = 1000;
     double relTolerance = 0.01;
 
     KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
@@ -72,10 +72,10 @@ int main(int argc, char *argv[])
     
     bool printOnTheScreen = true;               // Print results on the screen
     int Nobjects = 300;                         // TODO
-    int maxNdrawAttempts = 5000;                // TODO
+    int maxNdrawAttempts = 100;                // TODO
     int NiterationsBeforeClustering = 10;       // Number of nesting iterations before executing clustering algorithm again
     double initialEnlargementFactor = 2.5;      // TODO
-    double shrinkingRate = 0.1;                 // Exponent for remaining prior mass in ellipsoid enlargement factor
+    double shrinkingRate = 0.6;                 // Exponent for remaining prior mass in ellipsoid enlargement factor
     double terminationFactor = 0.01;            // Termination factor for nesting loop
 
 
