@@ -310,10 +310,6 @@ bool Ellipsoid::containsPoint(const RefArrayXd pointCoordinates)
 
 void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
 {
-     // Set up a some random generators
-    
-    uniform_real_distribution<> uniform(0.0, 1.0);
-    normal_distribution<> normal(0.0, 1.0);
 
     // Pick a point uniformly from a unit hyper-sphere
     
