@@ -13,6 +13,7 @@
 
 #include <random>
 #include <vector>
+#include <unordered_set>
 #include <algorithm>
 #include <Eigen/Dense>
 #include "NestedSampler.h"
@@ -30,29 +31,28 @@ class MultiEllipsoidSampler : public NestedSampler
                               Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
                               const int Nobjects, const double initialEnlargementFactor, const double shrinkingRate);
         ~MultiEllipsoidSampler();
-        
-        virtual void drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
+
+        virtual void drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, const double logTotalWidthInPriorMass, 
-                                        RefArrayXXd drawnSample, const int maxNdrawAttempts); 
+                                        RefArrayXd drawnPoint, double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts); 
 
         void computeEllipsoids(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, 
                                const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass);
 
-        vector<int> getNonOverlappingEllipsoidsIndices();
-        vector<int> getOverlappingEllipsoidsIndices();
+        void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
+
         vector<Ellipsoid> getEllipsoids();
    
 
     protected:
       
         void findOverlappingEllipsoids();
+        void NEWfindOverlappingEllipsoids();
 
 
     private:
 
         vector<Ellipsoid> ellipsoids;
-        vector<int> nonOverlappingEllipsoidsIndices;
-        vector<int> overlappingEllipsoidsIndices;
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFactor;        // Initial factor for enlargement of ellipsoids
         double shrinkingRate;                   // Prior volume shrinkage rate (between 0 and 1)
