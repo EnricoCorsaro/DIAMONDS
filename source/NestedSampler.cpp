@@ -46,21 +46,19 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, ve
 
     clock_t clockticks = clock();
     engine.seed(clockticks);
+
+    // The number of dimensions of the parameter space is the sum
+    // of the dimensions covered by each of the priors
+
+    Ndimensions = 0;
     
     for (int i = 0; i < ptrPriors.size(); i++)
     {
         // Get the number of dimensions from each type of prior
 
-        totalNdimensions = ptrPriors[i]->getNdimensions(); 
+        Ndimensions += ptrPriors[i]->getNdimensions(); 
     }
-
-    Ndimensions = totalNdimensions;
-    constant1 = 1.0/(Nobjects + 1);
-    constant2 = constant1*Nobjects;
-    constant3 = 1.0/((Nobjects + 2)*constant1);
-
-} // END NestedSampler::NestedSampler()
-
+} 
 
 
 
@@ -112,141 +110,140 @@ NestedSampler::~NestedSampler()
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(const double terminationFactor, const int NiterationsBeforeClustering, const int maxNdrawAttempts)
+void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int NiterationsBeforeClustering, const int maxNdrawAttempts)
 {
-    int copy = 0;
-    int worst;
     int startTime = time(0);
-    int NdimensionsPerPrior;               // Number of dimensions having same type of prior
-    int actualNdimensions = 0;
-    double logWidthInPriorMass;
-    double logEvidenceNew;
-    double logWeight = 0.0;
-    double logMeanEvidenceNew;
     double logMeanLiveEvidence;
-    double logTotalLikelihoodOfLivePoints = -DBL_MAX;
-    double actualTerminationFactor;
+    double ratioOfLiveToTotalEvidence;
 
 
     // Set up the random number generator. It generates integers random numbers
-    // between 0 and Nobjects-1, inclusive. The engine's seed is based on the
-    // current time, and a Marsenne Twister pesudo-random generator is used.
+    // between 0 and Nobjects-1, inclusive.
 
-    uniform_int_distribution<int> uniform(0, Nobjects-1);
+    uniform_int_distribution<int> discreteUniform(0, Nobjects-1);
 
 
-    // Set the sizes of the Eigen Arrays logLikelihood and nestedSample
+    // Draw the initial sample from the prior PDF. Different coordinates of a point
+    // can have different priors, so these have to be sampled individually.
 
-    logLikelihood.resize(Nobjects);
     nestedSample.resize(Ndimensions, Nobjects);
-    ArrayXXd priorSample;
-
-
-    // Initialize all the objects of the process.
-    // nestedSample will then contain the sample of coordinates for all the nested objects
-    // The first initialization is done by coordinates according to their corresponding prior distribution
-    // This process ensures that each object is drawn uniformly from the prior PDF
+    int beginIndex = 0;
 
     for (int i = 0; i < ptrPriors.size(); i++)
     {
-        NdimensionsPerPrior = ptrPriors[i]->getNdimensions();
-        priorSample.resize(NdimensionsPerPrior, Nobjects);
+        // Some priors cover one particalar coordinate, others may cover two or more coordinates
+        // Find out how many dimensions the current prior covers.
+
+        const int NdimensionsOfCurrentPrior = ptrPriors[i]->getNdimensions();
+        
+        // Draw the subset of coordinates randomly from the current prior
+
+        ArrayXXd priorSample(NdimensionsOfCurrentPrior, Nobjects);
         ptrPriors[i]->draw(priorSample);
-        nestedSample.block(actualNdimensions,0,NdimensionsPerPrior,Nobjects) = priorSample;      
-        actualNdimensions += NdimensionsPerPrior;
+        
+        // Insert this random subset of coordinates into the total sample of coordinates of points
+
+        nestedSample.block(beginIndex, 0, NdimensionsOfCurrentPrior, Nobjects) = priorSample;      
+        
+        // Move index to the beginning of the coordinate set of the next prior
+
+        beginIndex += NdimensionsOfCurrentPrior;
     }
 
 
-    // Initialize corresponding likelihood values
+
+    // Compute the log(Likelihood) for each of our sample points
+
+    logLikelihood.resize(Nobjects);
     
-    ArrayXd nestedSamplePerObject(Ndimensions);
-    
-    for (int i = 0; i < Nobjects; i++)
+    for (int i = 0; i < Nobjects; ++i)
     {
-        nestedSamplePerObject = nestedSample.col(i);
-        logLikelihood(i) = likelihood.logValue(nestedSamplePerObject);
+        logLikelihood(i) = likelihood.logValue(nestedSample.col(i));
     }
 
 
-    // Initialize prior mass interval
+    // Initialize the prior mass interval
 
-    logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));
+    double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));
     double logTotalWidthInPriorMass = logWidthInPriorMass;
     
     
-    // Identify the clusters contained in the initial sample of nested objects
+    // The nested sampling will involve finding clusters in the sample.
+    // This will require the following containers.
 
-    int Nclusters;
+    int Nclusters=0;
     vector<int> clusterIndices(Nobjects);
     vector<int> clusterSizes;
 
-    // Nested sampling loop
+
+    // Start the nested sampling loop. Each iteration, we'll replace the point with the worse likelihood.
+    // New points are drawn from the prior, but with the constraint that they should have a likelihood
+    // that is better than the currently worse one.
 
     do 
     {
-        if (printOnTheScreen && (Niterations !=0))
-        {
-            for (int l=0; l < 20; l++)
-            {
-                cerr << endl;
-            }
-        }
+        cerr << endl << endl << endl << endl << endl << endl;
 
+        // Resize the arrays to make room for an additional point.
+        // Do so without destroying the original contents.
 
-        // Resizing array dimensions to the actual number of nested iterations
-        // conservativeResize allows dinamic resizing of Eigen Arrays, while keeping the previous values untouched
-    
-        posteriorSample.conservativeResize(Ndimensions, Niterations + 1);        // conservative resize to column number only
+        posteriorSample.conservativeResize(Ndimensions, Niterations + 1);  
         logLikelihoodOfPosteriorSample.conservativeResize(Niterations + 1);
         logWeightOfPosteriorSample.conservativeResize(Niterations + 1);
         
 
-        // Find worst object in the collection. The likelihood of this object
-        // defines the constraint when drawing new objects later on.
+        // Find the point with the worse likelihood. This likelihood value will set a constraint
+        // when drawing new points later on.
         
-        actualLogLikelihoodConstraint = logLikelihood.minCoeff(&worst);
-        logWeight = logWidthInPriorMass + actualLogLikelihoodConstraint;                
+        int indexOfLivePointWithWorseLikelihood;
+        worseLiveLogLikelihood = logLikelihood.minCoeff(&indexOfLivePointWithWorseLikelihood);
+        double logWeight = logWidthInPriorMass + worseLiveLogLikelihood;                
 
 
         // Update the evidence Z and the information Gain
         
-        logEvidenceNew = Functions::logExpSum(logEvidence, logWeight);
-        informationGain = exp(logWeight - logEvidenceNew) * actualLogLikelihoodConstraint       // Not necessary with new statistical uncertainty
-                       + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
-                       - logEvidenceNew;
+        double logEvidenceNew = Functions::logExpSum(logEvidence, logWeight);
+        informationGain = exp(logWeight - logEvidenceNew) * worseLiveLogLikelihood 
+                                        + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
+                                        - logEvidenceNew;
         logEvidence = logEvidenceNew;
 
         
-        // Save the actual posterior sample and its corresponding likelihood and weights
-        
-        posteriorSample.col(Niterations) = nestedSample.col(worst);      // save coordinates of worst nested object
-        logLikelihoodOfPosteriorSample(Niterations) = actualLogLikelihoodConstraint; // save corresponding likelihood
-        logWeightOfPosteriorSample(Niterations) = logWeight;                         // save corresponding weight...
-                                                                                     // ...proportional to posterior probability density
+        // Although we will replace the point with the worse likelihood in the live sample, we will save
+        // it in our collection of posterior sample. Also save its likelihood value and its weight
 
-        // Compute average likelihood of the actual set of live points
+        posteriorSample.col(Niterations) = nestedSample.col(indexOfLivePointWithWorseLikelihood); 
+        logLikelihoodOfPosteriorSample(Niterations) = worseLiveLogLikelihood; 
+        logWeightOfPosteriorSample(Niterations) = logWeight; 
+
+
+        // Compute the (logarithm of) the mean likelihood of the set of live points.
+        // Note that we are not computing mean(log(likelihodd)) but log(mean(likelhood)).
+        // Since we are only storing the log(likelihood) values, this results in a peculiar
+        // way of computing the mean.
         
-        logTotalLikelihoodOfLivePoints = logLikelihood(0);
+        logMeanLikelihoodOfLivePoints = logLikelihood(0);
 
         for (int m = 1; m < Nobjects; m++)
         {
-            logTotalLikelihoodOfLivePoints = Functions::logExpSum(logTotalLikelihoodOfLivePoints,logLikelihood(m));
+            logMeanLikelihoodOfLivePoints = Functions::logExpSum(logMeanLikelihoodOfLivePoints, logLikelihood(m));
         }
 
-        logMeanLikelihoodOfLivePoints = logTotalLikelihoodOfLivePoints - log(Nobjects);
+        logMeanLikelihoodOfLivePoints -= log(Nobjects);
         
         
         // Compute mean evidence and mean live evidence
 
-        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations*log(constant2);
-        logMeanEvidenceNew = Functions::logExpSum(actualLogLikelihoodConstraint + Niterations*log(constant2) - log(Nobjects), logMeanEvidence);
+        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * log(constant2);
+        double logMeanEvidenceNew = Functions::logExpSum(worseLiveLogLikelihood + Niterations*log(constant2) - log(Nobjects), logMeanEvidence);
         logMeanEvidence = logMeanEvidenceNew;
         logMeanTotalEvidence = Functions::logExpSum(logMeanEvidence, logMeanLiveEvidence);
 
 
-        // Evaluate termination condition
-        
-        actualTerminationFactor = exp(logMeanLiveEvidence - logMeanEvidence);
+        // Compute the ratio of the evidence of the live sample to the evidence of the total sample (live + not-live).
+        // Only when we gathered enough evidence, this ratio will be sufficiently small so that we can stop the iterations.
+
+        ratioOfLiveToTotalEvidence = exp(logMeanLiveEvidence - logMeanEvidence);
         
         
         // Print current information on the screen, if required
@@ -258,7 +255,7 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
             cerr << "=========================================" << endl;
             cerr << "Niterations: " << Niterations << endl;
             cerr << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
-            cerr << "Actual Termination Factor: " << actualTerminationFactor << endl;
+            cerr << "Live/Total Evidence: " << ratioOfLiveToTotalEvidence << endl;
             cerr << endl;
             cerr << "=========================================" << endl;
             cerr << "Information on Evidence" << endl;
@@ -269,39 +266,50 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
             cerr << "Keeton's log(Total Evidence): " << logMeanTotalEvidence << endl;
             cerr << endl;
         }
-        
 
-        // If condition is verified, identify the clusters contained in the actual sample of nested objects
+
+        // Find clusters in our live sample of points. Don't do this every iteration but only
+        // every x iterations, where x is given by 'NiterationsBeforeClustering'.
 
         if ((Niterations % NiterationsBeforeClustering) == 0)
-        {
-            
+        {            
             Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes, printOnTheScreen);
         }
 
-        // Evolve worst object with the new constraint logLikelihood > actualLogLikelihoodConstraint
-        // Compute approximate sampling to find new point verifying the likelihood constraint
 
-        ArrayXXd drawnSample = ArrayXXd::Zero(Ndimensions, 1);
-        drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, logTotalWidthInPriorMass, drawnSample, maxNdrawAttempts); 
-       
-        // Replace worst object in favour of a copy of different survivor
-        // No replacement if Nobjects == 1. Fundamental step to preserve
-        // the randomness of the process
+        // Draw a new point, which should replace the point with the worse likelihood.
+        // This new point should be drawn from the prior, but with a likelihood greater 
+        // than the current worse likelihood. The drawing algorithm may need a starting point,
+        // for which we will take a randomly chosen point of the live sample (excluding the
+        // worse point).
 
+        int indexOfRandomlyChosenPoint = 0;
         if (Nobjects > 1)
         {
+            // Select randomly an index of a sample point, but not the one of the worse point
+
             do 
             {
-                copy = uniform(engine);             // 0 <= copy < Nobjects
+                // 0 <= indexOfRandomlyChosenPoint < Nobjects
+
+                indexOfRandomlyChosenPoint = discreteUniform(engine);
             } 
-            while (copy == worst);
+            while (indexOfRandomlyChosenPoint == indexOfLivePointWithWorseLikelihood);
         }
 
-        nestedSample.col(worst) = nestedSample.col(copy);
-        logLikelihood(worst) = logLikelihood(copy);
-        nestedSample.col(worst) = drawnSample;     // Update new set of parameters in the overall nested sample coordinates
 
+        // drawnPoint will be a starting point as input, and will contain the newly drawn point as output
+
+        ArrayXd drawnPoint = nestedSample.col(indexOfRandomlyChosenPoint); 
+        double logLikelihoodOfDrawnPoint = 0.0;
+        drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, logTotalWidthInPriorMass, drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
+
+
+        // Replace the point with the worse likelihood with our newly drawn one.
+
+        nestedSample.col(indexOfLivePointWithWorseLikelihood) = drawnPoint;
+        logLikelihood(indexOfLivePointWithWorseLikelihood) = logLikelihoodOfDrawnPoint;
+        
 
         // Shrink prior mass interval
         
@@ -310,14 +318,14 @@ void NestedSampler::run(const double terminationFactor, const int NiterationsBef
         
         // Update total width in prior mass from beginning to actual nested iteration
 
-        logTotalWidthInPriorMass = Functions::logExpSum(logTotalWidthInPriorMass,logWidthInPriorMass);
+        logTotalWidthInPriorMass = Functions::logExpSum(logTotalWidthInPriorMass, logWidthInPriorMass);
 
 
         // Increase nested loop counter
         
         Niterations++;
     }
-    while (terminationFactor < actualTerminationFactor);                          // Termination condition by Keeton 2011
+    while (ratioOfLiveToTotalEvidence > maxRatioOfLiveToTotalEvidence);                          // Termination condition by Keeton 2011
     
  
     // Compute Skilling's error on the log(Evidence)

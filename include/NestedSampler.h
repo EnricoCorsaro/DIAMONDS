@@ -41,11 +41,11 @@ class NestedSampler
                       Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
-        void run(const double terminationFactor = 0.5, const int NiterationsBeforeClustering = 10, const int maxNdrawAttempts = 200);
+        void run(const double maxRatioOfLiveToTotalEvidence = 0.5, const int NiterationsBeforeClustering = 10, const int maxNdrawAttempts = 200);
 
-        virtual void drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
-                                        const vector<int> &clusterSizes, const double logWidthInPriorMass, RefArrayXXd drawnSample, 
-                                        const int maxNdrawAttempts) = 0;
+        virtual void drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
+                                        const vector<int> &clusterSizes, const double logWidthInPriorMass, RefArrayXd drawnPoint, 
+                                        double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) = 0;
         
         int getNiterations();
         double getLogEvidence();
@@ -67,7 +67,7 @@ class NestedSampler
         bool printOnTheScreen;
         int Ndimensions;
         int Nobjects;                           // Total number of objects
-        double actualLogLikelihoodConstraint;   // Likelihood constraining value at each nested iteration
+        double worseLiveLogLikelihood;          // the worse likelihood value of the current live sample
         double logTotalWidthInPriorMass;        // The remaining width in prior mass at a given nested iteration (log X_k)
 
         mt19937 engine;
@@ -85,11 +85,10 @@ class NestedSampler
         double logMeanEvidenceError;             // Keeton's error on evidence (no contribution from live evidence)
         double logMeanTotalEvidenceError;        // Keeton's total error on evidence (contribution from live evidence)
         double logMeanLikelihoodOfLivePoints;    // The logarithm of the mean likelihood value of the remaining set of live points
-        double logMaximumLikelihoodOfLivePoints; // The logarithm of the maximun likelihood value of the remaining set of live points
         double computationalTime;
-        double constant1;                        // Constant factors used in Keeton's formulas
-        double constant2;
-        double constant3;
+        const double constant1;                  // Constant factors used in Keeton's formulas
+        const double constant2;
+        const double constant3;
         ArrayXd logLikelihood;                   // log-likelihood values of the actual set of live points
         ArrayXXd nestedSample;                   // parameters values (the free parameters of the problem) of the actual set of live points
 
