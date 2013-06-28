@@ -16,11 +16,15 @@ Ellipsoid::Ellipsoid(RefArrayXXd sample, const double enlargementFactor)
 : sample(sample),
   sampleSize(sample.cols()),
   Ndimensions(sample.rows()),
-  engine(time(0)),
   uniform(0.0, 1.0),
   normal(0.0, 1.0)
 
 {
+    // Set the seed of the random generator using the clock
+
+    clock_t clockticks = clock();
+    engine.seed(clockticks);
+
     // Resize the matrices to their proper size
 
     originalEigenvalues.resize(Ndimensions);
@@ -323,7 +327,8 @@ void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
         }
     }
     while ((drawnPoint == 0.0).all());    // Repeat sampling if point falls in origin
-        
+    
+
     // Normalize the point so that it belongs to the unit hyper-sphere
         
     drawnPoint = drawnPoint / drawnPoint.matrix().norm(); 
@@ -332,6 +337,7 @@ void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
 
     drawnPoint = pow(uniform(engine), 1./Ndimensions) * drawnPoint; 
     
+
     // Transform sphere coordinates to ellipsoid coordinates
     
     MatrixXd D = enlargedEigenvalues.sqrt().matrix().asDiagonal();

@@ -9,13 +9,13 @@
 //
 // INPUT:
 //      mean: array containing mean values for setting 
-//      centroids of the multi-dimensional normal prior. 
+//            centroids of the multi-dimensional normal prior. 
 //      standardDeviation: array containing SDV values of the
-//      multi-dimensional normal prior.
+//                         multi-dimensional normal prior.
 //
 
 NormalPrior::NormalPrior(const RefArrayXd mean, const RefArrayXd standardDeviation)
-: Prior(mean.size(),false),
+: Prior(mean.size()),
   mean(mean),
   standardDeviation(standardDeviation)
 {
@@ -27,9 +27,6 @@ NormalPrior::NormalPrior(const RefArrayXd mean, const RefArrayXd standardDeviati
         normal_distribution<double> normal(mean(i),standardDeviation(i));
         normalDistributionVector[i] = normal;
     }
-
-    normalizingFactor = (1./(standardDeviation*sqrt(2*Functions::PI))).prod();
-
 }
 
 
@@ -54,6 +51,22 @@ NormalPrior::~NormalPrior()
 }
 
 
+
+
+
+
+
+
+// NormalPrior::isUniformPrior()
+//
+// PURPOSE:
+//    returns false for this normal Prior  
+//
+
+bool NormalPrior::isUniformPrior()
+{
+    return false;
+}
 
 
 
@@ -112,20 +125,35 @@ ArrayXd NormalPrior::getStandardDeviation()
 
 
 
-
-
-// NormalPrior::getNormalizingFactor()
+// NormalPrior::logDensity()
 //
-// PURPOSE: 
-//      Get the private data member normalizingFactor.
+// PURPOSE:
+//      Compute the logarithm of the probability density distribution evaluated in 'x'.
+//
+// INPUT: 
+//      x:                   Point in which the log(pdf) should be evaluated.
+//      includeConstantTerm: If true : compute the exact log(density), 
+//                           If false: ignore the constant terms (with factors of pi, 2, etc.)
 //
 // OUTPUT:
-//      An integer containing the normalization factor of the normal prior.
+//      Natural logarithm of the probability density evaluation in x.
+//
 
-double NormalPrior::getNormalizingFactor()
+double NormalPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
 {
-    return normalizingFactor;
+    double logDens = -0.5 * ((x - mean)/standardDeviation).square().sum();
+
+    if (includeConstantTerm)
+    {
+        logDens += -Ndimensions/2.0 * log(2.*Functions::PI) - 0.5 * standardDeviation.log().sum();
+    }
+
+    return logDens;
 }
+
+
+
+
 
 
 
@@ -145,22 +173,22 @@ double NormalPrior::getNormalizingFactor()
 //      and contain Nobjects values each.
 //
 // INPUT:
-//      nestedSampleOfParameters: two-dimensional Eigen Array to contain 
-//      the resulting parameters values.
+//      sample: two-dimensional Eigen Array to contain 
+//              the resulting parameters values.
 //
 // OUTPUT:
 //      void
 //
 
-void NormalPrior::draw(RefArrayXXd nestedSampleOfParameters)
+void NormalPrior::draw(RefArrayXXd sample)
 {
     // Normal sampling over parameters intervals
     
     for (int i = 0; i < Ndimensions; i++)
     {
-        for (int j = 0; j < nestedSampleOfParameters.cols(); j++)
+        for (int j = 0; j < sample.cols(); j++)
         {
-            nestedSampleOfParameters(i,j) = normalDistributionVector[i](engine);
+            sample(i,j) = normalDistributionVector[i](engine);
         }
     }
 
@@ -179,17 +207,13 @@ void NormalPrior::draw(RefArrayXXd nestedSampleOfParameters)
 //      having higher likelihood value.
 //
 // INPUT:
-//      parameters: one-dimensional array containing the set of 
-//      parameters values to be updated.
-//      likelihood: an object to compute the corresponding likelihood value.
+//      parameters: one-dimensional array containing the set of parameters
+//                  values to be updated. Initially it should contain the coordinates
+//                  of the point with the worst likelihood.
+//      likelihood: an object to compute the likelihood values.
 //
 // OUTPUT:
 //      void
-//
-// NOTE:
-//      parameters refers to the worst object identified in the nested
-//      sampling loop. Thus, the array contains Ndimensions elements.
-//
 
 void NormalPrior::drawWithConstraint(RefArrayXd parameters, Likelihood &likelihood)
 {
@@ -202,15 +226,13 @@ void NormalPrior::drawWithConstraint(RefArrayXd parameters, Likelihood &likeliho
     do
     {
         for (int i = 0; i < Ndimensions; i++)
-            {
-                parameters(i) = normalDistributionVector[i](engine);
-            }
+        {
+            parameters(i) = normalDistributionVector[i](engine);
+        }
     
         logLikelihood = likelihood.logValue(parameters);
     }
     while (logLikelihood <= logLikelihoodConstraint);
-    
-
 } 
 
 
@@ -219,46 +241,4 @@ void NormalPrior::drawWithConstraint(RefArrayXd parameters, Likelihood &likeliho
 
 
 
-
-
-
-
-
-
-// NormalPrior::pointIsRejected()
-//
-// PURPUSE:
-//      Evaluates whether input point coordinates satisfy prior conditions.
-//
-// INPUT:
-//      drawnSampleOfParameters: an Eigen Array of size (Ndimensions, 2)
-//      containing a sample of coordinates for one object to be verified (column 0)
-//      and for a reference object used in the sampling process (column 1).
-//
-// OUTPUT:
-//      A bool variable declaring whether the point has to be rejected (true)
-//      or accepted (false)
-//
-
-bool NormalPrior::pointIsRejected(RefArrayXXd drawnSampleOfParameters)
-{
-    assert(drawnSampleOfParameters.cols() == 2);
-    assert(drawnSampleOfParameters.rows() == Ndimensions);
-    
-    bool pointIsRejected = false;
-
-    
-    // Compute density-related values for each point
-
-    double weight1;
-    double weight2;
-
-    weight1 = ((drawnSampleOfParameters.col(0) - mean)/standardDeviation).square().sum();
-    weight2 = ((drawnSampleOfParameters.col(1) - mean)/standardDeviation).square().sum();
-
-    if (weight1 > weight2)          // If prior density of drawn point is lower than reference point
-        pointIsRejected = true;     // then drawn point is not accepeted
-                                                        
-    return pointIsRejected;
-}
 

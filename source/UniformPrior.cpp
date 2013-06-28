@@ -15,13 +15,12 @@
 //
 
 UniformPrior::UniformPrior(const RefArrayXd minima, const RefArrayXd maxima)
-: Prior(minima.size(), true),
+: Prior(minima.size()),
   uniform(0.0,1.0),
   minima(minima),
   maxima(maxima)
 {
     assert (minima.size() == maxima.size());
-    normalizingFactor = (1./(maxima - minima)).prod();
 }
 
 
@@ -45,6 +44,19 @@ UniformPrior::~UniformPrior()
 
 
 
+
+
+
+// UniformPrior::isUniformPrior()
+//
+// PURPOSE:
+//    returns true for this uniform Prior  
+//
+
+bool UniformPrior::isUniformPrior() 
+{
+    return true;
+}
 
 
 
@@ -100,20 +112,50 @@ ArrayXd UniformPrior::getMaxima()
 
 
 
-
-
-// UniformPrior::getNormalizingFactor()
+// UniformPrior::logDensity()
 //
-// PURPOSE: 
-//      Get the private data member uniformFactor.
+// PURPOSE:
+//      Compute the logarithm of the probability density distribution evaluated in 'x'.
+//
+// INPUT: 
+//      x:                   Point in which the log(pdf) should be evaluated.
+//      includeConstantTerm: If true : compute the exact log(density), 
+//                           If false: ignore the constant terms (with factors of pi, 2, etc.)
 //
 // OUTPUT:
-//      An integer containing the normalization factor of the uniform prior.
+//      Natural logarithm of the probability density evaluation in x.
+//
 
-double UniformPrior::getNormalizingFactor()
+double UniformPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
 {
-    return normalizingFactor;
+    double logDens;
+
+    if ((x < minima).any() | (x > maxima).any())
+    {
+        // The point x falls out of the distribution's boundaries. In this case
+        // the density is zero, and thus the log(density) is infinity, which we
+        // approximate with the largest possible value.
+
+        logDens = numeric_limits<double>::max();
+        return logDens;
+    }
+    else
+    {
+        // The points falls inside the distribution's boundaries.
+
+        logDens = -1.0;
+    }
+
+    if (includeConstantTerm)
+    {
+        logDens *= (maxima - minima).log().sum(); 
+    }
+
+    return logDens;
 }
+
+
+
 
 
 
@@ -134,22 +176,22 @@ double UniformPrior::getNormalizingFactor()
 //      and contain Nobjects values each.
 //
 // INPUT:
-//      nestedSampleOfParameters: two-dimensional Eigen Array to contain 
-//      the resulting parameters values.
+//      sample: two-dimensional Eigen Array to contain 
+//              the resulting parameters values.
 //
 // OUTPUT:
 //      void
 //
 
-void UniformPrior::draw(RefArrayXXd nestedSampleOfParameters)
+void UniformPrior::draw(RefArrayXXd sample)
 {
     // Uniform sampling over parameters intervals
     
     for (int i = 0; i < Ndimensions; i++)
     {
-        for (int j = 0; j < nestedSampleOfParameters.cols(); j++)
+        for (int j = 0; j < sample.cols(); j++)
         {
-            nestedSampleOfParameters(i,j) = uniform(engine)*(maxima(i)-minima(i)) + minima(i);
+            sample(i,j) = uniform(engine)*(maxima(i)-minima(i)) + minima(i);
         }
     }
 
@@ -204,49 +246,3 @@ void UniformPrior::drawWithConstraint(RefArrayXd parameters, Likelihood &likelih
 
 
 
-
-
-
-
-
-
-
-
-
-
-// UniformPrior::pointIsRejected()
-//
-// PURPUSE:
-//      Evaluates whether input point coordinates satisfy prior conditions.
-//
-// INPUT:
-//      drawnSampleOfParameters: an Eigen Array of size Ndimensions
-//      containing a sample of coordinates for one object to be verified.
-//
-// OUTPUT:
-//      A bool variable declaring whether the point has to be rejected (true)
-//      or accepted (false)
-//
-
-bool UniformPrior::pointIsRejected(RefArrayXXd drawnSampleOfParameters)
-{
-    assert (drawnSampleOfParameters.cols() == 1);
-    assert (drawnSampleOfParameters.rows() == Ndimensions);
-
-
-    bool pointIsRejected = false;           // Start without rejection
-
-    for (int i = 0; i < Ndimensions; i++)
-    {
-        // If at least in one dimension the coordinate is not verifying boundaries, 
-        // reject the point and end function
-
-        if ((drawnSampleOfParameters(i,0) > maxima(i)) || (drawnSampleOfParameters(i,0) < minima(i)))
-        {
-            pointIsRejected = true;
-            return pointIsRejected;
-        }
-    }
-
-    return pointIsRejected;
-}

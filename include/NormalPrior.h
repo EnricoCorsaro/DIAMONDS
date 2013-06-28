@@ -29,10 +29,10 @@ class NormalPrior : public Prior
         ArrayXd getMean();
         ArrayXd getStandardDeviation();
      
-        virtual double getNormalizingFactor();
-        virtual void draw(RefArrayXXd nestedSampleOfParameters);
-        virtual void drawWithConstraint(RefArrayXd parameters, Likelihood &likelihood);
-        virtual bool pointIsRejected(RefArrayXXd drawnSampleOfParameters);
+        virtual double logDensity(RefArrayXd x, const bool includeConstantTerm=false);
+        virtual void draw(RefArrayXXd sample);
+        virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood);
+        virtual bool isUniformPrior();
 
 
     private:

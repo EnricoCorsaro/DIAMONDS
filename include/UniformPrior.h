@@ -9,6 +9,7 @@
 #define UNIFORMPRIOR_H
 
 #include <iostream>
+#include <limits>
 #include "Prior.h"
 
 
@@ -30,10 +31,10 @@ class UniformPrior : public Prior
         ArrayXd getMinima();
         ArrayXd getMaxima();
 
-        virtual double getNormalizingFactor();
-        virtual void draw(RefArrayXXd nestedSampleOfParameters);
+        virtual double logDensity(RefArrayXd x, const bool includeConstantTerm=false);
+        virtual void draw(RefArrayXXd sample);
         virtual void drawWithConstraint(RefArrayXd parameters, Likelihood &likelihood);
-        virtual bool pointIsRejected(RefArrayXXd drawnSampleOfParameters);
+        virtual bool isUniformPrior();
 
 
     private:
