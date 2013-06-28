@@ -62,7 +62,7 @@ int main(int argc, char *argv[])
     EuclideanMetric myMetric;
     int minNclusters = 1;
     int maxNclusters = 5;
-    int Ntrials = 1000;
+    int Ntrials = 200;
     double relTolerance = 0.01;
 
     KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
@@ -71,11 +71,11 @@ int main(int argc, char *argv[])
     // Start nested sampling process
     
     bool printOnTheScreen = true;               // Print results on the screen
-    int Nobjects = 300;                         // TODO
-    int maxNdrawAttempts = 100;                // TODO
+    int Nobjects = 500;                         // TODO
+    int maxNdrawAttempts = 500;                 // TODO
     int NiterationsBeforeClustering = 10;       // Number of nesting iterations before executing clustering algorithm again
     double initialEnlargementFactor = 2.5;      // TODO
-    double shrinkingRate = 0.6;                 // Exponent for remaining prior mass in ellipsoid enlargement factor
+    double shrinkingRate = 0.3;                 // Exponent for remaining prior mass in ellipsoid enlargement factor
     double terminationFactor = 0.01;            // Termination factor for nesting loop
 
 
