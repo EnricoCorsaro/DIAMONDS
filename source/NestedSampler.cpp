@@ -32,15 +32,20 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, ve
   clusterer(clusterer),
   printOnTheScreen(printOnTheScreen),
   Nobjects(Nobjects),
-  engine(time(0)),
   uniform(0.0, 1.0),
   Niterations(0),
   informationGain(0.0), 
   logEvidence(-DBL_MAX),
-  logMeanEvidence(-DBL_MAX)
+  logMeanEvidence(-DBL_MAX),
+  constant1(1.0/(Nobjects + 1)),
+  constant2(constant1*Nobjects),
+  constant3(1.0/((Nobjects + 2)*constant1))
 
 {
-    int totalNdimensions = 0;
+   // Set the seed of the random generator using the clock
+
+    clock_t clockticks = clock();
+    engine.seed(clockticks);
     
     for (int i = 0; i < ptrPriors.size(); i++)
     {
