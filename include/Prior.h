@@ -34,6 +34,8 @@ class Prior
         virtual void draw(RefArrayXXd sample) = 0;
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood) = 0;
 
+        const double minusInfinity;
+
     protected:
         
         int Ndimensions;

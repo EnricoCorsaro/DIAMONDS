@@ -118,10 +118,10 @@ double UniformPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
     if ((x < minima).any() | (x > maxima).any())
     {
         // The point x falls out of the distribution's boundaries. In this case
-        // the density is zero, and thus the log(density) is -infinity, which we
-        // approximate with the smalleest possible value.
+        // the density is zero, and thus the log(density) is -infinity. The value
+        // of the latter is defined in the parent class.
 
-        logDens = numeric_limits<double>::lowest();
+        logDens = minusInfinity;
         return logDens;
     }
     else

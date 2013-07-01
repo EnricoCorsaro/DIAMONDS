@@ -12,7 +12,8 @@
 //
 
 Prior::Prior(const int Ndimensions)
-: Ndimensions(Ndimensions),
+: minusInfinity(numeric_limits<double>::lowest()),
+  Ndimensions(Ndimensions),
   engine(time(0))
 {
 
