@@ -22,9 +22,15 @@ KmeansClusterer::KmeansClusterer(Metric &metric, unsigned int minNclusters, unsi
   minNclusters(minNclusters), 
   maxNclusters(maxNclusters), 
   Ntrials(Ntrials), 
-  relTolerance(relTolerance),
-  engine(time(0))
+  relTolerance(relTolerance)
 {
+    // Set the seed of the random generator using the clock
+
+    clock_t clockticks = clock();
+    engine.seed(clockticks);
+
+    // Do some sanity check(s)
+
     assert(minNclusters <= maxNclusters);
 }
 

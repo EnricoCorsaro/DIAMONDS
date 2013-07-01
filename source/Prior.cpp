@@ -13,10 +13,12 @@
 
 Prior::Prior(const int Ndimensions)
 : minusInfinity(numeric_limits<double>::lowest()),
-  Ndimensions(Ndimensions),
-  engine(time(0))
+  Ndimensions(Ndimensions)
 {
+	// Set the seed of the random generator using the clock
 
+    clock_t clockticks = clock();
+    engine.seed(clockticks);
 }
 
 
