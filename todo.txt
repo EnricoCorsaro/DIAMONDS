@@ -24,3 +24,11 @@ TODO
 - In MultiNest.run() and elsewhere, consider replacing 'nestedSample' with 'liveSample'
 
 - Update method docstrings in MultiEllipsoidSampler and NestedSampler (no longer up to date after refactoring)
+
+- Change Results::writeParametersEstimationToFile() into Change Results::writeParametersSummaryToFile()
+
+- Fix the credible interval computation as it sometimes (not always...) generates the error message: 
+  Assertion failed: (index >= 0 && index < size()), function operator()
+  when executing demoTwo2DGaussians.
+
+  
