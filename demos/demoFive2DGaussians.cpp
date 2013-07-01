@@ -60,7 +60,7 @@ int main(int argc, char *argv[])
     // Set up the K-means clusterer using an Euclidean metric
 
     EuclideanMetric myMetric;
-    int minNclusters = 1;
+    int minNclusters = 5;
     int maxNclusters = 5;
     int Ntrials = 200;
     double relTolerance = 0.01;
@@ -87,11 +87,11 @@ int main(int argc, char *argv[])
     // Save the results in output files
 
     Results results(nestedSampler);
-    results.writeParametersToFile("demoMultiple2DGaussians_Parameter");
-    results.writeLogLikelihoodToFile("demoMultiple2DGaussians_LogLikelihood.txt");
-    results.writeEvidenceInformationToFile("demoMultiple2DGaussians_Evidence.txt");
-    results.writePosteriorProbabilityToFile("demoMultiple2DGaussians_Posterior.txt");
-    results.writeParameterEstimationToFile("demoMultiple2DGaussians_ParameterEstimation.txt");
+    results.writeParametersToFile("demoFive2DGaussians_Parameter");
+    results.writeLogLikelihoodToFile("demoFive2DGaussians_LogLikelihood.txt");
+    results.writeEvidenceInformationToFile("demoFive2DGaussians_Evidence.txt");
+    results.writePosteriorProbabilityToFile("demoFive2DGaussians_Posterior.txt");
+    results.writeParameterEstimationToFile("demoFive2DGaussians_ParameterEstimation.txt");
  
     // That's it!
 
