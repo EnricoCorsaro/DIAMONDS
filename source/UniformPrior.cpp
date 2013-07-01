@@ -128,12 +128,12 @@ double UniformPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
     {
         // The points falls inside the distribution's boundaries.
 
-        logDens = -1.0;
+        logDens = 0.0;
     }
 
     if (includeConstantTerm)
     {
-        logDens *= (maxima - minima).log().sum(); 
+        logDens += (-1.0) * (maxima - minima).log().sum(); 
     }
 
     return logDens;
