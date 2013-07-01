@@ -1,6 +1,6 @@
 
-#ifndef MULTIPLE2DGAUSSIANSLIKELIHOOD_H
-#define MULTIPLE2DGAUSSIANSLIKELIHOOD_H
+#ifndef FIVE2DGAUSSIANS_H
+#define FIVE2DGAUSSIANS_H
 
 #include <cmath>
 #include <iostream>
