@@ -247,6 +247,18 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
 
             ArrayXd subsetOfReferencePoint = referencePoint.segment(beginIndex, NdimensionsOfPrior);
 
+            // First check the special case when the logDensity of the prior of our newPoint is -infinity 
+            // (probability density = 0) This can happen e.g. for the uniform distribution, when the point 
+            // falls out of its boundaries. This is a reason to immediately discard the point, without 
+            // checking out the priors of the orther coordinates.
+
+            double logPriorDensityOfSubsetOfNewPoint = ptrPriors[priorIndex]->logDensity(subsetOfNewPoint);
+            if (logPriorDensityOfSubsetOfNewPoint == ptrPriors[priorIndex]->minusInfinity)
+            {
+                habemusNewPoint = false;
+                break;
+            }
+
             // Check if the logPrior density of the new point is >= than the one of the reference point
             // If it failed this criterion for one prior, we can immediately discared the new point, 
             // without needing to check the priors for the other coordinates.
