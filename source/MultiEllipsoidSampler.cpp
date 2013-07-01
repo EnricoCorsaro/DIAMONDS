@@ -226,10 +226,10 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
         ellipsoids[indexOfSelectedEllipsoid].drawPoint(referencePoint);
 
 
-        // Accept our new point only if its logPriorDensity is larger than the one of the 
-        // reference point. Since different coordinates of our new point may have different priors,
-        // this should hold for all of those priors.
-
+        // To draw according to the prior, we accept our new point only if the logDensity of the
+        // prior is larger than the one of the reference point. Since different coordinates of our new 
+        // point may have different priors, we need to check this for all the priors.
+        
         int beginIndex = 0;
 
         for (int priorIndex = 0; priorIndex < ptrPriors.size(); ++priorIndex)
