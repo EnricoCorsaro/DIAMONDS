@@ -36,8 +36,8 @@ int main(int argc, char *argv[])
 
     // Setting Prior distribution and parameter space
 
-    int Ndimensions = 2;        // Number of free parameters (dimensions) of the problem
-    vector<Prior*> ptrPriors(1);
+    int Ndimensions = 2;                      // Number of free parameters (dimensions) of the problem
+    vector<Prior*> ptrPriors(1);              // One prior, covering both coordinates
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
     parametersMinima << -7.0, -4.0;         // Centroid x direction, Centroid y direction
