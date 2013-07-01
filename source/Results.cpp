@@ -301,30 +301,29 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
             parameterValuesLeft(nn) = parameterValuesRebinned(nn);
         }
 
+        // while (totalProbability < (credibleLevel/100.))     // Stop when probability >= credibleLevel 
+        // {
+        //     totalProbability = 0.0;
+        //     limitProbabilityRight = marginalDistributionRebinned(max + stepRight);
+        //     limitParameterRight = parameterValuesRebinned(max + stepRight);
+        //     marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();
 
-        while (totalProbability < (credibleLevel/100.))     // Stop when probability >= credibleLevel 
-        {
-            totalProbability = 0.0;
-            limitProbabilityRight = marginalDistributionRebinned(max + stepRight);
-            limitParameterRight = parameterValuesRebinned(max + stepRight);
-            marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();
+        //     min = 0;
+        //     limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);
+        //     limitProbabilityLeft = marginalDistributionRebinned(min);
+        //     limitParameterLeft = parameterValuesRebinned(min);
 
-            min = 0;
-            limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);
-            limitProbabilityLeft = marginalDistributionRebinned(min);
-            limitParameterLeft = parameterValuesRebinned(min);
+        //     for (int t = min; t <= (max + stepRight); t++)
+        //     {
+        //         totalProbability += marginalDistributionRebinned(t);        // Evaluate total probability within the range
+        //     }
 
-            for (int t = min; t <= (max + stepRight); t++)
-            {
-                totalProbability += marginalDistributionRebinned(t);        // Evaluate total probability within the range
-            }
-
-            stepRight++;
-        }
-
-
-        lowerCredibleInterval = parameterMean - limitParameterLeft;
-        upperCredibleInterval = limitParameterRight - parameterMean;
+        //     stepRight++;
+        // }
+        //
+        //
+        // lowerCredibleInterval = parameterMean - limitParameterLeft;
+        // upperCredibleInterval = limitParameterRight - parameterMean;
            
         parameterEstimates(i,3) = lowerCredibleInterval;
         parameterEstimates(i,4) = upperCredibleInterval;
@@ -495,7 +494,6 @@ void Results::writePosteriorProbabilityToFile(string fullPath)
 void Results::writeParameterEstimationToFile(string fullPath, const double credibleLevel)
 {
     ArrayXXd parameterEstimates = parameterEstimation(credibleLevel);
-
 
     // Write output ASCII file
 
