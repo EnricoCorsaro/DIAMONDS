@@ -20,8 +20,9 @@
 
 
 using namespace std;
-using Eigen::ArrayXXd;
-using Eigen::ArrayXd;
+using namespace Eigen;
+typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
+typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
 
 namespace File
@@ -30,10 +31,10 @@ namespace File
     void openOutputFile(ofstream &outputFile, string outputFileName);
     
     ArrayXXd arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, const int Ncols, char separator = ' ', char commentChar = '#');
-    void arrayXXdToFile(ofstream &outputFile, ArrayXXd array, string separator = "  ", string terminator = "\n");
-    void twoArrayXdToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, string separator = "  ", string terminator = "\n");
-    void arrayXdToFile(ofstream &outputFile, ArrayXd array, string terminator = "\n");
-    void arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fileExtension = ".txt", string terminator = "\n");
+    void arrayXXdToFile(ofstream &outputFile, RefArrayXXd array, string separator = "  ", string terminator = "\n");
+    void twoArrayXdToFile(ofstream &outputFile, RefArrayXd array1, RefArrayXd array2, string separator = "  ", string terminator = "\n");
+    void arrayXdToFile(ofstream &outputFile, RefArrayXd array, string terminator = "\n");
+    void arrayXXdRowsToFiles(RefArrayXXd array, string fullPathPrefix, string fileExtension = ".txt", string terminator = "\n");
     void sniffFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char separator = ' ', char commentChar = '#');
 
 } // END namespace File

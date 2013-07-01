@@ -205,7 +205,7 @@ ArrayXXd File::arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, 
 //      - this function can equally well be used to append to an existing file
 //
 
-void File::arrayXXdToFile(ofstream &outputFile, ArrayXXd array, string separator, string terminator)
+void File::arrayXXdToFile(ofstream &outputFile, RefArrayXXd array, string separator, string terminator)
 {
     for (ptrdiff_t i = 0; i < array.rows(); ++i)
     {
@@ -245,7 +245,7 @@ void File::arrayXXdToFile(ofstream &outputFile, ArrayXXd array, string separator
 //      - this function can equally well be used to append to an existing file
 //
 
-void File::twoArrayXdToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2, string separator, string terminator)
+void File::twoArrayXdToFile(ofstream &outputFile, RefArrayXd array1, RefArrayXd array2, string separator, string terminator)
 {
     assert(array1.size() == array2.size());
     
@@ -283,7 +283,7 @@ void File::twoArrayXdToFile(ofstream &outputFile, ArrayXd array1, ArrayXd array2
 //      - this function can equally well be used to append to an existing file
 //
 
-void File::arrayXdToFile(ofstream &outputFile, ArrayXd array, string terminator)
+void File::arrayXdToFile(ofstream &outputFile, RefArrayXd array, string terminator)
 {
     for (ptrdiff_t i = 0; i < array.size(); ++i)
     {
@@ -301,7 +301,7 @@ void File::arrayXdToFile(ofstream &outputFile, ArrayXd array, string terminator)
 
 
 
-void File::arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fileExtension, string terminator)
+void File::arrayXXdRowsToFiles(RefArrayXXd array, string fullPathPrefix, string fileExtension, string terminator)
 {
     int Nrows = array.rows();
     assert(Nrows > 0);
@@ -327,12 +327,13 @@ void File::arrayXXdRowsToFiles(ArrayXXd array, string fullPathPrefix, string fil
         
         ofstream outputFile;
         File::openOutputFile(outputFile, fullPath);
-       
+        outputFile << setiosflags(ios::scientific) << setprecision(9);
+
 
         // Write all values of this particular parameter in our sample to the output file
         
-        outputFile << setiosflags(ios::scientific) << setprecision(9);
-        File::arrayXdToFile(outputFile, array.row(i), terminator);
+        ArrayXd oneRow = array.row(i);
+        File::arrayXdToFile(outputFile, oneRow, terminator);
         outputFile.close();
     }
 }
