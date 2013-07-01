@@ -462,13 +462,6 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
     // As we don't know a prior the optimal number of clusters, loop over a
     // user-specified range of clusters, and determine which number gives the
     // optimal clustering
-    
-    if (printOnTheScreen)
-    {
-        cerr << "=========================================" << endl; 
-        cerr << "Information on X-means clustering" << endl;
-        cerr << "=========================================" << endl; 
-    }
 
     for (unsigned int Nclusters = minNclusters; Nclusters <= maxNclusters; ++Nclusters)
     {
@@ -518,9 +511,6 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
         {
             BICvalue = evaluateBICvalue(sample, bestCenters, bestClusterSizes, bestClusterIndices);
             
-            if (printOnTheScreen)
-                cerr << "Nclusters: " << Nclusters << " " << "BIC: " << BICvalue << endl;
-                        
             if (BICvalue < bestBICvalue)
             {
                 // We found a cluster combination that is better than anything found before. Save it.
@@ -556,16 +546,6 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
     } // end loop over Nclusters
     
     // That's it!
-
-    if (printOnTheScreen)
-    {
-        cerr << "Optimal Nclusters: " << optimalNclusters << endl;
-        for (int n = 0; n < optimalNclusters; ++n)
-        {
-            cerr << "Size of cluster #" << n << ": " << optimalClusterSizes[n] << endl;
-        }
-        cerr << endl;
-    }
 
     return optimalNclusters;
 }

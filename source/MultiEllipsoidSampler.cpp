@@ -102,15 +102,6 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
 
     logRemainingWidthInPriorMass = log(1.0 - exp(logTotalWidthInPriorMass));
     computeEllipsoids(sample, Nclusters, clusterIndices, clusterSizes, logRemainingWidthInPriorMass);
-    
-
-    if (printOnTheScreen)
-    {   
-        cerr << "=========================================" << endl;
-        cerr << "Information on Ellipsoidal Sampler" << endl;
-        cerr << "=========================================" << endl;
-        cerr << "Nellipsoids computed: " << Nellipsoids << endl;
-    }
 
 
     // Find which ellipsoids are overlapping and which are not

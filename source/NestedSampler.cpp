@@ -182,8 +182,6 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
 
     do 
     {
-        cerr << endl << endl << endl << endl << endl << endl;
-
         // Resize the arrays to make room for an additional point.
         // Do so without destroying the original contents.
 
@@ -245,28 +243,6 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
 
         ratioOfLiveToTotalEvidence = exp(logMeanLiveEvidence - logMeanEvidence);
         
-        
-        // Print current information on the screen, if required
-
-        if (printOnTheScreen)
-        {
-            cerr << "=========================================" << endl;
-            cerr << "Information on Nesting process" << endl;
-            cerr << "=========================================" << endl;
-            cerr << "Niterations: " << Niterations << endl;
-            cerr << "Total Width In Prior Mass: " << exp(logTotalWidthInPriorMass) << endl;
-            cerr << "Live/Total Evidence: " << ratioOfLiveToTotalEvidence << endl;
-            cerr << endl;
-            cerr << "=========================================" << endl;
-            cerr << "Information on Evidence" << endl;
-            cerr << "=========================================" << endl;
-            cerr << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
-            cerr << "Keeton's log(Evidence): " << logMeanEvidence << endl;
-            cerr << "Keeton's log(Live Evidence): " << logMeanLiveEvidence << endl;
-            cerr << "Keeton's log(Total Evidence): " << logMeanTotalEvidence << endl;
-            cerr << endl;
-        }
-
 
         // Find clusters in our live sample of points. Don't do this every iteration but only
         // every x iterations, where x is given by 'NiterationsBeforeClustering'.
@@ -275,6 +251,20 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
         {            
             Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes, printOnTheScreen);
         }
+
+
+        // Print current information on the screen, if required
+
+        if (printOnTheScreen)
+        {
+            cerr << "Niter=" << Niterations << "  Nclusters:" << Nclusters << "  WidthPriorMass= " << exp(logTotalWidthInPriorMass) << "  EvidenceRatio=" << ratioOfLiveToTotalEvidence << "\r";
+            //cerr << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
+            //cerr << "Keeton's log(Evidence): " << logMeanEvidence << endl;
+            //cerr << "Keeton's log(Live Evidence): " << logMeanLiveEvidence << endl;
+            //cerr << "Keeton's log(Total Evidence): " << logMeanTotalEvidence << endl;
+            //cerr << endl;
+        }
+
 
 
         // Draw a new point, which should replace the point with the worse likelihood.
@@ -341,7 +331,6 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
     // Compute and print total computational time
 
     printComputationalTime(startTime);
-
 }
 
 
@@ -609,17 +598,6 @@ void NestedSampler::computeKeetonEvidenceError(const bool printOnTheScreen, cons
     logAdditionalEvidenceError = Functions::logExpSum(logAdditionalEvidenceError, log(2) + logMeanLikelihoodOfLivePoints + Niterations*log(constant2) + errorTerm4);
     logMeanTotalEvidenceError = sqrt(exp(logMeanEvidenceError) + exp(logAdditionalEvidenceError))/(exp(logMeanLiveEvidence) + exp(logMeanEvidence));
     logMeanEvidenceError = sqrt(exp(logMeanEvidenceError))/exp(logMeanEvidence);
-
-    if (printOnTheScreen)
-    {
-        cerr << "=========================================" << endl;
-        cout << "Final information on Evidence Uncertainty" << endl;
-        cout << "=========================================" << endl;
-        cerr << "Skilling's Uncertainty log(Evidence): " << logEvidenceError << endl; 
-        cerr << "Keeton's Uncertainty log(Evidence): " << logMeanEvidenceError << endl; 
-        cerr << "Keeton's Uncertainty log(Total Evidence): " << logMeanTotalEvidenceError << endl; 
-        cerr << endl;
-    }
 }
 
 
@@ -649,26 +627,22 @@ void NestedSampler::printComputationalTime(const double startTime)
     double endTime = time(0);
     computationalTime = endTime - startTime; 
     
+    cerr << endl;
+
     if (computationalTime < 60)
     {
-        cerr << "=========================================" << endl;
         cerr << "Total Computational Time: " << computationalTime << " seconds" << endl;
-        cerr << "=========================================" << endl;
     }
     else 
         if ((computationalTime >= 60) && (computationalTime < 60*60))
         {
             computationalTime = computationalTime/60.;
-            cerr << "=========================================" << endl;
             cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " minutes" << endl;
-            cerr << "=========================================" << endl;
         }
     else 
         if (computationalTime >= 60*60)
         {
             computationalTime = computationalTime/(60.*60.);
-            cerr << "=========================================" << endl;
             cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " hours" << endl;
-            cerr << "=========================================" << endl;
         }
 }
