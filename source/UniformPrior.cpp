@@ -47,21 +47,6 @@ UniformPrior::~UniformPrior()
 
 
 
-// UniformPrior::isUniformPrior()
-//
-// PURPOSE:
-//    returns true for this uniform Prior  
-//
-
-bool UniformPrior::isUniformPrior() 
-{
-    return true;
-}
-
-
-
-
-
 
 
 

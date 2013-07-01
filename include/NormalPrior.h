@@ -32,7 +32,6 @@ class NormalPrior : public Prior
         virtual double logDensity(RefArrayXd x, const bool includeConstantTerm=false);
         virtual void draw(RefArrayXXd sample);
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood);
-        virtual bool isUniformPrior();
 
 
     private:

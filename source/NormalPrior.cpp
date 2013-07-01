@@ -57,21 +57,6 @@ NormalPrior::~NormalPrior()
 
 
 
-// NormalPrior::isUniformPrior()
-//
-// PURPOSE:
-//    returns false for this normal Prior  
-//
-
-bool NormalPrior::isUniformPrior()
-{
-    return false;
-}
-
-
-
-
-
 
 
 
