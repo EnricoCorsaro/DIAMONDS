@@ -317,7 +317,15 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
     }
     while (ratioOfLiveToTotalEvidence > maxRatioOfLiveToTotalEvidence);                          // Termination condition by Keeton 2011
     
- 
+
+    // If we get here, we sampled the parameter space well enough to gather enough evidence Z.
+    // Add the remaining live sample of points to our collection of posterior points.
+
+    int oldNpointsInPosterior = posteriorSample.cols();
+    posteriorSample.conservativeResize(Ndimensions, oldNpointsInPosterior + Nobjects);          // First make enough room
+    posteriorSample.block(0, oldNpointsInPosterior, Ndimensions, Nobjects) = nestedSample;      // Then copy the live sample to the posterior array
+    
+
     // Compute Skilling's error on the log(Evidence)
     
     logEvidenceError = sqrt(fabs(informationGain)/Nobjects);
