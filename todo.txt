@@ -14,8 +14,9 @@ TODO
 - Replace X-means clusterer algorithm with something better
 
 - The XXX.conrvativeResize(Ndimensions, Niterations + 1) statements at the beginning of the nested sampling loop in Multinest.run() are highly inefficient. Fix.
+  This also includes the conservativeResize() when adding the live sample to the posterior sample
 
-- Check if logLikelihood in NesteSampler is more efficiently described with a vector<double> than with a ArrayXd.
+- Check if logLikelihood in NesteSampler is more efficiently described with a vector<double> than with an ArrayXd.
 
 - NestedSampler contains a myriad of evidences: logMeanLiveEvidence, logMeanEvidence, logMeanEvidenceNew, logMeanTotalEvidence, ... Make it more clear. 
 
@@ -30,5 +31,11 @@ TODO
 - Fix the credible interval computation as it sometimes (not always...) generates the error message: 
   Assertion failed: (index >= 0 && index < size()), function operator()
   when executing demoTwo2DGaussians.
+
+- In NestedSampler, the Arrays 'posteriorSample', 'logLikelihoodOfPosteriorSample', 'logWeightOfPosteriorSample' are public which means that they can be altered from outside. Check whether there is a better design possible.
+
+- Consider changing Nobjects to Npoints, since "object" has already a meaning in C++ as an instantiated class.
+
+
 
   
