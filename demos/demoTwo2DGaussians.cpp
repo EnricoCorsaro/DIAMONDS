@@ -71,11 +71,11 @@ int main(int argc, char *argv[])
     // Start nested sampling process
     
     bool printOnTheScreen = true;               // Print results on the screen
-    int Nobjects = 300;                         // TODO
-    int maxNdrawAttempts = 300;                 // TODO
+    int Nobjects = 200;                         // TODO
+    int maxNdrawAttempts = 100;                 // TODO
     int NiterationsBeforeClustering = 10;       // Number of nesting iterations before executing clustering algorithm again
     double initialEnlargementFactor = 2.0;      // TODO
-    double shrinkingRate = 0.3;                 // Exponent for remaining prior mass in ellipsoid enlargement factor
+    double shrinkingRate = 0.2;                 // Exponent for remaining prior mass in ellipsoid enlargement factor
     double terminationFactor = 0.01;            // Termination factor for nesting loop
 
 
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     results.writeLogLikelihoodToFile("demoTwo2DGaussians_LogLikelihood.txt");
     results.writeEvidenceInformationToFile("demoTwo2DGaussians_Evidence.txt");
     results.writePosteriorProbabilityToFile("demoTwo2DGaussians_Posterior.txt");
-    results.writeParameterEstimationToFile("demoTwo2DGaussians_ParameterEstimation.txt");
+    //results.writeParameterEstimationToFile("demoTwo2DGaussians_ParameterEstimation.txt");
  
     // That's it!
 
