@@ -7,9 +7,9 @@
 //      Class constructor.
 //
 // INPUT:
-//      sample:            Eigen Array of size (Ndimensions, sampleSize), 
+//      sample:             Eigen Array of size (Ndimensions, sampleSize), 
 //                          containing the coordinates of the points inside the ellipsoid.
-//      enlargementFactor: TODO
+//      enlargementFactor:  Initial enlargement factor to compute the ellipsoids for the first time
 //
 
 Ellipsoid::Ellipsoid(RefArrayXXd sample, const double enlargementFactor)
@@ -18,12 +18,12 @@ Ellipsoid::Ellipsoid(RefArrayXXd sample, const double enlargementFactor)
   Ndimensions(sample.rows()),
   uniform(0.0, 1.0),
   normal(0.0, 1.0)
-
 {
     // Set the seed of the random generator using the clock
 
     clock_t clockticks = clock();
     engine.seed(clockticks);
+
 
     // Resize the matrices to their proper size
 
@@ -33,21 +33,21 @@ Ellipsoid::Ellipsoid(RefArrayXXd sample, const double enlargementFactor)
     eigenvectors.resize(Ndimensions, Ndimensions);
     covarianceMatrix.resize(Ndimensions, Ndimensions);
 
+
     // Compute the covariance matrix of the sample of points
 
     Functions::clusterCovariance(sample, covarianceMatrix, centerCoordinates);
+
 
     // Compute the eigenvectors and eigenvalues of this covariance matrix
 
     Functions::selfAdjointMatrixDecomposition(covarianceMatrix, originalEigenvalues, eigenvectors);
 
+
     // Set the enlargement factor, and (re)compute the corresponding eigenvalues, eigenvectors etc.
 
     resetEnlargementFactor(enlargementFactor);
 }
-
-
-
 
 
 
@@ -80,8 +80,6 @@ Ellipsoid::~Ellipsoid()
 
 
 
-
-
 // Ellipsoid::resetEnlargementFactor()
 //
 // PURPOSE: 
@@ -91,8 +89,8 @@ Ellipsoid::~Ellipsoid()
 //      enlargementFactor term.
 //
 // INPUT:
-//      enlargementFactor: a double to contain the enlargement
-//                         factor to be used for the chosen ellipsoid.
+//      newEnlargementFactor:  a double to contain the new enlargement
+//                          factor to be used for the chosen ellipsoid.
 //
 // OUTPUT:
 //      void
@@ -105,17 +103,22 @@ void Ellipsoid::resetEnlargementFactor(const double newEnlargementFactor)
     
     // Enlarge the eigenvalues with the user-specified factor
 
+
     enlargedEigenvalues = originalEigenvalues.sqrt() + enlargementFactor * originalEigenvalues.sqrt();
     enlargedEigenvalues = enlargedEigenvalues * enlargedEigenvalues;
 
+
     // Recompute the hypervolume contained in the enlarged ellipsoid
 
-    hyperVolume = enlargedEigenvalues.prod();
-    
+    hyperVolume = enlargedEigenvalues.sqrt().prod();
+
+
     // Recompute the covariance matrix with the enlarged eigenvalues
 
     covarianceMatrix = eigenvectors.matrix() * enlargedEigenvalues.matrix().asDiagonal() * eigenvectors.matrix().transpose();
 }
+
+
 
 
 
@@ -189,7 +192,8 @@ bool Ellipsoid::overlapsWith(Ellipsoid ellipsoid)
     bool ellipsoidsDoOverlap = false;       // Assume no overlap in the beginning
     double pointA;                          // Point laying in this ellipsoid
     double pointB;                          // Point laying in the other ellipsoid
-    
+
+
     // Loop over all eigenvectors
 
     for (int i = 0; i < Ndimensions+1; i++) 
@@ -206,6 +210,7 @@ bool Ellipsoid::overlapsWith(Ellipsoid ellipsoid)
                 V.col(i) = V.col(i).array() / V(Ndimensions,i).real();             // Normalize eigenvector to last component value
                 pointA = V.col(i).transpose().real() * AT * V.col(i).real();       // Evaluate point from this ellipsoid
                 pointB = V.col(i).transpose().real() * BT * V.col(i).real();       // Evaluate point from the other ellipsoid
+
 
                 // Accept only if point belongs to both ellipsoids
 
@@ -250,18 +255,21 @@ bool Ellipsoid::containsPoint(const RefArrayXd pointCoordinates)
     
     T.bottomLeftCorner(1,Ndimensions) = (-1.) * centerCoordinates.transpose();
 
+
     // Construct ellipsoid matrix in homogeneous coordinates
 
     MatrixXd A = MatrixXd::Zero(Ndimensions+1,Ndimensions+1);
     A(Ndimensions,Ndimensions) = -1;
     
     MatrixXd C = MatrixXd::Zero(Ndimensions, Ndimensions);
-    
+
+
     // Compute the covariance matrix
 
     C =  eigenvectors.matrix() * enlargedEigenvalues.matrix().asDiagonal() 
                                * eigenvectors.matrix().transpose(); 
     A.topLeftCorner(Ndimensions,Ndimensions) = C.inverse();
+
 
     // Translate to the ellipsoid center
 
@@ -270,6 +278,7 @@ bool Ellipsoid::containsPoint(const RefArrayXd pointCoordinates)
     VectorXd X(Ndimensions+1);
     X.head(Ndimensions) = pointCoordinates.matrix();
     X(Ndimensions) = 1;
+
 
     // Check if the point belongs to this ellipsoid
 
@@ -314,7 +323,6 @@ bool Ellipsoid::containsPoint(const RefArrayXd pointCoordinates)
 
 void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
 {
-
     // Pick a point uniformly from a unit hyper-sphere
     
     do
@@ -332,7 +340,8 @@ void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
     // Normalize the point so that it belongs to the unit hyper-sphere
         
     drawnPoint = drawnPoint / drawnPoint.matrix().norm(); 
-    
+ 
+
     // Sample uniformly in the radial direction
 
     drawnPoint = pow(uniform(engine), 1./Ndimensions) * drawnPoint; 
@@ -345,11 +354,6 @@ void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
 
     drawnPoint = (T * drawnPoint.matrix()) + centerCoordinates.matrix();
 }
-
-
-
-
-
 
 
 
@@ -385,10 +389,6 @@ ArrayXd Ellipsoid::getCenterCoordinates()
 
 
 
-
-
-
-
 // Ellipsoid::getEigenvalues()
 //
 // PURPOSE: 
@@ -402,9 +402,6 @@ ArrayXd Ellipsoid::getEigenvalues()
 {
     return enlargedEigenvalues;
 }
-
-
-
 
 
 
@@ -444,10 +441,6 @@ ArrayXXd Ellipsoid::getSample()
 
 
 
-
-
-
-
 // Ellipsoid::getCovarianceMatrix()
 //
 // PURPOSE: 
@@ -462,7 +455,6 @@ ArrayXXd Ellipsoid::getCovarianceMatrix()
 {
     return covarianceMatrix;
 }
-
 
 
 
@@ -526,7 +518,6 @@ int Ellipsoid::getSampleSize()
 
 
 
-
 // Ellipsoid::getHyperVolume()
 //
 // PURPOSE: 
@@ -552,14 +543,14 @@ double Ellipsoid::getHyperVolume()
 
 
 
-
 // Ellipsoid::getEnlargementFactor()
 //
 // PURPOSE: 
 //      Get the private data member enlargementFactor.      
 //
 // OUTPUT:
-//      A double containing the enlargement factor computed for the ellipsoid.
+//      A double containing the enlargement factor computed for the ellipsoid
+//      and updated to the last resetting.
 //
 
 double Ellipsoid::getEnlargementFactor()

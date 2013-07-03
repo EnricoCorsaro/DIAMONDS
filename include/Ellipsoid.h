@@ -30,7 +30,7 @@ class Ellipsoid
 
     public:
 
-        Ellipsoid(RefArrayXXd sampleOfParameters, const double enlargementFactor=1.0);
+        Ellipsoid(RefArrayXXd sampleOfParameters, const double enlargementFactor = 1.0);
         ~Ellipsoid();
 
         void resetEnlargementFactor(const double newEnlargementFactor);
