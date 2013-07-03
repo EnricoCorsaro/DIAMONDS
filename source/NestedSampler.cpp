@@ -35,17 +35,13 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, ve
   uniform(0.0, 1.0),
   Niterations(0),
   informationGain(0.0), 
-  logEvidence(-DBL_MAX),
-  logMeanEvidence(-DBL_MAX),
-  constant1(1.0/(Nobjects + 1)),
-  constant2(constant1*Nobjects),
-  constant3(1.0/((Nobjects + 2)*constant1))
-
+  logEvidence(numeric_limits<double>::lowest())
 {
    // Set the seed of the random generator using the clock
 
     clock_t clockticks = clock();
     engine.seed(clockticks);
+
 
     // The number of dimensions of the parameter space is the sum
     // of the dimensions covered by each of the priors
@@ -95,11 +91,11 @@ NestedSampler::~NestedSampler()
 //      logWeightOfPosteriorSample.
 //
 // INPUT:
-//      terminationFactor: a double specifying the amount of exceeding information to
-//      terminate nested iterations. Default is 1.
-//      NiterationsBeforeClustering: number of nested iterations required to recompute
-//      the clustering of the points in the sample.
-//      maxNdrawAttempts: the maximum number of attempts allowed when drawing from a single ellipsoid.
+//      terminationFactor:              a double specifying the amount of exceeding information to
+//                                      terminate nested iterations. Default is 1.
+//      NiterationsBeforeClustering:    number of nested iterations required to recompute
+//                                      the clustering of the points in the sample.
+//      maxNdrawAttempts:               the maximum number of attempts allowed when drawing from a single ellipsoid.
 //
 // OUTPUT:
 //      void
@@ -110,11 +106,11 @@ NestedSampler::~NestedSampler()
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int NiterationsBeforeClustering, const int maxNdrawAttempts)
+void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const int NiterationsBeforeClustering, const int maxNdrawAttempts)
 {
     int startTime = time(0);
     double logMeanLiveEvidence;
-    double ratioOfLiveToTotalEvidence;
+    double ratioOfRemainderToActualEvidence;
 
 
     // Set up the random number generator. It generates integers random numbers
@@ -128,23 +124,28 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
 
     nestedSample.resize(Ndimensions, Nobjects);
     int beginIndex = 0;
+    int NdimensionsOfCurrentPrior;
+    ArrayXXd priorSample;
 
     for (int i = 0; i < ptrPriors.size(); i++)
     {
         // Some priors cover one particalar coordinate, others may cover two or more coordinates
         // Find out how many dimensions the current prior covers.
 
-        const int NdimensionsOfCurrentPrior = ptrPriors[i]->getNdimensions();
+        NdimensionsOfCurrentPrior = ptrPriors[i]->getNdimensions();
         
-        // Draw the subset of coordinates randomly from the current prior
 
-        ArrayXXd priorSample(NdimensionsOfCurrentPrior, Nobjects);
-        ptrPriors[i]->draw(priorSample);
+        // Draw the subset of coordinates randomly from the current prior
         
+        priorSample.resize(NdimensionsOfCurrentPrior, Nobjects);
+        ptrPriors[i]->draw(priorSample);
+
+
         // Insert this random subset of coordinates into the total sample of coordinates of points
 
         nestedSample.block(beginIndex, 0, NdimensionsOfCurrentPrior, Nobjects) = priorSample;      
-        
+
+
         // Move index to the beginning of the coordinate set of the next prior
 
         beginIndex += NdimensionsOfCurrentPrior;
@@ -171,14 +172,14 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
     // The nested sampling will involve finding clusters in the sample.
     // This will require the following containers.
 
-    int Nclusters=0;
+    int Nclusters = 0;
     vector<int> clusterIndices(Nobjects);
     vector<int> clusterSizes;
 
 
-    // Start the nested sampling loop. Each iteration, we'll replace the point with the worse likelihood.
+    // Start the nested sampling loop. Each iteration, we'll replace the point with the worst likelihood.
     // New points are drawn from the prior, but with the constraint that they should have a likelihood
-    // that is better than the currently worse one.
+    // that is better than the currently worst one.
 
     do 
     {
@@ -190,33 +191,33 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
         logWeightOfPosteriorSample.conservativeResize(Niterations + 1);
         
 
-        // Find the point with the worse likelihood. This likelihood value will set a constraint
+        // Find the point with the worst likelihood. This likelihood value will set a constraint
         // when drawing new points later on.
         
-        int indexOfLivePointWithWorseLikelihood;
-        worseLiveLogLikelihood = logLikelihood.minCoeff(&indexOfLivePointWithWorseLikelihood);
-        double logWeight = logWidthInPriorMass + worseLiveLogLikelihood;                
+        int indexOfLivePointWithWorstLikelihood;
+        worstLiveLogLikelihood = logLikelihood.minCoeff(&indexOfLivePointWithWorstLikelihood);
+        double logWeight = logWidthInPriorMass + worstLiveLogLikelihood;                
 
 
         // Update the evidence Z and the information Gain
         
         double logEvidenceNew = Functions::logExpSum(logEvidence, logWeight);
-        informationGain = exp(logWeight - logEvidenceNew) * worseLiveLogLikelihood 
+        informationGain = exp(logWeight - logEvidenceNew) * worstLiveLogLikelihood 
                                         + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
                                         - logEvidenceNew;
         logEvidence = logEvidenceNew;
 
         
-        // Although we will replace the point with the worse likelihood in the live sample, we will save
+        // Although we will replace the point with the worst likelihood in the live sample, we will save
         // it in our collection of posterior sample. Also save its likelihood value and its weight
 
-        posteriorSample.col(Niterations) = nestedSample.col(indexOfLivePointWithWorseLikelihood); 
-        logLikelihoodOfPosteriorSample(Niterations) = worseLiveLogLikelihood; 
+        posteriorSample.col(Niterations) = nestedSample.col(indexOfLivePointWithWorstLikelihood); 
+        logLikelihoodOfPosteriorSample(Niterations) = worstLiveLogLikelihood; 
         logWeightOfPosteriorSample(Niterations) = logWeight; 
 
 
         // Compute the (logarithm of) the mean likelihood of the set of live points.
-        // Note that we are not computing mean(log(likelihodd)) but log(mean(likelhood)).
+        // Note that we are not computing mean(log(likelihood)) but log(mean(likelhood)).
         // Since we are only storing the log(likelihood) values, this results in a peculiar
         // way of computing the mean.
         
@@ -230,18 +231,15 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
         logMeanLikelihoodOfLivePoints -= log(Nobjects);
         
         
-        // Compute mean evidence and mean live evidence
+        // Compute mean live evidence
 
-        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * log(constant2);
-        double logMeanEvidenceNew = Functions::logExpSum(worseLiveLogLikelihood + Niterations*log(constant2) - log(Nobjects), logMeanEvidence);
-        logMeanEvidence = logMeanEvidenceNew;
-        logMeanTotalEvidence = Functions::logExpSum(logMeanEvidence, logMeanLiveEvidence);
+        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * (log(Nobjects) - log(Nobjects + 1));
 
 
-        // Compute the ratio of the evidence of the live sample to the evidence of the total sample (live + not-live).
+        // Compute the ratio of the evidence of the live sample to the actual Skilling's evidence.
         // Only when we gathered enough evidence, this ratio will be sufficiently small so that we can stop the iterations.
 
-        ratioOfLiveToTotalEvidence = exp(logMeanLiveEvidence - logMeanEvidence);
+        ratioOfRemainderToActualEvidence = exp(logMeanLiveEvidence - logEvidence);
         
 
         // Find clusters in our live sample of points. Don't do this every iteration but only
@@ -257,26 +255,25 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
 
         if (printOnTheScreen)
         {
-            cerr << "Niter=" << Niterations << "  Nclusters:" << Nclusters << "  WidthPriorMass= " << exp(logTotalWidthInPriorMass) << "  EvidenceRatio=" << ratioOfLiveToTotalEvidence << "\r";
-            //cerr << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
-            //cerr << "Keeton's log(Evidence): " << logMeanEvidence << endl;
-            //cerr << "Keeton's log(Live Evidence): " << logMeanLiveEvidence << endl;
-            //cerr << "Keeton's log(Total Evidence): " << logMeanTotalEvidence << endl;
-            //cerr << endl;
+            cerr << "Niter=" << Niterations << "  Nclusters:" << Nclusters 
+            << "  WidthPriorMass= " << exp(logTotalWidthInPriorMass) 
+            << "  EvidenceRatio=" << ratioOfRemainderToActualEvidence << "\r";
+            cerr << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
+            cerr << "Information Gain: " << informationGain << endl;
         }
 
 
 
-        // Draw a new point, which should replace the point with the worse likelihood.
+        // Draw a new point, which should replace the point with the worst likelihood.
         // This new point should be drawn from the prior, but with a likelihood greater 
-        // than the current worse likelihood. The drawing algorithm may need a starting point,
+        // than the current worst likelihood. The drawing algorithm may need a starting point,
         // for which we will take a randomly chosen point of the live sample (excluding the
-        // worse point).
+        // worst point).
 
         int indexOfRandomlyChosenPoint = 0;
         if (Nobjects > 1)
         {
-            // Select randomly an index of a sample point, but not the one of the worse point
+            // Select randomly an index of a sample point, but not the one of the worst point
 
             do 
             {
@@ -284,7 +281,7 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
 
                 indexOfRandomlyChosenPoint = discreteUniform(engine);
             } 
-            while (indexOfRandomlyChosenPoint == indexOfLivePointWithWorseLikelihood);
+            while (indexOfRandomlyChosenPoint == indexOfLivePointWithWorstLikelihood);
         }
 
 
@@ -292,13 +289,14 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
 
         ArrayXd drawnPoint = nestedSample.col(indexOfRandomlyChosenPoint); 
         double logLikelihoodOfDrawnPoint = 0.0;
-        drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, logTotalWidthInPriorMass, drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
+        drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, 
+                           logTotalWidthInPriorMass, drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
 
 
-        // Replace the point with the worse likelihood with our newly drawn one.
+        // Replace the point with the worst likelihood with our newly drawn one.
 
-        nestedSample.col(indexOfLivePointWithWorseLikelihood) = drawnPoint;
-        logLikelihood(indexOfLivePointWithWorseLikelihood) = logLikelihoodOfDrawnPoint;
+        nestedSample.col(indexOfLivePointWithWorstLikelihood) = drawnPoint;
+        logLikelihood(indexOfLivePointWithWorstLikelihood) = logLikelihoodOfDrawnPoint;
         
 
         // Shrink prior mass interval
@@ -315,7 +313,7 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
         
         Niterations++;
     }
-    while (ratioOfLiveToTotalEvidence > maxRatioOfLiveToTotalEvidence);                          // Termination condition by Keeton 2011
+    while (ratioOfRemainderToActualEvidence > maxRatioOfRemainderToActualEvidence);                          // Termination condition by Keeton 2011
     
 
     // If we get here, we sampled the parameter space well enough to gather enough evidence Z.
@@ -329,11 +327,6 @@ void NestedSampler::run(const double maxRatioOfLiveToTotalEvidence, const int Ni
     // Compute Skilling's error on the log(Evidence)
     
     logEvidenceError = sqrt(fabs(informationGain)/Nobjects);
-
-
-    // Compute Keeton's errors on the log(Evidence)
-
-    computeKeetonEvidenceError(printOnTheScreen, logMeanLiveEvidence);
 
 
     // Compute and print total computational time
@@ -379,7 +372,7 @@ int NestedSampler::getNiterations()
 //      Get private data member logEvidence.
 //
 // OUTPUT:
-//      A double containing the natural logarithm of the final evidence.
+//      A double containing the natural logarithm of the Skilling's evidence.
 //
 
 double NestedSampler::getLogEvidence()
@@ -409,99 +402,6 @@ double NestedSampler::getLogEvidenceError()
 {
     return logEvidenceError;
 }
-
-
-
-
-
-
-
-
-
-
-// NestedSampler::getLogMeanEvidence()
-//
-// PURPOSE:
-//      Get private data member logMeanEvidence.
-//
-// OUTPUT:
-//      A double containing the natural logarithm of the Keeton's mean evidence.
-//
-
-double NestedSampler::getLogMeanEvidence()
-{
-    return logMeanEvidence;
-}
-
-
-
-
-
-
-
-
-
-// NestedSampler::getLogMeanEvidenceError()
-//
-// PURPOSE:
-//      Get private data member logMeanEvidenceError.
-//
-// OUTPUT:
-//      A double containing the Keeton's error on the logMeanEvidence.
-//
-
-double NestedSampler::getLogMeanEvidenceError()
-{
-    return logMeanEvidenceError;
-}
-
-
-
-
-
-
-
-
-
-
-// NestedSampler::getLogMeanTotalEvidence()
-//
-// PURPOSE:
-//      Get private data member logMeanTotalEvidence.
-//
-// OUTPUT:
-//      A double containing the Keeton's mean total evidence.
-//
-
-double NestedSampler::getLogMeanTotalEvidence()
-{
-    return logMeanTotalEvidence;
-}
-
-
-
-
-
-
-
-
-
-
-
-// NestedSampler::getLogMeanTotalEvidenceError()
-//
-// PURPOSE:
-//      Get private data member logMeanTotalEvidenceError.
-//
-// OUTPUT:
-//      A double containing the Keeton's error on the logarithm of the mean total evidence.
-//
-
-double NestedSampler::getLogMeanTotalEvidenceError()
-{
-    return logMeanTotalEvidenceError;
-}
-
 
 
 
@@ -559,64 +459,6 @@ double NestedSampler::getComputationalTime()
 
 
 
-// NestedSampler::computeKeetonEvidenceError()
-//
-// PURPOSE:
-//      Computes the total evidence error on the total evidence, according to the
-//      description by Keeton C. 2011, MNRAS, 414,1418.
-//
-// INPUT:
-//      printOnTheScreen: a boolean value specifying whether the results are to 
-//      be printed on the screen or not.
-//      logMeanLiveEvidence: a double containing the logarithm of the live evidence
-//      compure by means of Keeton's equations.
-//
-// OUTPUT:
-//      void
-//
-
-void NestedSampler::computeKeetonEvidenceError(const bool printOnTheScreen, const double logMeanLiveEvidence)
-{
-    double logAdditionalEvidenceError;
-    double errorTerm1 = -DBL_MAX;
-    double errorTerm2 = -DBL_MAX;
-    double errorTerm3 = -DBL_MAX;
-    double errorTerm4 = -DBL_MAX;
-    double errorTerm5;
-
-    for (int j = 0; j < Niterations; j++)
-    {
-        for (int i = 0; i < j; i++)
-        {
-            errorTerm2 = Functions::logExpSum(logLikelihoodOfPosteriorSample(i) + i*log(constant3), errorTerm2);
-        }
-
-        errorTerm1 = Functions::logExpSum(logLikelihoodOfPosteriorSample(j) + j*log(constant2) + errorTerm2, errorTerm1);
-        errorTerm3 = Functions::logExpSum(logLikelihoodOfPosteriorSample(j) + j*log(constant2), errorTerm3);
-        errorTerm2 = -DBL_MAX;
-        errorTerm5 = Functions::logExpDifference(log(constant1) + j*log(constant3), j*log(constant2) - log(Nobjects));
-        errorTerm4 = Functions::logExpSum(logLikelihoodOfPosteriorSample(j) + errorTerm5, errorTerm4);
-    }
-    
-    logMeanEvidenceError = log(2.0) + log(constant1) - log(Nobjects) + errorTerm1;
-    logMeanEvidenceError = Functions::logExpDifference(logMeanEvidenceError, -2.0*log(Nobjects) + 2.0*errorTerm3);
-    
-    logAdditionalEvidenceError = 2.0*logMeanLikelihoodOfLivePoints + Niterations*log(constant2) 
-                                 + Functions::logExpDifference(Niterations*log(constant3), Niterations*log(constant3));
-    logAdditionalEvidenceError = Functions::logExpSum(logAdditionalEvidenceError, log(2) + logMeanLikelihoodOfLivePoints + Niterations*log(constant2) + errorTerm4);
-    logMeanTotalEvidenceError = sqrt(exp(logMeanEvidenceError) + exp(logAdditionalEvidenceError))/(exp(logMeanLiveEvidence) + exp(logMeanEvidence));
-    logMeanEvidenceError = sqrt(exp(logMeanEvidenceError))/exp(logMeanEvidence);
-}
-
-
-
-
-
-
-
-
-
-
 // NestedSampler::printComputationalTime()
 //
 // PURPOSE:
@@ -652,5 +494,11 @@ void NestedSampler::printComputationalTime(const double startTime)
         {
             computationalTime = computationalTime/(60.*60.);
             cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " hours" << endl;
+        }
+    else 
+        if (computationalTime >= 60*60*24)
+        {
+            computationalTime = computationalTime/(60.*60.*24.);
+            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " days" << endl;
         }
 }
