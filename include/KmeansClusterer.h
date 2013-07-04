@@ -6,6 +6,7 @@
 #include <cfloat>
 #include <cmath>
 #include <random>
+#include <limits>
 #include <iostream>
 #include "Clusterer.h"
 

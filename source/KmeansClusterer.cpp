@@ -194,20 +194,21 @@ void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXX
 //      the barycenter of these gathered points as the updated cluster center. And so on.
 //
 // INPUT:
-//      sample(Ndimensions, Npoints): sample of N-dimensional points
+//      sample(Ndimensions, Npoints):   sample of N-dimensional points
 //      center(Ndimensions, Nclusters): set of N-dimensional coordinates of the cluster centers 
-//      clusterSizes(Nclusters): for each cluster, the number of points it contains
-//      clusterIndices(Npoints): for each point the index of the cluster it belongs to. This index
-//                               runs from 0 to Nclusters-1.
-//      sumOfDistancesToClosestCenter: the sum over all points of their distance to the closest 
-//                                     cluster center (i.e. the center of the cluster to which they
-//                                     belong).
-//      relTolerance: fitting the clusters converged when S < relTolerance, where S is the relative 
-//                    change in total sum of distances of all points to their cluster center.  
+//      clusterSizes(Nclusters):        for each cluster, the number of points it contains
+//      clusterIndices(Npoints):        for each point the index of the cluster it belongs to. This index
+//                                      runs from 0 to Nclusters-1.
+//      sumOfDistancesToClosestCenter:  the sum over all points of their distance to the closest 
+//                                      cluster center (i.e. the center of the cluster to which they
+//                                      belong).
+//      relTolerance:                   fitting the clusters converged when S < relTolerance, where S 
+//                                      is the relative change in total sum of distances of all points 
+//                                      to their cluster center.  
 // 
 // OUTPUT:
-//      True if the convergence of k-means was successfully, false otherwise. A convergence is
-//      considered successfully if the relTolerance-criterion is satisfied (see above), _and_ if 
+//      True if the convergence of k-means was successful, false otherwise. A convergence is
+//      considered successful if the relTolerance-criterion is satisfied (see above), _and_ if 
 //      all clusters contain at least 2 points.
 
 
@@ -243,7 +244,7 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
     
         for (int n = 0; n < Npoints; ++n)
         {
-            distanceToClosestCenter = DBL_MAX;
+            distanceToClosestCenter = numeric_limits<double>::max();
         
             for (int i = 0; i < Nclusters; ++i)
             {
@@ -447,10 +448,10 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
     unsigned int Npoints = sample.cols();
     unsigned int Ndimensions = sample.rows();
     unsigned int optimalNclusters;    
-    double bestBICvalue = DBL_MAX;
+    double bestBICvalue = numeric_limits<double>::max();
     double BICvalue; 
     double sumOfDistancesToClosestCenter;
-    double bestSumOfDistancesToClosestCenter = DBL_MAX;
+    double bestSumOfDistancesToClosestCenter = numeric_limits<double>::max();
     vector<int> clusterIndices(Npoints);                    // For each point the index of the cluster to ...
     vector<int> bestClusterIndices(Npoints);                // ... which it belongs
     ArrayXd clusterSizes;                                   // Not vector<int> because will be used in Eigen array expressions
@@ -474,7 +475,7 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
         // The k-means algorithm is sensitive to the choice of the initial centers. 
         // We therefore run the algorithm 'Ntrial' times, and take the best clustering.
         
-        bestSumOfDistancesToClosestCenter = DBL_MAX;
+        bestSumOfDistancesToClosestCenter = numeric_limits<double>::max();
         
                     
         for (int m = 0; m < Ntrials; ++m)
