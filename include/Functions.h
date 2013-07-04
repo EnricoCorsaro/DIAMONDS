@@ -78,8 +78,11 @@ namespace Functions
     template <typename Type>
     vector<int> argsort(const vector<Type> &myVector);
 
+}
 
-} // END namespace Functions
+
+
+
 
 
 
@@ -89,38 +92,43 @@ namespace Functions
 //
 // PURPOSE: 
 //      Mimicks Numpy's argsort() function. Given a vector of any type, it returns a
-//      vector of integer indices such that
-//        myVector[indices[0]] <= myVector[indices[1]] <= ... <= myVector[indices[N-1]]
+//      vector of integer indices such that:
+//      myVector[indices[0]] <= myVector[indices[1]] <= ... <= myVector[indices[N-1]]
 //
 // INPUT:
-//      myVector[0..N-1]: vector which you want to argsort
+//      myVector[0..N-1]: vector which you want to sort in ascending order
 //
 // OUTPUT:
-//      indices[0-N-1]: vector with integer indices
-//
+//      indices[0-N-1]: vector with integer indices corresponding to sorted elements
+//                      of the input vector
 //
 // REMARKS:
-//      Because of the template, this function needs to be in the header file
+//      Because of the template, this function needs to be in the header file.
 // 
 
 template <typename Type>
 vector<int> Functions::argsort(const vector<Type> &myVector)
 {
+    // Create a vector of integers to contain the indices of the sorted elements
+    
     vector<int> indices(myVector.size());
 
-    // Generate the indices from 0 to N-1
+
+    // Generate the indices from 0 to myVector.size()-1
+    // std::iota is implemented in C++11 standard. 
+    // It requires the starting and ending indices of the array to fill with increasing integers
+    // and the starting value, which is incremented at each subsequent element (++value).
 
     iota(begin(indices), end(indices), 0);
 
-    // Use the sort() function of the STL, but with a lambda function
-    // that compares the elements of myVector
+
+    // Use the sort() function implemented in algorithm library, but with a lambda function
+    // that compares the elements of myVector.
 
     sort(begin(indices), end(indices), [&myVector] (int i, int j) {return myVector[i] < myVector[j];} );
 
     return indices;
 }
-
-
 
 
 #endif
