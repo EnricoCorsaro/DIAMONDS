@@ -6,20 +6,19 @@
 //      Class constructor.
 //
 // INPUT:
-//      printOnTheScreen:         true if the results are to be printed on the screen, false otherwise
-//      ptrPriors:                vector of Prior class objects containing the priors used in the problem.
-//      likelihood:               Likelihood class object used for likelihood sampling.
-//      metric:                   Metric class object to contain the metric used in the problem.
-//      clusterer:                Clusterer class object specifying the type of clustering algorithm to be used.      
-//      Nobjects:                 Initial number of objects coming from the main nested sampling loop
-//      initialEnlargementFactor: Initial value of the enlargement for the ellipsoids
-//      shrinkingRate:            Shrinking rate of the enlargement factors, between 0 and 1.
+//      printOnTheScreen:           true if the results are to be printed on the screen, false otherwise
+//      ptrPriors:                  vector of Prior class objects containing the priors used in the problem.
+//      likelihood:                 Likelihood class object used for likelihood sampling.
+//      metric:                     Metric class object to contain the metric used in the problem.
+//      clusterer:                  Clusterer class object specifying the type of clustering algorithm to be used.      
+//      Nobjects:                   Initial number of objects coming from the main nested sampling loop
+//      initialEnlargementFactor:   Initial value of the enlargement for the ellipsoids
+//      shrinkingRate:              Shrinking rate of the enlargement factors, between 0 and 1.
 //
 
 MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriors, 
                                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
-                                             const int Nobjects, const double initialEnlargementFactor, const double shrinkingRate
-                                            )
+                                             const int Nobjects, const double initialEnlargementFactor, const double shrinkingRate)
 : NestedSampler(printOnTheScreen, Nobjects, ptrPriors, likelihood, metric, clusterer),
   initialEnlargementFactor(initialEnlargementFactor),
   shrinkingRate(shrinkingRate)
@@ -73,15 +72,16 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      ellipsoid which is isolated, i.e. non-overlapping.
 //
 // INPUT:
-//      sample:              Eigen Array matrix of size (Ndimensions, Nobjects)
-//      Nclusters:                Optimal number of clusters found by clustering algorithm
-//      clusterIndices:           Indices of clusters for each point of the sample
-//      logTotalWidthInPriorMass: Log Value of total prior volume from beginning to the actual nested iteration.
-//      drawnPoint:              Eigen Array matrix of size (Ndimensions,Ndraws) to contain the
-//                                 coordinates of the drawn point to be used for the next nesting loop. 
-//                                 When used for the first time, the array contains the coordinates of the 
-//                                 worst nested object to be updated.
-//      maxNdrawAttempts:         Maximum number of attempts allowed when drawing from a single ellipsoid.
+//      sample:                     Eigen Array matrix of size (Ndimensions, Nobjects)
+//      Nclusters:                  Optimal number of clusters found by clustering algorithm
+//      clusterIndices:             Indices of clusters for each point of the sample
+//      clusterSizes:               A vector of integers containing the number of points belonging to each cluster
+//      logTotalWidthInPriorMass:   Log Value of total prior volume from beginning to the actual nested iteration.
+//      drawnPoint:                 Eigen Array matrix of size (Ndimensions,Ndraws) to contain the
+//                                  coordinates of the drawn point to be used for the next nesting loop. 
+//                                  When used for the first time, the array contains the coordinates of the 
+//                                  worst nested object to be updated.
+//      maxNdrawAttempts:           Maximum number of attempts allowed when drawing from a single ellipsoid.
 //      
 //
 // OUTPUT:
@@ -95,6 +95,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
     assert(sample.cols() == clusterIndices.size());
     assert(drawnPoint.size() == sample.rows());
     assert(Nclusters > 0);
+
 
     // Compute the ellipsoids corresponding to the clusters found by the clustering algorithm.
     // This involves computing the barycenter, covariance matrix, eigenvalues and eigenvectors
@@ -110,7 +111,8 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
     findOverlappingEllipsoids(overlappingEllipsoidsIndices);
     
 
-    // Compute the  hyper-volume for each of the ellipsoids.
+    // Get the hyper-volume for each of the ellipsoids and normalize it 
+    // to the sum of the hyper-volumes over all the ellipsoids
 
     vector<double> normalizedHyperVolumes(Nellipsoids);
     
@@ -118,8 +120,6 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
     {
         normalizedHyperVolumes[n] = ellipsoids[n].getHyperVolume();
     }
-
-    // Normalize the hyper-volumes with their sum
 
     double sumOfHyperVolumes = accumulate(normalizedHyperVolumes.begin(), normalizedHyperVolumes.end(), 0.0, plus<double>());
 
@@ -328,7 +328,9 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
 //
 // INPUT:
 //      sample(Ndimensions, Npoints):       Complete sample (spread over all clusters) of points
+//      Nclusters:                          The number of clusters identified by the clustering algorithm
 //      clusterIndices(Npoints):            For each point, the integer index of the cluster to which it belongs
+//      clusterSizes(Nclusters):            A vector of integers containing the number of points belonging to each cluster
 //      logRemainingWidthInPriorMass:       Log Value of the remaining prior volume at the actual nested iteration.
 //
 // OUTPUT:
@@ -339,20 +341,24 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
                                               const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass)
 {
     assert(sample.cols() == clusterIndices.size());
-    assert(sample.cols() > Ndimensions + 1);            // At least Ndimensions + 1 points are required.
- 
+    assert(sample.cols() >= Ndimensions + 1);            // At least Ndimensions + 1 points are required.
+
+
     // Compute "sorted indices" such that clusterIndices[sortedindices[k]] <= clusterIndices[sortedIndices[k+1]]
 
     vector<int> sortedIndices = Functions::argsort(clusterIndices);
 
-    // beginIndex will take values such that the indices for 1 particular cluster will be in 
-    // sortedIndex[beginIndex ... beginIndex + clusterSize[n]]      
+
+    // beginIndex will take values such that the indices for one particular cluster (# n) will be in 
+    // sortedIndex[beginIndex, ..., beginIndex + clusterSize[n] - 1]      
 
     int beginIndex = 0;
+
 
     // Clear whatever was in the ellipsoids collection
 
     ellipsoids.clear();
+
 
     // Create an Ellipsoid for each cluster (provided it's large enough)
 
@@ -360,12 +366,13 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
     {   
         // Skip cluster if number of points is not large enough
 
-        if (clusterSizes[i] <= Ndimensions + 1) 
+        if (clusterSizes[i] < Ndimensions + 1) 
         {
             // Move the beginIndex up to the next cluster
 
             beginIndex += clusterSizes[i];
-            
+
+
             // Continue with the next cluster
 
             continue;
@@ -384,14 +391,17 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
                 sampleOfOneCluster.col(n) = sample.col(sortedIndices[beginIndex+n]);
             }
 
+
             // Move the beginIndex up to the next cluster
 
             beginIndex += clusterSizes[i];
 
-            // Compute the enlargement factor
+
+            // Compute the new enlargement factor
 
             double enlargementFactor = exp( log(initialEnlargementFactor) + shrinkingRate * logRemainingWidthInPriorMass 
-                                                                          + 0.5 * log(static_cast<double>(Nobjects) / clusterSizes[i]) );
+                                       + 0.5 * log(static_cast<double>(Nobjects) / clusterSizes[i]) );
+
 
             // Add ellipsoid at the end of our vector
 
@@ -420,7 +430,9 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
 //      store the indices of those overlapping ellipsoids.
 //
 // INPUT:
-//      overlappingEllipsoidsIndices[0..Nellipsoids-1]
+//      overlappingEllipsoidsIndices[0..Nellipsoids-1]:     a vector of unordered_set of integers
+//                                                          whose elements will contain the indices
+//                                                          corresponding to the overlapping ellipsoids
 //
 // OUTPUT:
 //      overlappingEllipsoidsIndices will have changed. Element [i] contains an unordered_set<> with 
@@ -432,12 +444,14 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids(vector<unordered_set<int>>
     // Remove whatever was in the container before
 
     overlappingEllipsoidsIndices.clear();
-    
+   
+
     // Make sure that the indices container has the right size
 
     overlappingEllipsoidsIndices.resize(ellipsoids.size());
 
-    // If Ellipsoid i overlaps with j, than of course j also overlaps with i.
+
+    // If Ellipsoid i overlaps with ellipsoid j, than of course ellipsoid j also overlaps with i.
     // The indices are kept in an unordered_set<> which automatically takes care
     // that there are no duplicates.  
 
