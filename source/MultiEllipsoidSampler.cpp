@@ -137,7 +137,8 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
 
     double uniformNumber = uniform(engine);
 
-    // Select the ellipsoid that makes the cumulative hyper-distance greater than this random
+
+    // Select the ellipsoid that makes the cumulative hyper-volume greater than this random
     // number. Those ellipsoids with a larger hyper-volume will have a greater probability to 
     // be chosen.
 
@@ -153,18 +154,20 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
 
     // Draw a new point in this Ellipsoid, but with the constraints mentioned above.
 
-    bool habemusNewPoint = false;
+    bool newPointIsFound = false;
+
     
     // Drawing a new point with the constraints mentioned above may prove difficult.
     // Hence, we won't try more than 'maxNdrawAttempts'.
 
     int NdrawAttempts = 0; 
 
-    while ((habemusNewPoint == false) & (NdrawAttempts < maxNdrawAttempts))
+    while ((newPointIsFound == false) & (NdrawAttempts < maxNdrawAttempts))
     {
         // Keep count of the number of attempts
 
         NdrawAttempts++;
+
 
         // Draw a new point inside the ellipsoid
 
@@ -189,20 +192,21 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
                 if (ellipsoids[*index].containsPoint(drawnPoint))  NenclosingEllipsoids++;
             }
 
+
             // Only accept the new point with a probability = 1/NenclosingEllipsoids. 
             // If it's not accepted, go immediately back to the beginning of the while loop, 
             // and draw a new point inside the ellipsoid.
 
             uniformNumber = uniform(engine);
-            habemusNewPoint = (uniformNumber < 1./NenclosingEllipsoids);
-            if (!habemusNewPoint) continue;
+            newPointIsFound = (uniformNumber < 1./NenclosingEllipsoids);
+            if (!newPointIsFound) continue;
         }
         else
         {
             // There are no ellipsoids overlapping with the selected one, so the point
             // is automatically accepted
 
-            habemusNewPoint = true;
+            newPointIsFound = true;
         }
 
 
@@ -246,7 +250,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
             double logPriorDensityOfSubsetOfNewPoint = ptrPriors[priorIndex]->logDensity(subsetOfNewPoint);
             if (logPriorDensityOfSubsetOfNewPoint == ptrPriors[priorIndex]->minusInfinity)
             {
-                habemusNewPoint = false;
+                newPointIsFound = false;
                 break;
             }
 
@@ -256,7 +260,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
              
             if (ptrPriors[priorIndex]->logDensity(subsetOfNewPoint) < ptrPriors[priorIndex]->logDensity(subsetOfReferencePoint))
             {
-                habemusNewPoint = false;
+                newPointIsFound = false;
                 break;
             }
 
@@ -265,7 +269,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
             beginIndex += NdimensionsOfPrior;
         }
 
-        if (!habemusNewPoint)
+        if (!newPointIsFound)
         {
             // The new point failed the prior criterion, so go back to the start of the while loop
             // and draw a new point inside the selected ellipsoid
@@ -285,14 +289,14 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
             // and go back to the start of the while loop, and draw a new point inside the
             // ellipsoid.
 
-            habemusNewPoint = false;
+            newPointIsFound = false;
         }     
 
-    } // end while-loop (habemusNewPoint == false)
+    } // end while-loop (newPointIsFound == false)
 
     // If we end up here, and we still haven't found a new point, give up.
 
-    if (!habemusNewPoint)
+    if (!newPointIsFound)
     {
         cerr << "Can't find point with a better Likelihood" << endl; 
         cerr << "Quitting program." << endl;
