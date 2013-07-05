@@ -16,6 +16,7 @@
 #include <iostream>
 #include <iomanip>
 #include <cassert>
+#include <limits>
 #include <Eigen/Core>
 #include "Functions.h"
 #include "File.h"
@@ -58,5 +59,5 @@ class Results
 
         NestedSampler &nestedSampler;
 
-}; // END class Results
+};
 #endif

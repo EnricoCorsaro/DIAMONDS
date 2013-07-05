@@ -158,16 +158,16 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
 
         for (int j = 0; j < Niterations - 1; j++)
         {  
-            if (parameterValues(j) != -DBL_MAX)
+            if (parameterValues(j) != numeric_limits<double>::lowest())
             {
                 for (int k = j + 1; k < Niterations; k++)
                 {
-                    if (parameterValues(k) == -DBL_MAX)
+                    if (parameterValues(k) == numeric_limits<double>::lowest())
                         continue;
                     else
                         if (parameterValues(j) == parameterValues(k))
                         {   
-                            parameterValues(k) = -DBL_MAX;        // Set duplicate to bad value (flag)
+                            parameterValues(k) = numeric_limits<double>::lowest();        // Set duplicate to bad value (flag)
                             marginalDistribution(j) = marginalDistribution(j) + marginalDistribution(k); // Merge probability values
                             marginalDistribution(k) = 0.0;
                             NduplicateParameterComponents++;
@@ -190,10 +190,10 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
 
             for (int m = 0; (m < Niterations) && (n < (Niterations - NduplicateParameterComponents)); m++)
             {
-                if (parameterValues(m) == -DBL_MAX)
+                if (parameterValues(m) == numeric_limits<double>::lowest())
                     continue;
                 else
-                    if (parameterValues(m) != -DBL_MAX)
+                    if (parameterValues(m) != numeric_limits<double>::lowest())
                         {
                             parameterValuesCopy(n) = parameterValues(m);
                             marginalDistributionCopy(n) = marginalDistribution(m);
@@ -423,10 +423,6 @@ void Results::writeEvidenceInformationToFile(string fullPath)
             
     outputFile << "# Evidence results from nested sampling" << endl;
     outputFile << scientific << setprecision(9);
-    outputFile << "# Keeton's log(Evidence)" << setw(40) << "Keeton's Error log(Evidence)" << endl; 
-    outputFile << nestedSampler.getLogMeanEvidence() << setw(40) << nestedSampler.getLogMeanEvidenceError() << endl;
-    outputFile << "# Keeton's log(Total Evidence)" << setw(40) << "Keeton's Error log(Total Evidence)" << endl;
-    outputFile << nestedSampler.getLogMeanTotalEvidence() << setw(40) << nestedSampler.getLogMeanTotalEvidenceError() << endl;
     outputFile << "# Skilling's log(Evidence)" << setw(40) << "Skilling's Error log(Evidence)" << setw(40) << "Skilling's Information Gain" << endl;
     outputFile << nestedSampler.getLogEvidence() << setw(40) << nestedSampler.getLogEvidenceError() << setw(40) << nestedSampler.getInformationGain() << endl;
     outputFile.close();

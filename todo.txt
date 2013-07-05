@@ -9,8 +9,6 @@ TODO
 
 - Avoid accessing the individual elements of Eigen arrays too often in UniformPrior::draw()
 
-- Replace -DBL_MAX with numeric_limits<double>::lowest() defined in <limits>     (new in C++11)
-
 - Replace X-means clusterer algorithm with something better
 
 - The XXX.conrvativeResize(Ndimensions, Niterations + 1) statements at the beginning of the nested sampling loop in Multinest.run() are highly inefficient. Fix.
