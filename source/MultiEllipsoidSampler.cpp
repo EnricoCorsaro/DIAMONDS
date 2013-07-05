@@ -160,7 +160,10 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
     // Drawing a new point with the constraints mentioned above may prove difficult.
     // Hence, we won't try more than 'maxNdrawAttempts'.
 
-    int NdrawAttempts = 0; 
+    int NdrawAttempts = 0;
+    int NenclosingEllipsoids;
+    int beginIndex;
+    double logPriorDensityOfSubsetOfNewPoint;
 
     while ((newPointIsFound == false) & (NdrawAttempts < maxNdrawAttempts))
     {
@@ -183,7 +186,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
             // There are overlaps, so count the number of ellipsoids to which the new
             // point belongs
             
-            int NenclosingEllipsoids = 1;
+            NenclosingEllipsoids = 1;
 
             for (auto index = overlappingEllipsoidsIndices[indexOfSelectedEllipsoid].begin();
                       index != overlappingEllipsoidsIndices[indexOfSelectedEllipsoid].end();
@@ -225,7 +228,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
         // prior is larger than the one of the reference point. Since different coordinates of our new 
         // point may have different priors, we need to check this for all the priors.
         
-        int beginIndex = 0;
+        beginIndex = 0;
 
         for (int priorIndex = 0; priorIndex < ptrPriors.size(); ++priorIndex)
         {
@@ -233,26 +236,31 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
 
             const int NdimensionsOfPrior = ptrPriors[priorIndex]->getNdimensions();
 
+
             // Define a subset of the new point, consisting of those coordinates covered by the 
             // same (current) prior distribution.
 
             ArrayXd subsetOfNewPoint = drawnPoint.segment(beginIndex, NdimensionsOfPrior);
-             
+
+
             // Do the same with the reference point
 
             ArrayXd subsetOfReferencePoint = referencePoint.segment(beginIndex, NdimensionsOfPrior);
+
 
             // First check the special case when the logDensity of the prior of our newPoint is -infinity 
             // (probability density = 0) This can happen e.g. for the uniform distribution, when the point 
             // falls out of its boundaries. This is a reason to immediately discard the point, without 
             // checking out the priors of the orther coordinates.
 
-            double logPriorDensityOfSubsetOfNewPoint = ptrPriors[priorIndex]->logDensity(subsetOfNewPoint);
+            logPriorDensityOfSubsetOfNewPoint = ptrPriors[priorIndex]->logDensity(subsetOfNewPoint);
+            
             if (logPriorDensityOfSubsetOfNewPoint == ptrPriors[priorIndex]->minusInfinity)
             {
                 newPointIsFound = false;
                 break;
             }
+
 
             // Check if the logPrior density of the new point is >= than the one of the reference point
             // If it failed this criterion for one prior, we can immediately discared the new point, 
@@ -264,7 +272,8 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
                 break;
             }
 
-            // Move the beginIndex on to the next set of coordinates covered by the 
+
+            // Move the beginIndex on to the next set of coordinates covered by the prior
 
             beginIndex += NdimensionsOfPrior;
         }
@@ -277,20 +286,21 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
             continue;
         }
 
+
         // Finally, the point should not only be drawn inside the ellipsoid and according to the prior
         // density, but it should also have a likelihood that is larger than the one of the worst point.
         // We check this criterion only after the prior criterion, because often the likelihood is
         // much more time consuming to compute than the prior.
 
         logLikelihoodOfDrawnPoint = likelihood.logValue(drawnPoint);
-        if (logLikelihoodOfDrawnPoint < worseLiveLogLikelihood)
+        if (logLikelihoodOfDrawnPoint < worstLiveLogLikelihood)
         {
-            // The new point does not fulfull the likelihood criterion. Flag it as such,
+            // The new point does not fulfill the likelihood criterion. Flag it as such,
             // and go back to the start of the while loop, and draw a new point inside the
             // ellipsoid.
 
             newPointIsFound = false;
-        }     
+        }
 
     } // end while-loop (newPointIsFound == false)
 
