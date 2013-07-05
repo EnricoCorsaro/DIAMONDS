@@ -35,19 +35,14 @@ class MultiEllipsoidSampler : public NestedSampler
         virtual void drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, const double logTotalWidthInPriorMass, 
                                         RefArrayXd drawnPoint, double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts); 
-
-        void computeEllipsoids(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, 
-                               const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass);
-
-        void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
-
         vector<Ellipsoid> getEllipsoids();
    
 
     protected:
       
-        void findOverlappingEllipsoids();
-        void NEWfindOverlappingEllipsoids();
+        void computeEllipsoids(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, 
+                               const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass);
+        void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
 
 
     private:
