@@ -244,7 +244,7 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
     
         for (int n = 0; n < Npoints; ++n)
         {
-            distanceToClosestCenter = numeric_limits<double>::max();
+            distanceToClosestCenter = -numeric_limits<double>::lowest();
         
             for (int i = 0; i < Nclusters; ++i)
             {
@@ -448,10 +448,10 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
     unsigned int Npoints = sample.cols();
     unsigned int Ndimensions = sample.rows();
     unsigned int optimalNclusters;    
-    double bestBICvalue = numeric_limits<double>::max();
+    double bestBICvalue = -numeric_limits<double>::lowest();
     double BICvalue; 
     double sumOfDistancesToClosestCenter;
-    double bestSumOfDistancesToClosestCenter = numeric_limits<double>::max();
+    double bestSumOfDistancesToClosestCenter = -numeric_limits<double>::lowest();
     vector<int> clusterIndices(Npoints);                    // For each point the index of the cluster to ...
     vector<int> bestClusterIndices(Npoints);                // ... which it belongs
     ArrayXd clusterSizes;                                   // Not vector<int> because will be used in Eigen array expressions
@@ -475,7 +475,7 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
         // The k-means algorithm is sensitive to the choice of the initial centers. 
         // We therefore run the algorithm 'Ntrial' times, and take the best clustering.
         
-        bestSumOfDistancesToClosestCenter = numeric_limits<double>::max();
+        bestSumOfDistancesToClosestCenter = -numeric_limits<double>::lowest();
         
                     
         for (int m = 0; m < Ntrials; ++m)
