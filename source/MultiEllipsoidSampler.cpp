@@ -35,7 +35,6 @@ MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector
 
 
 
-
 // MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //
 // PURPOSE: 
@@ -46,13 +45,6 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 {
 
 }
-
-
-
-
-
-
-
 
 
 
@@ -161,9 +153,6 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
     // Hence, we won't try more than 'maxNdrawAttempts'.
 
     int NdrawAttempts = 0;
-    int NenclosingEllipsoids;
-    int beginIndex;
-    double logPriorDensityOfSubsetOfNewPoint;
 
     while ((newPointIsFound == false) & (NdrawAttempts < maxNdrawAttempts))
     {
@@ -186,7 +175,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
             // There are overlaps, so count the number of ellipsoids to which the new
             // point belongs
             
-            NenclosingEllipsoids = 1;
+            int NenclosingEllipsoids = 1;
 
             for (auto index = overlappingEllipsoidsIndices[indexOfSelectedEllipsoid].begin();
                       index != overlappingEllipsoidsIndices[indexOfSelectedEllipsoid].end();
@@ -228,7 +217,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
         // prior is larger than the one of the reference point. Since different coordinates of our new 
         // point may have different priors, we need to check this for all the priors.
         
-        beginIndex = 0;
+        int beginIndex = 0;
 
         for (int priorIndex = 0; priorIndex < ptrPriors.size(); ++priorIndex)
         {
@@ -253,7 +242,7 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
             // falls out of its boundaries. This is a reason to immediately discard the point, without 
             // checking out the priors of the orther coordinates.
 
-            logPriorDensityOfSubsetOfNewPoint = ptrPriors[priorIndex]->logDensity(subsetOfNewPoint);
+            double logPriorDensityOfSubsetOfNewPoint = ptrPriors[priorIndex]->logDensity(subsetOfNewPoint);
             
             if (logPriorDensityOfSubsetOfNewPoint == ptrPriors[priorIndex]->minusInfinity)
             {
@@ -313,13 +302,6 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
         exit(EXIT_FAILURE);
     }
 }
-
-
-
-
-
-
-
 
 
 
@@ -436,7 +418,6 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
 
 
 
-
 // MultiEllipsoidSampler::findOverlappingEllipsoids()
 //
 // PURPOSE:
@@ -481,17 +462,6 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids(vector<unordered_set<int>>
         }
     }
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
