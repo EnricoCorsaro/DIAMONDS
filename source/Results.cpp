@@ -297,8 +297,8 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
         double lowerCredibleInterval = parameterMean - limitParameterLeft;
         double upperCredibleInterval = limitParameterRight - parameterMean;
            
-        parameterEstimates(i,3) = lowerCredibleInterval;
-        parameterEstimates(i,4) = upperCredibleInterval;
+        parameterEstimates(i,4) = lowerCredibleInterval;
+        parameterEstimates(i,5) = upperCredibleInterval;
 
     }   // END for loop over the parameters
 
