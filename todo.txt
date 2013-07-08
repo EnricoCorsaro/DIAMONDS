@@ -16,15 +16,11 @@ TODO
 
 - Check if logLikelihood in NesteSampler is more efficiently described with a vector<double> than with an ArrayXd.
 
-- NestedSampler contains a myriad of evidences: logMeanLiveEvidence, logMeanEvidence, logMeanEvidenceNew, logMeanTotalEvidence, ... Make it more clear. 
-
 - Shouldn't the clustering part be really in MutliEllipsoid::drawWithConstraint() rather than in MultiNest.run()?
 
 - In MultiNest.run() and elsewhere, consider replacing 'nestedSample' with 'liveSample'
 
 - Update method docstrings in MultiEllipsoidSampler and NestedSampler (no longer up to date after refactoring)
-
-- Change Results::writeParametersEstimationToFile() into Change Results::writeParametersSummaryToFile()
 
 - Fix the credible interval computation as it sometimes (not always...) generates the error message: 
   Assertion failed: (index >= 0 && index < size()), function operator()
@@ -38,8 +34,3 @@ TODO
 
 - Come up with a concise way avoiding the drawing of a reference point in case of uniform priors. Uniform prior will be one of the most used ones, and the drawing of the reference point is in our inner loop, so it matters.
 
-- Declare variables as close to the scope where they will be used, and initialize them immediately if possible.
-
-
-
-  
