@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     results.writeLogLikelihoodToFile("demoEggbox_LogLikelihood.txt");
     results.writeEvidenceInformationToFile("demoEggbox_Evidence.txt");
     results.writePosteriorProbabilityToFile("demoEggbox_Posterior.txt");
-    results.writeParameterEstimationToFile("demoEggbox_ParameterEstimation.txt");
+    results.writeParametersSummaryToFile("demoEggbox_ParametersSummary.txt");
  
     // That's it!
 

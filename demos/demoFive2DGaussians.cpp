@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     results.writeLogLikelihoodToFile("demoFive2DGaussians_LogLikelihood.txt");
     results.writeEvidenceInformationToFile("demoFive2DGaussians_Evidence.txt");
     results.writePosteriorProbabilityToFile("demoFive2DGaussians_Posterior.txt");
-    results.writeParameterEstimationToFile("demoFive2DGaussians_ParameterEstimation.txt");
+    results.writeParametersSummaryToFile("demoFive2DGaussians_ParametersSummary.txt");
  
     // That's it!
 

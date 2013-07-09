@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     results.writeLogLikelihoodToFile("demoTwoCircles_LogLikelihood.txt");
     results.writeEvidenceInformationToFile("demoTwoCircles_Evidence.txt");
     results.writePosteriorProbabilityToFile("demoTwoCircles_Posterior.txt");
-    results.writeParameterEstimationToFile("demoTwoCircles_ParameterEstimation.txt");
+    results.writeParametersSummaryToFile("demoTwoCircles_ParametersSummary.txt");
  
     // That's it!
 

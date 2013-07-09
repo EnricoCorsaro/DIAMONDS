@@ -24,7 +24,7 @@ int main()
     unsigned long Nrows;
     int Ncols;
 
-    File::snifFile(inputFile, Nrows, Ncols);
+    File::sniffFile(inputFile, Nrows, Ncols);
     ArrayXXd data = File::arrayXXdFromFile(inputFile, Nrows, Ncols);
     ArrayXXd sample = data.transpose();
     inputFile.close();
@@ -44,8 +44,10 @@ int main()
     // Do the clustering, and get for each point the index of the cluster it belongs to
 
     int optimalNclusters;
-    ArrayXi clusterIndices(Nrows);
-    optimalNclusters = kmeans.cluster(true, sample, clusterIndices);
+    vector<int> clusterIndices(Nrows);
+    vector<int> clusterSizes;
+
+    optimalNclusters = kmeans.cluster(sample, clusterIndices, clusterSizes, true);
     
     
     // Output the results 
