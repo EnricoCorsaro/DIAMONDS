@@ -213,7 +213,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
 
         posteriorSample.col(Niterations) = nestedSample.col(indexOfLivePointWithWorstLikelihood); 
         logLikelihoodOfPosteriorSample(Niterations) = worstLiveLogLikelihood; 
-        logWeightOfPosteriorSample(Niterations) = logWeight; 
+        logWeightOfPosteriorSample(Niterations) = logWeight;
 
 
         // Compute the (logarithm of) the mean likelihood of the set of live points.
@@ -255,13 +255,11 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
 
         if (printOnTheScreen)
         {
-            cerr << "Niter=" << Niterations << "  Nclusters:" << Nclusters 
-            << "  WidthPriorMass= " << exp(logTotalWidthInPriorMass) 
-            << "  EvidenceRatio=" << ratioOfRemainderToActualEvidence << "\r";
-            cerr << "Skilling's log(Evidence): " << setprecision(12) << logEvidence << endl;
-            cerr << "Information Gain: " << informationGain << endl;
+            cerr << "Niter: " << Niterations << "   Nclusters: " << Nclusters << setprecision(4) 
+            << "   WidthPriorMass: " << exp(logTotalWidthInPriorMass) << endl;
+            cerr << "Remaining EvidenceRatio: " << ratioOfRemainderToActualEvidence - maxRatioOfRemainderToActualEvidence
+            << "   log(Evidence): " << logEvidence << "   Information Gain: " << informationGain << endl;
         }
-
 
 
         // Draw a new point, which should replace the point with the worst likelihood.
@@ -271,6 +269,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         // worst point).
 
         int indexOfRandomlyChosenPoint = 0;
+        
         if (Nobjects > 1)
         {
             // Select randomly an index of a sample point, but not the one of the worst point
@@ -313,16 +312,21 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         
         Niterations++;
     }
-    while (ratioOfRemainderToActualEvidence > maxRatioOfRemainderToActualEvidence);                          // Termination condition by Keeton 2011
+    while (ratioOfRemainderToActualEvidence > maxRatioOfRemainderToActualEvidence);             // Termination condition by Keeton 2011
     
 
     // If we get here, we sampled the parameter space well enough to gather enough evidence Z.
-    // Add the remaining live sample of points to our collection of posterior points.
+    // Add the remaining live sample of points to our collection of posterior points 
+    // (i.e parameter coordinates, likelihood values and weights)
 
     int oldNpointsInPosterior = posteriorSample.cols();
     posteriorSample.conservativeResize(Ndimensions, oldNpointsInPosterior + Nobjects);          // First make enough room
     posteriorSample.block(0, oldNpointsInPosterior, Ndimensions, Nobjects) = nestedSample;      // Then copy the live sample to the posterior array
-    
+    logWeightOfPosteriorSample.conservativeResize(oldNpointsInPosterior + Nobjects);
+    logWeightOfPosteriorSample.segment(oldNpointsInPosterior, Nobjects) = logWidthInPriorMass + logLikelihood;                
+    logLikelihoodOfPosteriorSample.conservativeResize(oldNpointsInPosterior + Nobjects);
+    logLikelihoodOfPosteriorSample.segment(oldNpointsInPosterior, Nobjects) = logLikelihood; 
+
 
     // Compute Skilling's error on the log(Evidence)
     
