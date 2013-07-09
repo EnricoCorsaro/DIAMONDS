@@ -34,3 +34,5 @@ TODO
 
 - Come up with a concise way avoiding the drawing of a reference point in case of uniform priors. Uniform prior will be one of the most used ones, and the drawing of the reference point is in our inner loop, so it matters.
 
+- Make marginal distributions for each free parameter to be printed into output ASCII files if so required. They can be very useful to study the estimators and apply other computations at a later stage.
+
