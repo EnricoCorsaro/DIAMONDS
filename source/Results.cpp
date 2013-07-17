@@ -55,10 +55,14 @@ Results::~Results()
 //
 // OUTPUT:
 //      An Eigen Array containing the values of the posterior probability
-//      sorted according to the nesting algorithm process.
+//      sorted according to the nesting process. The array computed
+//      according to the definition of posterior probability
+//      from the nesting algorithm is finally normalized by the sum
+//      of its elements. This allows to get rid of small deviations
+//      caused by a non-exact value of the evidence.
 // 
 // REMARK:
-//      Values are real probabilities (and not probability densities).
+//      Values are probabilities (and not probability densities).
 //
 
 ArrayXd Results::posteriorProbability()
@@ -66,7 +70,7 @@ ArrayXd Results::posteriorProbability()
     ArrayXd logPosteriorDistribution = nestedSampler.logWeightOfPosteriorSample - nestedSampler.getLogEvidence();
     ArrayXd posteriorDistribution = logPosteriorDistribution.exp();
     
-    return posteriorDistribution;
+    return posteriorDistribution/posteriorDistribution.sum();
 }
 
 
@@ -176,7 +180,7 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
             parameterValues = parameterValuesCopy;
             marginalDistribution = marginalDistributionCopy;
         }
-
+        
 
         // Compute the mean value (expectation value, or first moment) of the sample distribution
        
@@ -227,25 +231,15 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
         double parameterMaximum = parameterValues.maxCoeff();
         double parameterMinimum = parameterValues.minCoeff();
         
-        if (fabs(skewness) < 0.10)
-        {
-            // The distribution is rather symmetric.
-            // Scott's normal reference rule is adopted.
+
+        // Scott's normal reference rule is adopted
             
-            binWidth = 3.5*sqrt(secondMoment)/pow(sampleSize,1.0/3.0);
-            Nbins = ceil((parameterMaximum - parameterMinimum)/binWidth);
-        }
-        else
-        {
-            // The distribution is far from being symmetric.
-            // Doane's formula for non-normal distributions is adopted.
+        binWidth = 3.5*sqrt(secondMoment)/pow(sampleSize,1.0/3.0);
+        Nbins = floor((parameterMaximum - parameterMinimum)/binWidth);
 
-            double constant = sqrt(6.0*(sampleSize - 2.0) / ((sampleSize + 1.0)*(sampleSize + 3.0)));
-            double k = 1.0 + log(sampleSize)/log(2) + log(1 + (fabs(skewness)/constant))/log(2);
-            Nbins = ceil(k);
-            binWidth = (parameterMaximum - parameterMinimum)/k;
-        }
-
+        
+        // Save the second moment of the distribution
+        
         parameterEstimates(i,3) = secondMoment;
 
 
