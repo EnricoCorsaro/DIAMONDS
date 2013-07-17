@@ -219,8 +219,8 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
         
         // Compute third moment of the sample distribution (including skewness)
         
-        double thirdMoment = ((parameterValues - parameterMean).pow(3) * marginalDistribution).sum();
-        double skewness = thirdMoment/pow(secondMoment,3.0/2.0);
+        // double thirdMoment = ((parameterValues - parameterMean).pow(3) * marginalDistribution).sum();
+        // double skewness = thirdMoment/pow(secondMoment,3.0/2.0);
         
 
         // Compute optimal bin size for rebinning marginal distribution according to its symmetry properties
