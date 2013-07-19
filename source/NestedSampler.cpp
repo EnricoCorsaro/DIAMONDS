@@ -255,10 +255,15 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
 
         if (printOnTheScreen)
         {
-            cerr << "Niter: " << Niterations << "   Nclusters: " << Nclusters << setprecision(4) 
-            << "   WidthPriorMass: " << exp(logTotalWidthInPriorMass) << endl;
-            cerr << "Remaining EvidenceRatio: " << ratioOfRemainderToActualEvidence - maxRatioOfRemainderToActualEvidence
-            << "   log(Evidence): " << logEvidence << "   Information Gain: " << informationGain << endl;
+            if ((Niterations % 50) == 0)
+            {
+                cerr << "Nit: " << Niterations << "   Ncl: " << Nclusters 
+                     << "   WPM: " << exp(logTotalWidthInPriorMass)
+                     << "   Ratio: " << ratioOfRemainderToActualEvidence - maxRatioOfRemainderToActualEvidence
+                     << "   log(E): " << logEvidence 
+                     << "   IG: " << informationGain
+                     << endl;
+            }
         }
 
 
