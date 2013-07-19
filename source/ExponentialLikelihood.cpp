@@ -56,14 +56,9 @@ ExponentialLikelihood::~ExponentialLikelihood()
 
 double ExponentialLikelihood::logValue(RefArrayXd modelParameters)
 {
-    ArrayXd predictions;
-    ArrayXd lambda;
-    
-    predictions.resize(observations.size());
+    ArrayXd predictions(observations.size());
     model.predict(predictions, modelParameters);
-    
-    lambda = -1.0*(predictions.log() + observations/predictions);
-    
-    return lambda.sum();
+
+    return -1.0*(predictions.log() + observations/predictions).sum();
 }
 
