@@ -59,7 +59,7 @@ void Functions::lorentzProfile(RefArrayXd predictions, const RefArrayXd covariat
 void Functions::modeProfile(RefArrayXd predictions, const RefArrayXd covariates, 
                                const double centroid, const double height, const double linewidth)
 {
-    predictions = height/(1.0 + (4.0*(covariates-centroid)*(covariates-centroid)/(linewidth*linewidth)));
+    predictions = height/(1.0 + (4.0*(covariates-centroid).square()/(linewidth*linewidth)));
 }
 
 
