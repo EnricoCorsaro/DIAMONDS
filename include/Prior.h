@@ -31,7 +31,7 @@ class Prior
         int getNdimensions();
         
         virtual double logDensity(RefArrayXd x, const bool includeConstantTerm=false) = 0;
-        virtual void draw(RefArrayXXd sample) = 0;
+        virtual void draw(RefArrayXXd drawnSample) = 0;
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood) = 0;
 
         const double minusInfinity;

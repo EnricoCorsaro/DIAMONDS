@@ -158,25 +158,28 @@ double UniformPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
 // PURPOSE:
 //      Draw a sample of parameters values from a uniform prior
 //      distributions. The parameters are in number Ndimensions
-//      and contain Nobjects values each.
+//      and contain Npoints values each.
 //
 // INPUT:
-//      sample: two-dimensional Eigen Array to contain 
-//              the resulting parameters values.
+//      drawnSample:    two-dimensional Eigen Array to contain 
+//                      the resulting parameters values.
 //
 // OUTPUT:
 //      void
 //
 
-void UniformPrior::draw(RefArrayXXd sample)
+void UniformPrior::draw(RefArrayXXd drawnSample)
 {
-    // Uniform sampling over parameters intervals
-    
+    int Npoints = drawnSample.cols();
+ 
+
+    // Uniform sampling over all free parameters and points
+
     for (int i = 0; i < Ndimensions; i++)
     {
-        for (int j = 0; j < sample.cols(); j++)
+        for (int j = 0; j < Npoints; j++)
         {
-            sample(i,j) = uniform(engine)*(maxima(i)-minima(i)) + minima(i);
+            drawnSample(i,j) = uniform(engine)*(maxima(i)-minima(i)) + minima(i);
         }
     }
 
@@ -195,9 +198,9 @@ void UniformPrior::draw(RefArrayXXd sample)
 //      having higher likelihood value.
 //
 // INPUT:
-//      parameters: one-dimensional Eigen Array containing the set of 
-//      parameters values to be updated.
-//      likelihood: an object to compute the corresponding likelihood value.
+//      drawnPoint:     one-dimensional Eigen Array containing the set of 
+//                      parameters values to be updated.
+//      likelihood:     an object to compute the corresponding likelihood value.
 //
 // OUTPUT:
 //      void
@@ -207,10 +210,10 @@ void UniformPrior::draw(RefArrayXXd sample)
 //      sampling loop. Thus, the array contains Ndimensions elements.
 //
 
-void UniformPrior::drawWithConstraint(RefArrayXd parameters, Likelihood &likelihood)
+void UniformPrior::drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood)
 {
     double logLikelihood;
-    double logLikelihoodConstraint = likelihood.logValue(parameters);
+    double logLikelihoodConstraint = likelihood.logValue(drawnPoint);
 
 
     // Uniform sampling to find new parameter with logLikelihood > logLikelihoodConstraint
@@ -219,10 +222,10 @@ void UniformPrior::drawWithConstraint(RefArrayXd parameters, Likelihood &likelih
     {
         for (int i = 0; i < Ndimensions; i++)
             {
-                parameters(i) = uniform(engine)*(maxima(i) - minima(i)) + minima(i);
+                drawnPoint(i) = uniform(engine)*(maxima(i) - minima(i)) + minima(i);
             }
     
-        logLikelihood = likelihood.logValue(parameters);
+        logLikelihood = likelihood.logValue(drawnPoint);
     }
     while (logLikelihood <= logLikelihoodConstraint);
     
