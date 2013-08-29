@@ -325,6 +325,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
     // (i.e parameter coordinates, likelihood values and weights)
 
     int oldNpointsInPosterior = posteriorSample.cols();
+    
     posteriorSample.conservativeResize(Ndimensions, oldNpointsInPosterior + Nobjects);          // First make enough room
     posteriorSample.block(0, oldNpointsInPosterior, Ndimensions, Nobjects) = nestedSample;      // Then copy the live sample to the posterior array
     logWeightOfPosteriorSample.conservativeResize(oldNpointsInPosterior + Nobjects);

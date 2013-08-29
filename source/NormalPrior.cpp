@@ -155,25 +155,28 @@ double NormalPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
 // PURPOSE:
 //      Draw a sample of parameters values from a normal prior
 //      distribution. The parameters are in number Ndimensions
-//      and contain Nobjects values each.
+//      and contain Npoints values each.
 //
 // INPUT:
-//      sample: two-dimensional Eigen Array to contain 
-//              the resulting parameters values.
+//      drawnSample:    two-dimensional Eigen Array to contain 
+//                      the resulting parameters values.
 //
 // OUTPUT:
 //      void
 //
 
-void NormalPrior::draw(RefArrayXXd sample)
-{
-    // Normal sampling over parameters intervals
+void NormalPrior::draw(RefArrayXXd drawnSample)
+{ 
+    int Npoints = drawnSample.cols();
+ 
     
+    // Normal sampling over all free parameters and points 
+
     for (int i = 0; i < Ndimensions; i++)
     {
-        for (int j = 0; j < sample.cols(); j++)
+        for (int j = 0; j < Npoints; j++)
         {
-            sample(i,j) = normalDistributionVector[i](engine);
+            drawnSample(i,j) = normalDistributionVector[i](engine);
         }
     }
 
@@ -192,7 +195,7 @@ void NormalPrior::draw(RefArrayXXd sample)
 //      having higher likelihood value.
 //
 // INPUT:
-//      parameters: one-dimensional array containing the set of parameters
+//      drawnPoint: one-dimensional array containing the set of parameters
 //                  values to be updated. Initially it should contain the coordinates
 //                  of the point with the worst likelihood.
 //      likelihood: an object to compute the likelihood values.
@@ -200,10 +203,10 @@ void NormalPrior::draw(RefArrayXXd sample)
 // OUTPUT:
 //      void
 
-void NormalPrior::drawWithConstraint(RefArrayXd parameters, Likelihood &likelihood)
+void NormalPrior::drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood)
 {
     double logLikelihood;
-    double logLikelihoodConstraint = likelihood.logValue(parameters);
+    double logLikelihoodConstraint = likelihood.logValue(drawnPoint);
 
 
     // Normal sampling to find new parameter with logLikelihood > logLikelihoodConstraint
@@ -212,10 +215,10 @@ void NormalPrior::drawWithConstraint(RefArrayXd parameters, Likelihood &likeliho
     {
         for (int i = 0; i < Ndimensions; i++)
         {
-            parameters(i) = normalDistributionVector[i](engine);
+            drawnPoint(i) = normalDistributionVector[i](engine);
         }
     
-        logLikelihood = likelihood.logValue(parameters);
+        logLikelihood = likelihood.logValue(drawnPoint);
     }
     while (logLikelihood <= logLikelihoodConstraint);
 } 

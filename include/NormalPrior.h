@@ -30,7 +30,7 @@ class NormalPrior : public Prior
         ArrayXd getStandardDeviation();
      
         virtual double logDensity(RefArrayXd x, const bool includeConstantTerm=false);
-        virtual void draw(RefArrayXXd sample);
+        virtual void draw(RefArrayXXd drawnSample);
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood);
 
 
