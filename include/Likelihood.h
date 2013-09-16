@@ -26,7 +26,7 @@ class Likelihood
         ~Likelihood();
         ArrayXd getObservations();
 
-        virtual double logValue(RefArrayXd modelParameters) = 0;
+        virtual double logValue(RefArrayXd const modelParameters) = 0;
 
 
     protected:

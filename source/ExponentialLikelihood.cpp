@@ -54,7 +54,7 @@ ExponentialLikelihood::~ExponentialLikelihood()
 //      exponential likelihood
 //
 
-double ExponentialLikelihood::logValue(RefArrayXd modelParameters)
+double ExponentialLikelihood::logValue(RefArrayXd const modelParameters)
 {
     ArrayXd predictions;
     ArrayXd lambda;
