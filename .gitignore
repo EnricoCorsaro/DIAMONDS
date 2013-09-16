@@ -2,6 +2,8 @@
 MultiNest.sublime*
 lib/
 build/
+results/
+test/
 source/.*swo
 source/.*swp
 include/.*swo
