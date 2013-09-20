@@ -16,7 +16,7 @@
 #include "NormalPrior.h"
 #include "Results.h"
 #include "Ellipsoid.h"
-#include "LorentzianModel.h"
+#include "ZeroModel.h"
 #include "demoTwo2DGaussians.h"
 
 
@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     // the Likelihood directly, but the Likelihood nevertheless expects a model in 
     // its constructor.
     
-    LorentzianModel model(covariates);
+    zeroModel model(covariates);
 
 
     // Set up the likelihood function to be used
