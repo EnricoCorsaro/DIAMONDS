@@ -15,7 +15,7 @@ Model::Model(const RefArrayXd covariates)
 : covariates(covariates)
 {
 
-} // END Model::Model()
+}
 
 
 
@@ -33,7 +33,7 @@ Model::Model(const RefArrayXd covariates)
 Model::~Model()
 {
 
-} // END Model::~Model()
+}
 
 
 
@@ -55,6 +55,29 @@ Model::~Model()
 ArrayXd Model::getCovariates()
 {
     return covariates;
-} // END Model::getCovariates()
+}
 
 
+
+
+
+
+
+
+
+
+
+// Model::getNparameters()
+//
+// PURPOSE: 
+//      Get the protected data member Nparameters;
+//
+// OUTPUT:
+//      Returns an integer containing the total number of 
+//      free parameters used in the model.
+//
+
+int Model::getNparameters()
+{
+    return Nparameters;
+}

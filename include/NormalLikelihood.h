@@ -29,7 +29,7 @@ class NormalLikelihood : public Likelihood
         ~NormalLikelihood();
         ArrayXd getUncertainties();
 
-        virtual double logValue(RefArrayXd nestedSampleOfParameters);
+        virtual double logValue(RefArrayXd const modelParameters);
 
 
     private:

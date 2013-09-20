@@ -30,7 +30,7 @@ class MeanNormalLikelihood : public Likelihood
         ArrayXd getNormalizedUncertainties();
         ArrayXd getWeights();
 
-        virtual double logValue(RefArrayXd nestedSampleOfParameters);
+        virtual double logValue(RefArrayXd const modelParameters);
 
     private:
         
