@@ -32,9 +32,9 @@ class MultiEllipsoidSampler : public NestedSampler
                               const int Nobjects, const double initialEnlargementFactor, const double shrinkingRate);
         ~MultiEllipsoidSampler();
 
-        virtual void drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
+        virtual bool drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, const double logTotalWidthInPriorMass, 
-                                        RefArrayXd drawnPoint, double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts); 
+                                        RefArrayXd drawnPoint, double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) override; 
         vector<Ellipsoid> getEllipsoids();
    
 

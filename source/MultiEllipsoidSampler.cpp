@@ -77,10 +77,10 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      
 //
 // OUTPUT:
-//      void
+//      true is a new point is found, false otherwise
 //
 
-void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
+bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
                                                const vector<int> &clusterSizes, const double logTotalWidthInPriorMass, 
                                                RefArrayXd drawnPoint, double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts)
 {    
@@ -293,13 +293,15 @@ void MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
 
     } // end while-loop (newPointIsFound == false)
 
-    // If we end up here, and we still haven't found a new point, give up.
+    // Depending on whether we found a new point or not, return true or false.
 
-    if (!newPointIsFound)
+    if (newPointIsFound)
     {
-        cerr << "Can't find point with a better Likelihood" << endl; 
-        cerr << "Quitting program." << endl;
-        exit(EXIT_FAILURE);
+        return true;
+    }
+    else
+    {
+        return false;
     }
 }
 

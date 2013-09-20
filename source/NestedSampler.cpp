@@ -181,6 +181,8 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
     // New points are drawn from the prior, but with the constraint that they should have a likelihood
     // that is better than the currently worst one.
 
+    bool nestedSamplingShouldContinue = true;
+
     do 
     {
         // Resize the arrays to make room for an additional point.
@@ -293,8 +295,16 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
 
         ArrayXd drawnPoint = nestedSample.col(indexOfRandomlyChosenPoint); 
         double logLikelihoodOfDrawnPoint = 0.0;
-        drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, 
-                           logTotalWidthInPriorMass, drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
+        bool newPointIsFound = drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, 
+                                                  logTotalWidthInPriorMass, drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
+
+        // If we didn't find a point with a better likelihood, then we can stop right here.
+        
+        if (!newPointIsFound)
+        {
+            nestedSamplingShouldContinue = false;
+            break;
+        }
 
 
         // Replace the point with the worst likelihood with our newly drawn one.
@@ -316,8 +326,13 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         // Increase nested loop counter
         
         Niterations++;
+
+        // Re-evaluate the stopping criterion, using the condition of Keeton (2011)
+
+        nestedSamplingShouldContinue = (ratioOfRemainderToActualEvidence > maxRatioOfRemainderToActualEvidence);
+
     }
-    while (ratioOfRemainderToActualEvidence > maxRatioOfRemainderToActualEvidence);             // Termination condition by Keeton 2011
+    while (nestedSamplingShouldContinue);  
     
 
     // If we get here, we sampled the parameter space well enough to gather enough evidence Z.
