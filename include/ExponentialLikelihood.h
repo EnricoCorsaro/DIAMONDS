@@ -28,7 +28,7 @@ class ExponentialLikelihood : public Likelihood
         ExponentialLikelihood(const RefArrayXd observations, Model &model);
         ~ExponentialLikelihood();
 
-        virtual double logValue(RefArrayXd nestedSampleOfParameters);
+        virtual double logValue(RefArrayXd const modelParameters);
 
 
     private:

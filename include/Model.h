@@ -25,13 +25,15 @@ class Model
         Model(const RefArrayXd covariates);
         ~Model();
         ArrayXd getCovariates();
-        
+
         virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters) = 0;
-        
+        int getNparameters();
+
 
     protected:
         
         ArrayXd covariates;
+        int Nparameters;
 
 
     private:
