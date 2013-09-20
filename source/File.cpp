@@ -307,11 +307,6 @@ void File::arrayXXdRowsToFiles(RefArrayXXd array, string fullPathPrefix, string 
     assert(Nrows > 0);
 
 
-    // Find out the number of decimal digits that the number of dimensions has
-    
-    int Ndigits = int(floor(log10(double(Nrows)))); 
-    
-
     // Write everything to the output files
 
     for (int i = 0; i < Nrows; i++)
@@ -319,7 +314,7 @@ void File::arrayXXdRowsToFiles(RefArrayXXd array, string fullPathPrefix, string 
         // Include the row number with preceding zeros in the filename
         
         ostringstream numberString;
-        numberString << setfill('0') << setw(3-Ndigits) << i;
+        numberString << setfill('0') << setw(3) << i;
         string fullPath = fullPathPrefix + numberString.str() + fileExtension;
        
 
