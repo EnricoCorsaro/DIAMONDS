@@ -88,7 +88,6 @@ ArrayXd Results::posteriorProbability()
 //      Computes the expectation, median and mode values from the 
 //      marginalized posterior probability. 
 //      Shortest Bayesian credible intervals (CI) are also computed.
-//      All the values are stored in a bidimensional Eigen Array.
 //
 // INPUT:
 //      credibleLevel:  a double number providing the desired credible 
@@ -103,7 +102,6 @@ ArrayXd Results::posteriorProbability()
 ArrayXXd Results::parameterEstimation(const double credibleLevel)
 {
     int Ndimensions = nestedSampler.posteriorSample.rows();
-    int Npoints = nestedSampler.posteriorSample.cols();
     ArrayXd posteriorDistribution = posteriorProbability();
     assert (nestedSampler.posteriorSample.cols() == posteriorDistribution.size());
     ArrayXXd parameterEstimates(Ndimensions, 6);
@@ -121,65 +119,6 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
         // order and sort elements of array marginalDistribution accordingly
         
         Functions::sortElementsDouble(parameterValues, marginalDistribution); 
-        
-
-        // Merge existing posterior values that orrespond 
-        // to equal parameter values (if any)
-
-        int NduplicateParameterComponents = 0;
-
-        for (int j = 0; j < Npoints - 1; ++j)
-        {  
-            if (parameterValues(j) != numeric_limits<double>::lowest())
-            {
-                for (int k = j + 1; k < Npoints; k++)
-                {
-                    if (parameterValues(k) == numeric_limits<double>::lowest())
-                        continue;
-                    else
-                        if (parameterValues(j) == parameterValues(k))
-                        {   
-                            parameterValues(k) = numeric_limits<double>::lowest();        // Set duplicate to bad value (flag)
-                            marginalDistribution(j) = marginalDistribution(j) + marginalDistribution(k); // Merge probability values
-                            marginalDistribution(k) = 0.0;
-                            NduplicateParameterComponents++;
-                        }
-                }
-            }
-            else
-                continue;
-        }
-
-
-        // Remove bad points and store final values into array copies.
-        // Check if bad points are present otherwise skip block.
-
-        if (NduplicateParameterComponents > 0)      
-        {
-            ArrayXd parameterValuesCopy(Npoints - NduplicateParameterComponents);
-            ArrayXd marginalDistributionCopy(Npoints - NduplicateParameterComponents);
-        
-            int n = 0;
-
-            for (int m = 0; (m < Npoints) && (n < Npoints - NduplicateParameterComponents); m++)
-            {
-                if (parameterValues(m) == numeric_limits<double>::lowest())
-                    continue;
-                else
-                    if (parameterValues(m) != numeric_limits<double>::lowest())
-                        {
-                            parameterValuesCopy(n) = parameterValues(m);
-                            marginalDistributionCopy(n) = marginalDistribution(m);
-                            n++;
-                        }
-            }
-
-
-            // Replace original marginal arrays with array copies
-
-            parameterValues = parameterValuesCopy;
-            marginalDistribution = marginalDistributionCopy;
-        }
         
 
         // Compute the mean value (expectation value, or first moment) of the sample distribution
@@ -216,7 +155,13 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
         double parameterMode = parameterValues(max);
         parameterEstimates(i,2) = parameterMode;
 
+       
+        // Save the second moment of the distribution
         
+        parameterEstimates(i,3) = secondMoment;
+       
+
+        /* COMMENTED OUT - COMPUTATION OF CREDIBLE INTERVALS
         // Compute third moment of the sample distribution (including skewness)
         
         // double thirdMoment = ((parameterValues - parameterMean).pow(3) * marginalDistribution).sum();
@@ -236,11 +181,6 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
             
         binWidth = 3.5*sqrt(secondMoment)/pow(sampleSize,1.0/3.0);
         Nbins = floor((parameterMaximum - parameterMinimum)/binWidth);
-
-        
-        // Save the second moment of the distribution
-        
-        parameterEstimates(i,3) = secondMoment;
 
 
         // Rebin marginal distribution for computing credible intervals        
@@ -305,7 +245,7 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
         for (int nn = 0; nn <= max; ++nn)
         {
             marginalDistributionLeft(nn) = marginalDistributionRebinned(nn);
-            parameterValuesLeft(nn) = parameterValuesRebinned(nn);                                                                                                  }
+            parameterValuesLeft(nn) = parameterValuesRebinned(nn);                                                                                               }
 
 
         // Count number of steps in the distribution to the right of the modal value
@@ -346,6 +286,10 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
            
         parameterEstimates(i,4) = lowerCredibleInterval;
         parameterEstimates(i,5) = upperCredibleInterval;
+        */
+        
+        parameterEstimates(i,4) = 0.0;
+        parameterEstimates(i,5) = 0.0;
 
     }   // END for loop over the parameters
 
