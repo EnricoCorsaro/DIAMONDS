@@ -77,7 +77,7 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      
 //
 // OUTPUT:
-//      true is a new point is found, false otherwise
+//      A boolean value that is true if a new point in the sampling process is found and false otherwise.
 //
 
 bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,

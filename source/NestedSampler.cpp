@@ -303,6 +303,8 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         if (!newPointIsFound)
         {
             nestedSamplingShouldContinue = false;
+            cerr << "Can't find point with a better Likelihood" << endl; 
+            cerr << "Quitting program." << endl;
             break;
         }
 
@@ -327,6 +329,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         
         Niterations++;
 
+
         // Re-evaluate the stopping criterion, using the condition of Keeton (2011)
 
         nestedSamplingShouldContinue = (ratioOfRemainderToActualEvidence > maxRatioOfRemainderToActualEvidence);
@@ -335,7 +338,6 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
     while (nestedSamplingShouldContinue);  
     
 
-    // If we get here, we sampled the parameter space well enough to gather enough evidence Z.
     // Add the remaining live sample of points to our collection of posterior points 
     // (i.e parameter coordinates, likelihood values and weights)
 
