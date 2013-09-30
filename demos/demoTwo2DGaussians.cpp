@@ -51,7 +51,7 @@ int main(int argc, char *argv[])
     // the Likelihood directly, but the Likelihood nevertheless expects a model in 
     // its constructor.
     
-    zeroModel model(covariates);
+    ZeroModel model(covariates);
 
 
     // Set up the likelihood function to be used
@@ -72,18 +72,19 @@ int main(int argc, char *argv[])
 
     // Start nested sampling process
     
-    bool printOnTheScreen = true;               // Print results on the screen
-    int Nobjects = 200;                         // 
-    int maxNdrawAttempts = 1000;                // Maximum number of attempts when trying to draw a new sampling point
-    int NiterationsBeforeClustering = 10;       // Number of nesting iterations before executing clustering algorithm again
-    double initialEnlargementFactor = 2.0;      // 
-    double shrinkingRate = 0.6;                 // Exponent for remaining prior mass in ellipsoid enlargement factor
-    double terminationFactor = 0.01;            // Termination factor for nesting loop
+    bool printOnTheScreen = true;                   // Print results on the screen
+    int Nobjects = 200;                             // TODO
+    int maxNdrawAttempts = 1000;                    // Maximum number of attempts when trying to draw a new sampling point
+    int NinitialIterationsWithoutClustering = 100;  // The first N iterations, we assume that there is only 1 cluster
+    int NiterationsWithSameClustering = 10;         // Clustering is only happening every X iterations.
+    double initialEnlargementFactor = 2.0;          // TODO
+    double shrinkingRate = 0.6;                     // Exponent for remaining prior mass in ellipsoid enlargement factor
+    double terminationFactor = 0.01;                // Termination factor for nesting loop
 
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         Nobjects, initialEnlargementFactor, shrinkingRate);
-    nestedSampler.run(terminationFactor, NiterationsBeforeClustering, maxNdrawAttempts);
+    nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
     // Save the results in output files
