@@ -398,7 +398,7 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
             // Compute the new enlargement factor
 
             double enlargementFactor = exp( log(initialEnlargementFactor) + shrinkingRate * logRemainingWidthInPriorMass 
-                                       + 0.5 * log(static_cast<double>(Nobjects) / clusterSizes[i]) );
+                                            + 0.5 * log(static_cast<double>(Nobjects) / clusterSizes[i]) );
 
 
             // Add ellipsoid at the end of our vector
