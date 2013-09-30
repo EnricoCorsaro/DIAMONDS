@@ -15,6 +15,7 @@
 #include <vector>
 #include <cassert>
 #include <limits>
+#include <algorithm>
 #include <Eigen/Dense>
 #include "Functions.h"
 #include "Prior.h"
@@ -42,7 +43,8 @@ class NestedSampler
                       Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
-        void run(const double maxRatioOfRemainderToActualEvidence = 0.5, const int NiterationsBeforeClustering = 10, const int maxNdrawAttempts = 5000);
+        void run(const double maxRatioOfRemainderToActualEvidence = 0.5, const int NinitialIterationsWithoutClustering = 100, 
+                 const int NiterationsWithSameClustering = 10, const int maxNdrawAttempts = 5000);
 
         virtual bool drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, const double logWidthInPriorMass, RefArrayXd drawnPoint, 

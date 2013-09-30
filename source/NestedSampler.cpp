@@ -91,22 +91,30 @@ NestedSampler::~NestedSampler()
 //      logWeightOfPosteriorSample.
 //
 // INPUT:
-//      terminationFactor:              a double specifying the amount of exceeding information to
-//                                      terminate nested iterations. Default is 1.
-//      NiterationsBeforeClustering:    number of nested iterations required to recompute
-//                                      the clustering of the points in the sample.
-//      maxNdrawAttempts:               the maximum number of attempts allowed when drawing from a single ellipsoid.
+//      terminationFactor:                   The amount of exceeding 'information' to terminate the nested iteration loop.
+//
+//      NinitialIterationsWithoutClustering: The first N iterations, no clustering will happen. I.e. It will be assumed that
+//                                            there is only 1 cluster containing all the points. This is often useful because 
+//                                            initially the points may be sampled from a uniform prior, and we therefore don't 
+//                                            expect any clustering before the algorithm is able to tune in on the island(s) of 
+//                                            high likelihood. Clusters found in the first N initial iterations are therefore 
+//                                            likely purely noise.
+//
+//      NiterationsWithSameClustering:       A new clustering will only happen every N iterations.
+//
+//      maxNdrawAttempts:                    The maximum number of attempts allowed when drawing from a single ellipsoid.
 //
 // OUTPUT:
 //      void
 //
 // REMARKS: 
-//      Eigen Matrices are defaulted column-major. Hence the 
-//      nestedSample and posteriorSample are resized as 
+//      Eigen Matrices are defaulted column-major. Hence the nestedSample and posteriorSample are resized as 
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const int NiterationsBeforeClustering, const int maxNdrawAttempts)
+
+void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const int NinitialIterationsWithoutClustering,
+                        const int NiterationsWithSameClustering, const int maxNdrawAttempts)
 {
     int startTime = time(0);
     double logMeanLiveEvidence;
@@ -182,6 +190,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
     // that is better than the currently worst one.
 
     bool nestedSamplingShouldContinue = true;
+    Niterations = 0;
 
     do 
     {
@@ -245,11 +254,33 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         
 
         // Find clusters in our live sample of points. Don't do this every iteration but only
-        // every x iterations, where x is given by 'NiterationsBeforeClustering'.
+        // every x iterations, where x is given by 'NiterationsWithSameClustering'.
 
-        if ((Niterations % NiterationsBeforeClustering) == 0)
+        if ((Niterations % NiterationsWithSameClustering) == 0)
         {            
-            Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes, printOnTheScreen);
+            // Don't do clustering the first N iterations, where N is user-specified. That is, 
+            // the first N iterations we assume that there is only 1 cluster containing all the points.
+            // This is often useful because initially the points may be sampled from a uniform prior,
+            // and we therefore don't expect any clustering _before_ the algorithm is able to tune in on 
+            // the island(s) of high likelihood. Clusters found in the first N initial iterations are
+            // therefore likely purely noise.
+
+            if (Niterations < NinitialIterationsWithoutClustering)
+            {
+                // There is only 1 cluster, containing all objects. All points have the same cluster
+                // index, namely 0.
+                
+                Nclusters = 1;
+                clusterSizes.resize(1);
+                clusterSizes[0] = Nobjects;
+                fill(clusterIndices.begin(), clusterIndices.end(), 0);
+            }
+            else
+            {
+                // After the first N initial iterations, we do a proper clustering.
+
+                Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes, printOnTheScreen);
+            }
         }
 
 
@@ -304,7 +335,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         {
             nestedSamplingShouldContinue = false;
             cerr << "Can't find point with a better Likelihood" << endl; 
-            cerr << "Quitting program." << endl;
+            cerr << "Stopping the nested sampling loop prematurely." << endl;
             break;
         }
 
