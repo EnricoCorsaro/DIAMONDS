@@ -1,5 +1,5 @@
 // Compile with:
-// clang++ -o demoKmeansClusterer demoKmeansClusterer.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
+// clang++ -o demoKmeansClusterer5D demoKmeansClusterer5D.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
 //
 
 #include <cstdlib>
@@ -17,10 +17,10 @@ using namespace Eigen;
 
 int main()
 {
-    // Open the input file and read the data (synthetic sampling of a 2D parameter space)
+    // Open the input file and read the data (synthetic sampling of a 5D parameter space)
     
     ifstream inputFile;
-    File::openInputFile(inputFile, "kmeans_testsample.txt");
+    File::openInputFile(inputFile, "kmeans_testsample5D.txt");
     unsigned long Nrows;
     int Ncols;
 
@@ -52,14 +52,15 @@ int main()
     
     // Output the results 
     
-    cerr << "Input number of clusters: 5" << endl; 
+    cerr << "Input number of clusters: 4" << endl; 
     cerr << "Optimal number of clusters: " << optimalNclusters << endl;
-    // cout << clusterIndices << endl;
     
-    int Nclusters = optimalNclusters;
-    int Ndimensions = Ncols;
-    int Nobjects = Nrows;
-    
+    for (int n = 0; n < Nrows; ++n)
+    {
+        cout << data(n,0) << "  " << data(n,1) << "  " << data(n,2) << "  " 
+             << data(n,3) << "  " << data(n,4) << "  " << clusterIndices[n] << endl;
+    }
+
     // That's it!
  
     return EXIT_SUCCESS;
