@@ -30,10 +30,10 @@ class Ellipsoid
 
     public:
 
-        Ellipsoid(RefArrayXXd sampleOfParameters, const double enlargementFactor = 1.0);
+        Ellipsoid(RefArrayXXd sampleOfParameters, const double enlargementFraction = 0.0);              // Default no enlargement
         ~Ellipsoid();
 
-        void resetEnlargementFactor(const double newEnlargementFactor);
+        void resetEnlargementFraction(const double newEnlargementFraction);
         bool overlapsWith(Ellipsoid ellipsoid);
         bool containsPoint(const RefArrayXd pointCoordinates);
         void drawPoint(RefArrayXd drawnPoint);
@@ -44,7 +44,7 @@ class Ellipsoid
         ArrayXXd getEigenvectors();
         int getSampleSize();
         double getHyperVolume();
-        double getEnlargementFactor();
+        double getEnlargementFraction();
 
 
     protected:
@@ -57,7 +57,7 @@ class Ellipsoid
         ArrayXXd eigenvectors;
         int sampleSize;
         double hyperVolume;
-        double enlargementFactor;
+        double enlargementFraction;
 
 
     private:

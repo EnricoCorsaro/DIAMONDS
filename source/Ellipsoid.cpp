@@ -7,12 +7,12 @@
 //      Class constructor.
 //
 // INPUT:
-//      sample:             Eigen Array of size (Ndimensions, sampleSize), 
-//                          containing the coordinates of the points inside the ellipsoid.
-//      enlargementFactor:  Initial enlargement factor to compute the ellipsoids for the first time
+//      sample:                 Eigen Array of size (Ndimensions, sampleSize), 
+//                              containing the coordinates of the points inside the ellipsoid.
+//      enlargementFraction:    Initial enlargement fraction to compute the ellipsoids for the first time
 //
 
-Ellipsoid::Ellipsoid(RefArrayXXd sample, const double enlargementFactor)
+Ellipsoid::Ellipsoid(RefArrayXXd sample, const double enlargementFraction)
 : sample(sample),
   sampleSize(sample.cols()),
   Ndimensions(sample.rows()),
@@ -37,16 +37,17 @@ Ellipsoid::Ellipsoid(RefArrayXXd sample, const double enlargementFactor)
     // Compute the covariance matrix of the sample of points
 
     Functions::clusterCovariance(sample, covarianceMatrix, centerCoordinates);
-
-
+   
+    
     // Compute the eigenvectors and eigenvalues of this covariance matrix
 
-    Functions::selfAdjointMatrixDecomposition(covarianceMatrix, originalEigenvalues, eigenvectors);
+    bool covarianceDecompositionIsSuccessful = Functions::selfAdjointMatrixDecomposition(covarianceMatrix, originalEigenvalues, eigenvectors);
+    if (!covarianceDecompositionIsSuccessful) abort();
 
 
-    // Set the enlargement factor, and (re)compute the corresponding eigenvalues, eigenvectors etc.
+    // Set the enlargement fraction, and (re)compute the corresponding eigenvalues, eigenvectors etc.
 
-    resetEnlargementFactor(enlargementFactor);
+    resetEnlargementFraction(enlargementFraction);
 }
 
 
@@ -80,32 +81,32 @@ Ellipsoid::~Ellipsoid()
 
 
 
-// Ellipsoid::resetEnlargementFactor()
+// Ellipsoid::resetEnlargementFraction()
 //
 // PURPOSE: 
 //      Compute covariance matrix, center coordinates, 
 //      eigenvalues and eigenvectors matrix of the ellipsoid.
 //      Eigenvalues are automatically enlarged according to the
-//      enlargementFactor term.
+//      enlargementFraction term.
 //
 // INPUT:
-//      newEnlargementFactor:  a double to contain the new enlargement
-//                          factor to be used for the chosen ellipsoid.
+//      newEnlargementFraction:  a double to contain the new enlargement
+//                               fraction to be used for the chosen ellipsoid.
 //
 // OUTPUT:
 //      void
 
-void Ellipsoid::resetEnlargementFactor(const double newEnlargementFactor)
+void Ellipsoid::resetEnlargementFraction(const double newEnlargementFraction)
 {
-    // Save the new user-specified enlargement factor
+    // Save the new user-specified enlargement fraction
 
-    this->enlargementFactor = newEnlargementFactor;
-    
-    // Enlarge the eigenvalues with the user-specified factor
+    this->enlargementFraction = newEnlargementFraction;
+   
 
+    // Enlarge the eigenvalues with the user-specified fraction
 
-    enlargedEigenvalues = originalEigenvalues.sqrt() + enlargementFactor * originalEigenvalues.sqrt();
-    enlargedEigenvalues = enlargedEigenvalues * enlargedEigenvalues;
+    enlargedEigenvalues = originalEigenvalues.sqrt() + enlargementFraction * originalEigenvalues.sqrt();
+    enlargedEigenvalues = enlargedEigenvalues.square();
 
 
     // Recompute the hypervolume contained in the enlarged ellipsoid
@@ -184,7 +185,12 @@ bool Ellipsoid::overlapsWith(Ellipsoid ellipsoid)
     
     ComplexEigenSolver<MatrixXcd> eigenSolver(CC);
 
-    if (eigenSolver.info() != Success) abort();
+    if (eigenSolver.info() != Success)
+    {
+        cout << "Ellipsoid Matrix decomposition failed." << endl;
+        cout << "Quitting program." << endl;
+        abort();
+    }
     
     MatrixXcd E = eigenSolver.eigenvalues();
     MatrixXcd V = eigenSolver.eigenvectors();
@@ -338,8 +344,9 @@ void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
     
 
     // Normalize the point so that it belongs to the unit hyper-sphere
-        
+    
     drawnPoint = drawnPoint / drawnPoint.matrix().norm(); 
+    
  
 
     // Sample uniformly in the radial direction
@@ -350,8 +357,8 @@ void Ellipsoid::drawPoint(RefArrayXd drawnPoint)
     // Transform sphere coordinates to ellipsoid coordinates
     
     MatrixXd D = enlargedEigenvalues.sqrt().matrix().asDiagonal();
-    MatrixXd T = eigenvectors.matrix().transpose() * D;
-
+    MatrixXd T = eigenvectors.matrix() * D;    
+    
     drawnPoint = (T * drawnPoint.matrix()) + centerCoordinates.matrix();
 }
 
@@ -543,17 +550,17 @@ double Ellipsoid::getHyperVolume()
 
 
 
-// Ellipsoid::getEnlargementFactor()
+// Ellipsoid::getEnlargementFraction()
 //
 // PURPOSE: 
-//      Get the private data member enlargementFactor.      
+//      Get the private data member enlargementFraction.      
 //
 // OUTPUT:
-//      A double containing the enlargement factor computed for the ellipsoid
+//      A double containing the enlargement fraction computed for the ellipsoid
 //      and updated to the last resetting.
 //
 
-double Ellipsoid::getEnlargementFactor()
+double Ellipsoid::getEnlargementFraction()
 {
-    return enlargementFactor;
+    return enlargementFraction;
 }
