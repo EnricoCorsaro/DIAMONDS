@@ -71,17 +71,20 @@ int main(int argc, char *argv[])
     // Start nested sampling process
     
     bool printOnTheScreen = true;                   // Print results on the screen
-    int Nobjects = 300;                             // TODO
-    int maxNdrawAttempts = 5000;                    // TODO
-    int NinitialIterationsWithoutClustering = 100;  // The first N iterations, we assume that there is only 1 cluster
+    int Nobjects = 300;                             // Number of active points evolving within the nested sampling process. 
+    int maxNdrawAttempts = 5000;                    // Maximum number of attempts when trying to draw a new sampling point.
+    int NinitialIterationsWithoutClustering = 100;  // The first N iterations, we assume that there is only 1 cluster.
     int NiterationsWithSameClustering = 10;         // Clustering is only happening every X iterations.
-    double initialEnlargementFactor = 2.5;          // TODO
-    double shrinkingRate = 0.1;                     // Exponent for remaining prior mass in ellipsoid enlargement factor
-    double terminationFactor = 0.01;                // Termination factor for nesting loop
+    double initialEnlargementFraction = 2.5;        // Fraction by which each axis in an ellipsoid has to be enlarged.
+                                                    // It can be a number >= 0, where 0 means no enlargement.
+    double shrinkingRate = 0.1;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
+                                                    // It is a number between 0 and 1. The smaller the slower the shrinkage
+                                                    // of the ellipsoids.
+    double terminationFactor = 0.01;                // Termination factor for nesting loop.
 
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
-                                        Nobjects, initialEnlargementFactor, shrinkingRate);
+                                        Nobjects, initialEnlargementFraction, shrinkingRate);
     nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
