@@ -198,7 +198,7 @@ double Functions::logGaussLikelihood(const RefArrayXd observations, const RefArr
 //      void
 //
 
-void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd covarianceMatrix, 
+void Functions::clusterCovariance(RefArrayXXd const clusterSample, RefArrayXXd covarianceMatrix, 
                                   RefArrayXd centerCoordinates)
 {    
     int Ndimensions = clusterSample.rows();
@@ -239,17 +239,19 @@ void Functions::clusterCovariance(const RefArrayXXd clusterSample, RefArrayXXd c
 //      Compute the decomposition of a covariance matrix into eigenvectors and eigenvalues.
 //
 // INPUT:
-//      covarianceMatrix: an Eigen Array matrix to be decomposed
-//      eigenvalues: an Eigen Array to contain the eigenvalues 
-//      of the covariance matrix
-//      eigenvectorsMatrix: an Eigen Array matrix to contain the matrix of
-//      the eigenvectors of the covariance matrix
+//      covarianceMatrix:       an Eigen Array matrix to be decomposed
+//                              eigenvalues: an Eigen Array to contain the eigenvalues 
+//                              of the covariance matrix.
+//      eigenvalues:            an Eigen Array containing the eigenvalues of the covariance matrix
+//                              listed in ascending order.
+//      eigenvectorsMatrix:     an Eigen Array matrix to contain the matrix of
+//                              the eigenvectors of the covariance matrix.
 //
 // OUTPUT:
-//      void
+//      A boolean value that is true if the decomposition was successfull, false otherwise.
 //
 
-void Functions::selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatrix, RefArrayXd eigenvalues, 
+bool Functions::selfAdjointMatrixDecomposition(RefArrayXXd const covarianceMatrix, RefArrayXd eigenvalues, 
                                                RefArrayXXd eigenvectorsMatrix)
 {
     assert(covarianceMatrix.cols() == covarianceMatrix.rows());
@@ -259,10 +261,17 @@ void Functions::selfAdjointMatrixDecomposition(const RefArrayXXd covarianceMatri
 
     SelfAdjointEigenSolver<MatrixXd> eigenSolver(covarianceMatrix.matrix());
 
-    if (eigenSolver.info() != Success) abort();
+    if (eigenSolver.info() != Success)
+    {
+        cout << "Covariance Matrix decomposition failed." << endl;
+        cout << "Quitting program" << endl;
+        return false;
+    }
 
     eigenvalues = eigenSolver.eigenvalues();
     eigenvectorsMatrix = eigenSolver.eigenvectors();
+
+    return true;
 }
 
 
