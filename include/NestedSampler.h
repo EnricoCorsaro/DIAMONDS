@@ -66,7 +66,7 @@ class NestedSampler
         bool printOnTheScreen;
         int Ndimensions;
         int Nobjects;                           // Total number of objects
-        double worstLiveLogLikelihood;          // the worst likelihood value of the current live sample
+        double worstLiveLogLikelihood;          // The worst likelihood value of the current live sample
         double logTotalWidthInPriorMass;        // The remaining width in prior mass at a given nested iteration (log X_k)
 
         mt19937 engine;
@@ -85,7 +85,6 @@ class NestedSampler
         ArrayXXd nestedSample;                   // parameters values (the free parameters of the problem) of the actual set of live points
 
         void printComputationalTime(const double startTime);
-
 }; 
 
 #endif

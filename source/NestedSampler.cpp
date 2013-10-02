@@ -367,8 +367,8 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
 
     }
     while (nestedSamplingShouldContinue);  
-    
 
+    
     // Add the remaining live sample of points to our collection of posterior points 
     // (i.e parameter coordinates, likelihood values and weights)
 
@@ -385,6 +385,11 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
     // Compute Skilling's error on the log(Evidence)
     
     logEvidenceError = sqrt(fabs(informationGain)/Nobjects);
+
+
+    // Add Mean Live Evidence of the remaining live sample of points to the total log(Evidence) collected
+
+    logEvidence = Functions::logExpSum(logMeanLiveEvidence, logEvidence);
 
 
     // Compute and print total computational time
@@ -517,6 +522,8 @@ double NestedSampler::getComputationalTime()
 
 
 
+
+
 // NestedSampler::printComputationalTime()
 //
 // PURPOSE:
@@ -560,3 +567,17 @@ void NestedSampler::printComputationalTime(const double startTime)
             cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " days" << endl;
         }
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
