@@ -6,21 +6,21 @@
 //      Class constructor.
 //
 // INPUT:
-//      printOnTheScreen:           true if the results are to be printed on the screen, false otherwise
-//      ptrPriors:                  vector of Prior class objects containing the priors used in the problem.
-//      likelihood:                 Likelihood class object used for likelihood sampling.
-//      metric:                     Metric class object to contain the metric used in the problem.
-//      clusterer:                  Clusterer class object specifying the type of clustering algorithm to be used.      
-//      Nobjects:                   Initial number of objects coming from the main nested sampling loop
-//      initialEnlargementFactor:   Initial value of the enlargement for the ellipsoids
-//      shrinkingRate:              Shrinking rate of the enlargement factors, between 0 and 1.
+//      printOnTheScreen:               true if the results are to be printed on the screen, false otherwise
+//      ptrPriors:                      vector of Prior class objects containing the priors used in the problem.
+//      likelihood:                     Likelihood class object used for likelihood sampling.
+//      metric:                         Metric class object to contain the metric used in the problem.
+//      clusterer:                      Clusterer class object specifying the type of clustering algorithm to be used.      
+//      Nobjects:                       Initial number of objects coming from the main nested sampling loop
+//      initialEnlargementFraction:     Initial value of the enlargement for the ellipsoids
+//      shrinkingRate:                  Shrinking rate of the enlargement factors, between 0 and 1.
 //
 
 MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriors, 
                                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
-                                             const int Nobjects, const double initialEnlargementFactor, const double shrinkingRate)
+                                             const int Nobjects, const double initialEnlargementFraction, const double shrinkingRate)
 : NestedSampler(printOnTheScreen, Nobjects, ptrPriors, likelihood, metric, clusterer),
-  initialEnlargementFactor(initialEnlargementFactor),
+  initialEnlargementFraction(initialEnlargementFraction),
   shrinkingRate(shrinkingRate)
 {
 
@@ -164,7 +164,7 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
         // Draw a new point inside the ellipsoid
 
         ellipsoids[indexOfSelectedEllipsoid].drawPoint(drawnPoint);
-    
+
 
         // Check if the new point is also in other ellipsoids. If the point happens to be 
         // in N overlapping ellipsoids, then accept it only with a probability 1/N. If we
@@ -395,15 +395,15 @@ void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const in
             beginIndex += clusterSizes[i];
 
 
-            // Compute the new enlargement factor
+            // Compute the new enlargement fraction (it is the fraction by which each axis of an ellipsoid is enlarged)
 
-            double enlargementFactor = exp( log(initialEnlargementFactor) + shrinkingRate * logRemainingWidthInPriorMass 
+            double enlargementFraction = initialEnlargementFraction * exp( shrinkingRate * logRemainingWidthInPriorMass 
                                             + 0.5 * log(static_cast<double>(Nobjects) / clusterSizes[i]) );
-
+           
 
             // Add ellipsoid at the end of our vector
 
-            ellipsoids.push_back(Ellipsoid(sampleOfOneCluster, enlargementFactor));
+            ellipsoids.push_back(Ellipsoid(sampleOfOneCluster, enlargementFraction));
         }
     }
 
