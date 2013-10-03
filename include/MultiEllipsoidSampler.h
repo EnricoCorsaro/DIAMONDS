@@ -40,7 +40,7 @@ class MultiEllipsoidSampler : public NestedSampler
 
     protected:
       
-        void computeEllipsoids(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices, 
+        void computeEllipsoids(RefArrayXXd const totalSample, const int Nclusters, const vector<int> &clusterIndices, 
                                const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass);
         void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
 

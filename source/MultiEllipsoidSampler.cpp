@@ -335,7 +335,7 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
 //      void
 //
 
-void MultiEllipsoidSampler::computeEllipsoids(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices, 
+void MultiEllipsoidSampler::computeEllipsoids(RefArrayXXd const sample, const int Nclusters, const vector<int> &clusterIndices, 
                                               const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass)
 {
     assert(sample.cols() == clusterIndices.size());
