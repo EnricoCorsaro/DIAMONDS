@@ -38,6 +38,6 @@ class Likelihood
     private:
 
         
-}; // END class Likelihood
+};
 
 #endif
