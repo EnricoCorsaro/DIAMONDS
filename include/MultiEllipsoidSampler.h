@@ -32,16 +32,16 @@ class MultiEllipsoidSampler : public NestedSampler
                               const int Nobjects, const double initialEnlargementFraction, const double shrinkingRate);
         ~MultiEllipsoidSampler();
 
-        virtual bool drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
-                                        const vector<int> &clusterSizes, const double logTotalWidthInPriorMass, 
-                                        RefArrayXd drawnPoint, double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) override; 
+        virtual bool drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
+                                        const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
+                                        double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) override; 
         vector<Ellipsoid> getEllipsoids();
    
 
     protected:
       
-        void computeEllipsoids(RefArrayXXd const totalSample, const int Nclusters, const vector<int> &clusterIndices, 
-                               const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass);
+        void computeEllipsoids(RefArrayXXd const totalSample, const int Nclusters, 
+                               const vector<int> &clusterIndices, const vector<int> &clusterSizes);
         void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
 
 
@@ -51,7 +51,6 @@ class MultiEllipsoidSampler : public NestedSampler
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFraction;      // Initial fraction for enlargement of ellipsoids
         double shrinkingRate;                   // Prior volume shrinkage rate (between 0 and 1)
-        double logRemainingWidthInPriorMass;    // log value of the total remaining prior mass at the actual nested iteration
 
 };
 
