@@ -39,7 +39,7 @@ class NestedSampler
         ArrayXd logLikelihoodOfPosteriorSample;  // logLikelihood values corresponding to the posterior sample 
         ArrayXd logWeightOfPosteriorSample;      // logWeights corresponding to the posterior sample
 
-        NestedSampler(const bool printOnTheScreen, const int Nobjects, vector<Prior*> ptrPriors, 
+        NestedSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
                       Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
@@ -76,15 +76,19 @@ class NestedSampler
 
 	private:
 
+        int minNobjects;                         // Minimum number of live points allowed
         int Niterations;                         // Counter saving the number of nested loops used
         double informationGain;                  // Information gain in moving from prior to posterior PDF
         double logEvidence;                      // Skilling's evidence
         double logEvidenceError;                 // Skilling's error on evidence (based on information gain)
-        double logMeanLikelihoodOfLivePoints;    // The logarithm of the mean likelihood value of the remaining set of live points
-        double computationalTime;
+        double logMeanLikelihoodOfLivePoints;    // The logarithm of the mean likelihood value of the actual set of live points
+        double logMaxLikelihoodOfLivePoints;     // The logarithm of the maxumum likelihood value of the actual set of live points
+        double logMaxEvidenceContribution;       // The logarithm of the maximum evidence contribution at a given iteration of the nesting process
+        double computationalTime;                // Computational time of the process
         ArrayXd logLikelihood;                   // log-likelihood values of the actual set of live points
         ArrayXXd nestedSample;                   // parameters values (the free parameters of the problem) of the actual set of live points
 
+        bool updateNobjects(double logMaxEvidenceContributionNew, double maxRatioOfRemainderToActualEvidence);
         void printComputationalTime(const double startTime);
 }; 
 
