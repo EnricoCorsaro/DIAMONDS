@@ -43,11 +43,11 @@ class NestedSampler
                       Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
-        void run(const double maxRatioOfRemainderToActualEvidence = 0.5, const int NinitialIterationsWithoutClustering = 100, 
+        void run(const double maxRatioOfRemainderToActualEvidence = 0.05, const int NinitialIterationsWithoutClustering = 100, 
                  const int NiterationsWithSameClustering = 10, const int maxNdrawAttempts = 5000);
 
         virtual bool drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
-                                        const vector<int> &clusterSizes, const double logWidthInPriorMass, RefArrayXd drawnPoint, 
+                                        const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) = 0;
         
         int getNiterations();
@@ -65,9 +65,10 @@ class NestedSampler
         Clusterer &clusterer;
         bool printOnTheScreen;
         int Ndimensions;
-        int Nobjects;                           // Total number of objects
+        int Nobjects;                           // Total number of objects at a given iteration
         double worstLiveLogLikelihood;          // The worst likelihood value of the current live sample
-        double logTotalWidthInPriorMass;        // The remaining width in prior mass at a given nested iteration (log X_k)
+        double logCumulatedPriorMass;           // The total (cumulated) prior mass at a given nested iteration
+        double logRemainingPriorMass;           // The remaining width in prior mass at a given nested iteration (log X_k)
 
         mt19937 engine;
         uniform_real_distribution<> uniform;  
