@@ -44,7 +44,7 @@ class MultiEllipsoidSampler : public NestedSampler
         void computeEllipsoids(RefArrayXXd const totalSample, const int Nclusters, 
                                const vector<int> &clusterIndices, const vector<int> &clusterSizes);
         void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
-
+        double updateEnlargementFraction(const int clusterSize);
 
     private:
 

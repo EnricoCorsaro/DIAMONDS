@@ -477,6 +477,42 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids(vector<unordered_set<int>>
 
 
 
+// MultiEllipsoidSampler::updateEnlargementFraction()
+//
+// PURPOSE:
+//      Updates the enlargementFraction adopted for the axes of the ellipsoid.
+//      The formula takes into account the number of dimensions of the problem,
+//      hence it is a modified version of the one adopted by Feroz F. et al. 2008.
+//
+// INPUT:
+//      clusterSize:    an integer specifying the number of points used to construct the
+//                      bounding ellipsoid.
+//
+// OUTPUT:
+//      A double containing the value of the updated enlargement fraction.
+//
+
+double MultiEllipsoidSampler::updateEnlargementFraction(const int clusterSize)
+{
+    double updatedEnlargementFraction = initialEnlargementFraction * exp( shrinkingRate * logRemainingPriorMass 
+                                            + 0.5 * log(static_cast<double>(Nobjects) / clusterSize) );
+    
+    return updatedEnlargementFraction;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // MultiEllipsoidSampler::getEllipsoids()
 //
 // PURPOSE:
