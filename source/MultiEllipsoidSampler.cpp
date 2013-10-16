@@ -10,16 +10,18 @@
 //      ptrPriors:                      vector of Prior class objects containing the priors used in the problem.
 //      likelihood:                     Likelihood class object used for likelihood sampling.
 //      metric:                         Metric class object to contain the metric used in the problem.
-//      clusterer:                      Clusterer class object specifying the type of clustering algorithm to be used.      
-//      Nobjects:                       Initial number of objects coming from the main nested sampling loop
+//      clusterer:                      Clusterer class object specifying the type of clustering algorithm to be used.
+//      initialNobjects:                Initial number of active points to start the nesting process
+//      NobjectsMinimum:                Minimum number of active points allowed in the nesting process
 //      initialEnlargementFraction:     Initial value of the enlargement for the ellipsoids
 //      shrinkingRate:                  Shrinking rate of the enlargement factors, between 0 and 1.
 //
 
 MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriors, 
                                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
-                                             const int Nobjects, const double initialEnlargementFraction, const double shrinkingRate)
-: NestedSampler(printOnTheScreen, Nobjects, ptrPriors, likelihood, metric, clusterer),
+                                             const int initialNobjects, const int minNobjects, 
+                                             const double initialEnlargementFraction, const double shrinkingRate)
+: NestedSampler(printOnTheScreen, initialNobjects, minNobjects, ptrPriors, likelihood, metric, clusterer),
   initialEnlargementFraction(initialEnlargementFraction),
   shrinkingRate(shrinkingRate)
 {
@@ -394,10 +396,11 @@ void MultiEllipsoidSampler::computeEllipsoids(RefArrayXXd const totalSample, con
             beginIndex += clusterSizes[i];
 
 
-            // Compute the new enlargement fraction (it is the fraction by which each axis of an ellipsoid is enlarged)
+            // Compute the new enlargement fraction (it is the fraction by which each axis of an ellipsoid is enlarged.
+            // This allows for improving the efficiency of the sampling by increasing the chance of having more
+            // points of the cluster falling inside the bounding ellipsoid.
 
-            double enlargementFraction = initialEnlargementFraction * exp( shrinkingRate * logRemainingWidthInPriorMass 
-                                            + 0.5 * log(static_cast<double>(Nobjects) / clusterSizes[i]) );
+            double enlargementFraction = updateEnlargementFraction(clusterSizes[i]);
            
 
             // Add ellipsoid at the end of our vector
