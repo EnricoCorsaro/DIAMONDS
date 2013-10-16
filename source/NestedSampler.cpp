@@ -9,14 +9,14 @@
 //      Increases the number of live nested processes.
 //
 // INPUT:
-//      printOnTheScreen: Boolean value specifying whether the results are to 
-//                         be printed on the screen or not.
-//      Nobjects:         Integer containing the number of objects to be
-//                         used in the nested sampling process.
-//      ptrPriors:        Vector of pointers to Prior class objects
-//      likelihood:       Likelihood class object used for likelihood sampling.
-//      metric:           Metric class object to contain the metric used in the problem.
-//      clusterer:        Clusterer class object specifying the type of clustering algorithm to be used.
+//      printOnTheScreen:   Boolean value specifying whether the results are to 
+//                          be printed on the screen or not.
+//      initialNobjects:    Initial number of live points to start the nesting process
+//      minNobjects:        Minimum number of live points allowed in the nesting process
+//      ptrPriors:          Vector of pointers to Prior class objects
+//      likelihood:         Likelihood class object used for likelihood sampling.
+//      metric:             Metric class object to contain the metric used in the problem.
+//      clusterer:          Clusterer class object specifying the type of clustering algorithm to be used.
 //
 // REMARK:
 //      The desired model for predictions is to be given initially to 
@@ -24,17 +24,18 @@
 //      nested sampling process.
 //
 
-NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, vector<Prior*> ptrPriors, 
+NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
 : ptrPriors(ptrPriors),
   likelihood(likelihood),
   metric(metric),
   clusterer(clusterer),
   printOnTheScreen(printOnTheScreen),
-  Nobjects(Nobjects),
+  Nobjects(initialNobjects),
   logCumulatedPriorMass(numeric_limits<double>::lowest()),
   logRemainingPriorMass(0.0),
   uniform(0.0, 1.0),
+  minNobjects(minNobjects),
   Niterations(0),
   informationGain(0.0), 
   logEvidence(numeric_limits<double>::lowest())
@@ -179,6 +180,13 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
     double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));         // First prior interval in the computation
     logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass,logWidthInPriorMass);
     
+   
+    // Evaluate max evidence contribution for the first iteration 
+
+    logMaxLikelihoodOfLivePoints = logLikelihood.maxCoeff();
+    logMaxEvidenceContribution = logMaxLikelihoodOfLivePoints;           // Initial remaining prior mass = 1
+
+
     // The nested sampling will involve finding clusters in the sample.
     // This will require the following containers.
 
@@ -193,6 +201,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
     // that is better than the currently worst one.
 
     bool nestedSamplingShouldContinue = true;
+    bool livePointsShouldBeReduced = true;
     Niterations = 0;
 
     do 
@@ -360,10 +369,87 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         nestedSamplingShouldContinue = (ratioOfRemainderToActualEvidence > maxRatioOfRemainderToActualEvidence);
        
         
+        // If the current iteration is not the last iteratiom and 
+        // the number of live points has not reached the minimum allowed,
+        // then update the number of live points for the next iteration.
+
+        if (nestedSamplingShouldContinue && livePointsShouldBeReduced)
+        {
+            // Evaluate max evidence contribution for the next iteration 
+
+            logMaxLikelihoodOfLivePoints = logLikelihood.maxCoeff();
+            double logMaxEvidenceContributionNew = logMaxLikelihoodOfLivePoints + logRemainingPriorMass;
 
 
+            // Number of live points for the actual iteration
+
+            int NobjectsAtActualIteration = Nobjects;
 
 
+            // Update the number of live points for the next iteration. If the number of live points reaches the minimum allowed
+            // then do not update their number anymore.
+
+            livePointsShouldBeReduced = updateNobjects(logMaxEvidenceContributionNew, maxRatioOfRemainderToActualEvidence);
+    
+            
+            // Number of live points to be removed
+
+            int NobjectsToRemove = NobjectsAtActualIteration - Nobjects;                
+           
+
+            // Resize all eigen arrays of dimensions Nobjects according to new number of live points evaluated.
+            // Pick one live point randomly and Remove it. Repeat the process up to the total number of live points to be removed.
+
+            ArrayXd nestedSamplePerLivePointCopy(Ndimensions);
+
+            for (int m = 0; m < NobjectsToRemove; ++m)
+            {
+                // Rescale uniform random integer generator with new number of live points
+
+                uniform_int_distribution<int> discreteUniform2(0, NobjectsAtActualIteration-1);
+                
+
+                // Select randomly one live point from the actual sample
+
+                int indexOfLivePointToRemove = discreteUniform2(engine);
+
+
+                // Swap the last element of the set of live points with the chosen one 
+                // and erase the last element. This is done for all the arrays that store information
+                // about live points.
+
+                nestedSamplePerLivePointCopy = nestedSample.col(NobjectsAtActualIteration-1);
+                nestedSample.col(NobjectsAtActualIteration-1) = nestedSample.col(indexOfLivePointToRemove);
+                nestedSample.col(indexOfLivePointToRemove) = nestedSamplePerLivePointCopy;
+                nestedSample.conservativeResize(Ndimensions, NobjectsAtActualIteration-1);       
+                
+                double logLikelihoodCopy = logLikelihood(NobjectsAtActualIteration-1);
+                logLikelihood(NobjectsAtActualIteration-1) = logLikelihood(indexOfLivePointToRemove);
+                logLikelihood(indexOfLivePointToRemove) = logLikelihoodCopy;
+                logLikelihood.conservativeResize(NobjectsAtActualIteration-1);
+              
+
+                // In the case of clusterIndices also subtract selected live point from 
+                // corresponding clusterSizes in order to update the size of the cluster to which
+                // the live point belongs.
+                
+                int clusterIndexCopy = clusterIndices[NobjectsAtActualIteration-1];
+                clusterIndices[NobjectsAtActualIteration-1] = clusterIndices[indexOfLivePointToRemove];
+                --clusterSizes[clusterIndices[indexOfLivePointToRemove]];
+                clusterIndices[indexOfLivePointToRemove] = clusterIndexCopy;
+                clusterIndices.pop_back();
+
+                
+                // Reduce the actual number of live points by one.
+                
+                --NobjectsAtActualIteration;
+            }
+
+            // Update discreteUniform with final number of live points
+
+            uniform_int_distribution<int> discreteUniform3(0, Nobjects-1);
+            discreteUniform = discreteUniform3;
+        }
         
 
         // Shrink prior mass interval according to proper number of live points
@@ -521,6 +607,63 @@ double NestedSampler::getInformationGain()
 double NestedSampler::getComputationalTime()
 {
     return computationalTime;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::updateNobjects()
+//
+// PURPOSE:
+//      Computes the updated number of live points based on the gaining of evidence
+//      achieved at the given iteration. The equation adopted was introduced
+//      by Feroz F. et al. (2009), MNRAS, 398, 1601.
+//
+// INPUT:
+//      logMaxEvidenceContributionNew:          The updated maximum contribution of the evidence
+//                                              expressed in natural logarithm.
+//      maxRatioOfRemainderToActualEvidence:    The fraction of remainder evidence to gained evidence used to terminate 
+//                                              the nested iteration loop. This value is also used as a tolerance on the final
+//                                              evidence to update the number of live points in the nesting process.
+//
+// OUTPUT:
+//      An integer containing the new number of live points to be used.
+//
+
+bool NestedSampler::updateNobjects(double logMaxEvidenceContributionNew, double maxRatioOfRemainderToActualEvidence)
+{
+    // Evaluate the new number of live points to be used in the next iteration of the nesting loop
+    
+    int updatedNobjects = static_cast<int>(Nobjects - minNobjects * 
+                          exp(Functions::logExpDifference(logMaxEvidenceContribution,logMaxEvidenceContributionNew)) /
+                          (exp(logMaxEvidenceContributionNew)*(1 - maxRatioOfRemainderToActualEvidence)));
+    
+    assert(updatedNobjects <= Nobjects);
+
+    if (updatedNobjects > minNobjects)
+    {
+        // If minimum number of live points allowed has not been reached, 
+        // save the new number and use it for the next nested iteration
+
+        Nobjects = updatedNobjects;
+        return true;
+    }
+    else
+    {
+        // Otherwise continue the nesting process by using 
+        // the minimum number of live points allowed
+
+        return false;
+    }
 }
 
 
