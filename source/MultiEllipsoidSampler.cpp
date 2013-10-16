@@ -64,11 +64,11 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      ellipsoid which is isolated, i.e. non-overlapping.
 //
 // INPUT:
-//      sample:                     Eigen Array matrix of size (Ndimensions, Nobjects)
+//      totalSample:                Eigen Array matrix of size (Ndimensions, Nobjects)
+//                                  containing the total sample of active points at a given nesting iteration
 //      Nclusters:                  Optimal number of clusters found by clustering algorithm
 //      clusterIndices:             Indices of clusters for each point of the sample
 //      clusterSizes:               A vector of integers containing the number of points belonging to each cluster
-//      logTotalWidthInPriorMass:   Log Value of total prior volume from beginning to the actual nested iteration.
 //      drawnPoint:                 Eigen Array matrix of size (Ndimensions,Ndraws) to contain the
 //                                  coordinates of the drawn point to be used for the next nesting loop. 
 //                                  When used for the first time, the array contains the coordinates of the 
@@ -80,12 +80,12 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      A boolean value that is true if a new point in the sampling process is found and false otherwise.
 //
 
-bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
-                                               const vector<int> &clusterSizes, const double logTotalWidthInPriorMass, 
-                                               RefArrayXd drawnPoint, double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts)
+bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
+                                               const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
+                                               double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts)
 {    
-    assert(sample.cols() == clusterIndices.size());
-    assert(drawnPoint.size() == sample.rows());
+    assert(totalSample.cols() == clusterIndices.size());
+    assert(drawnPoint.size() == totalSample.rows());
     assert(Nclusters > 0);
 
 
@@ -93,8 +93,7 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
     // This involves computing the barycenter, covariance matrix, eigenvalues and eigenvectors
     // for each ellipsoid/cluster.
 
-    logRemainingWidthInPriorMass = log(1.0 - exp(logTotalWidthInPriorMass));
-    computeEllipsoids(sample, Nclusters, clusterIndices, clusterSizes, logRemainingWidthInPriorMass);
+    computeEllipsoids(totalSample, Nclusters, clusterIndices, clusterSizes);
 
 
     // Find which ellipsoids are overlapping and which are not
@@ -282,6 +281,7 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
         // much more time consuming to compute than the prior.
 
         logLikelihoodOfDrawnPoint = likelihood.logValue(drawnPoint);
+
         if (logLikelihoodOfDrawnPoint < worstLiveLogLikelihood)
         {
             // The new point does not fulfill the likelihood criterion. Flag it as such,
@@ -325,21 +325,20 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd sample, const i
 //      are stored in the private data members.
 //
 // INPUT:
-//      sample(Ndimensions, Npoints):       Complete sample (spread over all clusters) of points
-//      Nclusters:                          The number of clusters identified by the clustering algorithm
-//      clusterIndices(Npoints):            For each point, the integer index of the cluster to which it belongs
-//      clusterSizes(Nclusters):            A vector of integers containing the number of points belonging to each cluster
-//      logRemainingWidthInPriorMass:       Log Value of the remaining prior volume at the actual nested iteration.
+//      totalSample(Ndimensions, Nobjects):     Complete sample (spread over all clusters) of points
+//      Nclusters:                              The number of clusters identified by the clustering algorithm
+//      clusterIndices(Nobjects):               For each point, the integer index of the cluster to which it belongs
+//      clusterSizes(Nclusters):                A vector of integers containing the number of points belonging to each cluster
 //
 // OUTPUT:
 //      void
 //
 
-void MultiEllipsoidSampler::computeEllipsoids(RefArrayXXd const sample, const int Nclusters, const vector<int> &clusterIndices, 
-                                              const vector<int> &clusterSizes, const double logRemainingWidthInPriorMass)
+void MultiEllipsoidSampler::computeEllipsoids(RefArrayXXd const totalSample, const int Nclusters, 
+                                              const vector<int> &clusterIndices, const vector<int> &clusterSizes)
 {
-    assert(sample.cols() == clusterIndices.size());
-    assert(sample.cols() >= Ndimensions + 1);            // At least Ndimensions + 1 points are required.
+    assert(totalSample.cols() == clusterIndices.size());
+    assert(totalSample.cols() >= Ndimensions + 1);            // At least Ndimensions + 1 points are required to start.
 
 
     // Compute "sorted indices" such that clusterIndices[sortedindices[k]] <= clusterIndices[sortedIndices[k+1]]
@@ -386,9 +385,9 @@ void MultiEllipsoidSampler::computeEllipsoids(RefArrayXXd const sample, const in
 
             for (int n = 0; n < clusterSizes[i]; ++n)
             {
-                sampleOfOneCluster.col(n) = sample.col(sortedIndices[beginIndex+n]);
+                sampleOfOneCluster.col(n) = totalSample.col(sortedIndices[beginIndex+n]);
             }
-
+    
 
             // Move the beginIndex up to the next cluster
 
