@@ -6,7 +6,7 @@
 // PURPOSE: 
 //      Constructor. Sets initial information, logEvidence and type 
 //      of prior and likelihood distributions to be used. 
-//      Increases the number of active nested processes.
+//      Increases the number of live nested processes.
 //
 // INPUT:
 //      printOnTheScreen: Boolean value specifying whether the results are to 
@@ -32,6 +32,8 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, ve
   clusterer(clusterer),
   printOnTheScreen(printOnTheScreen),
   Nobjects(Nobjects),
+  logCumulatedPriorMass(numeric_limits<double>::lowest()),
+  logRemainingPriorMass(0.0),
   uniform(0.0, 1.0),
   Niterations(0),
   informationGain(0.0), 
@@ -67,13 +69,12 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int Nobjects, ve
 // NestedSampler::~NestedSampler()
 //
 // PURPOSE: 
-//      Destructor. Deletes object of actual Nested sampling computation and
-//      decreases the number of active nested processes.
+//      Destructor.
 //
 
 NestedSampler::~NestedSampler()
 {
-} // END NestedSampler::~NestedSampler()
+}
 
 
 
@@ -91,18 +92,20 @@ NestedSampler::~NestedSampler()
 //      logWeightOfPosteriorSample.
 //
 // INPUT:
-//      terminationFactor:                   The amount of exceeding 'information' to terminate the nested iteration loop.
+//      maxRatioOfRemainderToActualEvidence:  The fraction of remainder evidence to gained evidence used to terminate 
+//                                            the nested iteration loop. This value is also used as a tolerance on the final
+//                                            evidence to update the number of live points in the nesting process.
 //
-//      NinitialIterationsWithoutClustering: The first N iterations, no clustering will happen. I.e. It will be assumed that
+//      NinitialIterationsWithoutClustering:  The first N iterations, no clustering will happen. I.e. It will be assumed that
 //                                            there is only 1 cluster containing all the points. This is often useful because 
 //                                            initially the points may be sampled from a uniform prior, and we therefore don't 
 //                                            expect any clustering before the algorithm is able to tune in on the island(s) of 
 //                                            high likelihood. Clusters found in the first N initial iterations are therefore 
 //                                            likely purely noise.
 //
-//      NiterationsWithSameClustering:       A new clustering will only happen every N iterations.
+//      NiterationsWithSameClustering:        A new clustering will only happen every N iterations.
 //
-//      maxNdrawAttempts:                    The maximum number of attempts allowed when drawing from a single ellipsoid.
+//      maxNdrawAttempts:                     The maximum number of attempts allowed when drawing from a single ellipsoid.
 //
 // OUTPUT:
 //      void
@@ -173,16 +176,16 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
 
     // Initialize the prior mass interval
 
-    double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));
-    double logTotalWidthInPriorMass = logWidthInPriorMass;
-    
+    double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));         // First prior interval in the computation
+    logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass,logWidthInPriorMass);
     
     // The nested sampling will involve finding clusters in the sample.
     // This will require the following containers.
 
     int Nclusters = 0;
-    vector<int> clusterIndices(Nobjects);
-    vector<int> clusterSizes;
+    vector<int> clusterIndices(Nobjects);           // clusterIndices must have the same number of elements as the number of live points
+    vector<int> clusterSizes;                       // The number of live points counted in each cluster is updated everytime one live point
+                                                    // is removed from the sample.
 
 
     // Start the nested sampling loop. Each iteration, we'll replace the point with the worst likelihood.
@@ -210,7 +213,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         double logWeight = logWidthInPriorMass + worstLiveLogLikelihood;                
 
 
-        // Update the evidence Z and the information Gain
+        // Update the evidence and the information Gain
         
         double logEvidenceNew = Functions::logExpSum(logEvidence, logWeight);
         informationGain = exp(logWeight - logEvidenceNew) * worstLiveLogLikelihood 
@@ -220,7 +223,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
 
         
         // Although we will replace the point with the worst likelihood in the live sample, we will save
-        // it in our collection of posterior sample. Also save its likelihood value and its weight
+        // it in our collection of posterior sample. Also save its likelihood value and its weight.
 
         posteriorSample.col(Niterations) = nestedSample.col(indexOfLivePointWithWorstLikelihood); 
         logLikelihoodOfPosteriorSample(Niterations) = worstLiveLogLikelihood; 
@@ -242,7 +245,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         logMeanLikelihoodOfLivePoints -= log(Nobjects);
         
         
-        // Compute mean live evidence
+        // Compute mean live evidence (see Keeton 2011, MNRAS) 
 
         logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * (log(Nobjects) - log(Nobjects + 1));
 
@@ -255,7 +258,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
 
         // Find clusters in our live sample of points. Don't do this every iteration but only
         // every x iterations, where x is given by 'NiterationsWithSameClustering'.
-
+        
         if ((Niterations % NiterationsWithSameClustering) == 0)
         {            
             // Don't do clustering the first N iterations, where N is user-specified. That is, 
@@ -264,21 +267,21 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
             // and we therefore don't expect any clustering _before_ the algorithm is able to tune in on 
             // the island(s) of high likelihood. Clusters found in the first N initial iterations are
             // therefore likely purely noise.
-
+        
             if (Niterations < NinitialIterationsWithoutClustering)
             {
                 // There is only 1 cluster, containing all objects. All points have the same cluster
                 // index, namely 0.
-                
+                       
                 Nclusters = 1;
                 clusterSizes.resize(1);
                 clusterSizes[0] = Nobjects;
                 fill(clusterIndices.begin(), clusterIndices.end(), 0);
             }
-            else
+            else         
             {
                 // After the first N initial iterations, we do a proper clustering.
-
+                
                 Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes, printOnTheScreen);
             }
         }
@@ -291,8 +294,9 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
             if ((Niterations % 50) == 0)
             {
                 cerr << "Nit: " << Niterations << "   Ncl: " << Nclusters 
-                     << "   WPM: " << exp(logTotalWidthInPriorMass)
-                     << "   Ratio: " << ratioOfRemainderToActualEvidence - maxRatioOfRemainderToActualEvidence
+                     << "   Nlive: " << Nobjects
+                     << "   CPM: " << exp(logCumulatedPriorMass)
+                     << "   Ratio: " << ratioOfRemainderToActualEvidence
                      << "   log(E): " << logEvidence 
                      << "   IG: " << informationGain
                      << endl;
@@ -306,7 +310,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         // for which we will take a randomly chosen point of the live sample (excluding the
         // worst point).
 
-        int indexOfRandomlyChosenPoint = 0;
+        int indexOfRandomlyChosenLivePoint = 0;
         
         if (Nobjects > 1)
         {
@@ -314,20 +318,20 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
 
             do 
             {
-                // 0 <= indexOfRandomlyChosenPoint < Nobjects
+                // 0 <= indexOfRandomlyChosenLivePoint < Nobjects
 
-                indexOfRandomlyChosenPoint = discreteUniform(engine);
+                indexOfRandomlyChosenLivePoint = discreteUniform(engine);
             } 
-            while (indexOfRandomlyChosenPoint == indexOfLivePointWithWorstLikelihood);
+            while (indexOfRandomlyChosenLivePoint == indexOfLivePointWithWorstLikelihood);
         }
 
 
         // drawnPoint will be a starting point as input, and will contain the newly drawn point as output
 
-        ArrayXd drawnPoint = nestedSample.col(indexOfRandomlyChosenPoint); 
+        ArrayXd drawnPoint = nestedSample.col(indexOfRandomlyChosenLivePoint);
         double logLikelihoodOfDrawnPoint = 0.0;
         bool newPointIsFound = drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, 
-                                                  logTotalWidthInPriorMass, drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
+                                                  drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
 
         // If we didn't find a point with a better likelihood, then we can stop right here.
         
@@ -340,31 +344,38 @@ void NestedSampler::run(const double maxRatioOfRemainderToActualEvidence, const 
         }
 
 
-        // Replace the point with the worst likelihood with our newly drawn one.
+        // Replace the point having the worst likelihood with our newly drawn one.
 
         nestedSample.col(indexOfLivePointWithWorstLikelihood) = drawnPoint;
         logLikelihood(indexOfLivePointWithWorstLikelihood) = logLikelihoodOfDrawnPoint;
         
-
-        // Shrink prior mass interval
         
-        logWidthInPriorMass -= 1.0 / Nobjects;
-
-        
-        // Update total width in prior mass from beginning to actual nested iteration
-
-        logTotalWidthInPriorMass = Functions::logExpSum(logTotalWidthInPriorMass, logWidthInPriorMass);
-
-
         // Increase nested loop counter
         
         Niterations++;
 
 
-        // Re-evaluate the stopping criterion, using the condition of Keeton (2011)
+        // Re-evaluate the stopping criterion, using the condition suggested by Keeton (2011)
 
         nestedSamplingShouldContinue = (ratioOfRemainderToActualEvidence > maxRatioOfRemainderToActualEvidence);
+       
+        
 
+
+
+
+        
+
+        // Shrink prior mass interval according to proper number of live points
+        
+        logWidthInPriorMass -= 1.0 / Nobjects;
+
+        
+        // Update total width in prior mass and remaining width in prior mass from beginning to actual iteration
+        // and use this information for the next iteration (if any)
+
+        logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
+        logRemainingPriorMass = log(1.0 - exp(logCumulatedPriorMass));
     }
     while (nestedSamplingShouldContinue);  
 
@@ -567,17 +578,4 @@ void NestedSampler::printComputationalTime(const double startTime)
             cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " days" << endl;
         }
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
 
