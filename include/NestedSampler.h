@@ -43,7 +43,7 @@ class NestedSampler
                       Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
-        void run(const double maxRatioOfRemainderToActualEvidence = 0.05, const int NinitialIterationsWithoutClustering = 100, 
+        void run(const double maxRatioOfRemainderToCurrentEvidence = 0.05, const int NinitialIterationsWithoutClustering = 100, 
                  const int NiterationsWithSameClustering = 10, const int maxNdrawAttempts = 5000);
 
         virtual bool drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
@@ -88,7 +88,7 @@ class NestedSampler
         ArrayXd logLikelihood;                   // log-likelihood values of the actual set of live points
         ArrayXXd nestedSample;                   // parameters values (the free parameters of the problem) of the actual set of live points
 
-        bool updateNobjects(double logMaxEvidenceContributionNew, double maxRatioOfRemainderToActualEvidence);
+        bool updateNobjects(double logMaxEvidenceContributionNew, double maxRatioOfRemainderToCurrentEvidence);
         void printComputationalTime(const double startTime);
 }; 
 
