@@ -40,8 +40,8 @@ int main(int argc, char *argv[])
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
-    parametersMinima <<  0.0, 10.0;         // Centroid x direction, Centroid y direction
-    parametersMaxima << 20.0, 30.0;
+    parametersMinima <<  0.0, 0.0;         // Centroid x direction, Centroid y direction
+    parametersMaxima << 10.0*Functions::PI, 10.0*Functions::PI;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriors[0] = &uniformPrior;
     
@@ -60,31 +60,52 @@ int main(int argc, char *argv[])
     // Set up the K-means clusterer using an Euclidean metric
 
     EuclideanMetric myMetric;
-    int minNclusters = 1;
-    int maxNclusters = 5;
+    int minNclusters = 4;
+    int maxNclusters = 20;
     int Ntrials = 10;
     double relTolerance = 0.01;
 
     KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
-    // Start nested sampling process
+    // Configure nested sampling
     
     bool printOnTheScreen = true;                   // Print results on the screen
-    int Nobjects = 300;                             // Number of active points evolving within the nested sampling process. 
-    int maxNdrawAttempts = 5000;                    // Maximum number of attempts when trying to draw a new sampling point.
-    int NinitialIterationsWithoutClustering = 100;  // The first N iterations, we assume that there is only 1 cluster.
-    int NiterationsWithSameClustering = 10;         // Clustering is only happening every X iterations.
-    double initialEnlargementFraction = 2.5;        // Fraction by which each axis in an ellipsoid has to be enlarged.
+    int initialNobjects = 2000;                     // Initial number of active points evolving within the nested sampling process.
+    int minNobjects = 2000;                          // Minimum number of active points allowed in the nesting process.
+    int maxNdrawAttempts = 10000;                    // Maximum number of attempts when trying to draw a new sampling point.
+    int NinitialIterationsWithoutClustering = 1000;  // The first N iterations, we assume that there is only 1 cluster.
+    int NiterationsWithSameClustering = 100;         // Clustering is only happening every X iterations.
+    double initialEnlargementFraction = 1.5;        // Fraction by which each axis in an ellipsoid has to be enlarged.
                                                     // It can be a number >= 0, where 0 means no enlargement.
-    double shrinkingRate = 0.1;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
+    double shrinkingRate = 0.2;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                     // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                     // of the ellipsoids.
-    double terminationFactor = 0.01;                // Termination factor for nesting loop.
+    double terminationFactor = 0.05;                // Termination factor for nesting loop.
 
+    
+    // Save configuring parameters into an ASCII file
+
+    ofstream outputFile;
+    string fullPath = "demoEggbox_configuringParameters.txt";
+    File::openOutputFile(outputFile, fullPath);
+    outputFile << "Initial Nojects: " << initialNobjects << endl;
+    outputFile << "Minimum Nobjects: " << minNobjects << endl;
+    outputFile << "Minimum Nclusters: " << minNclusters << endl;
+    outputFile << "Maximum Nclusters: " << maxNclusters << endl;
+    outputFile << "NinitialIterationsWithoutClustering: " << NinitialIterationsWithoutClustering << endl;
+    outputFile << "NiterationsWithSameClustering: " << NiterationsWithSameClustering << endl;
+    outputFile << "maxNdrawAttempts: " << maxNdrawAttempts << endl;
+    outputFile << "Initial EnlargementFraction: " << initialEnlargementFraction << endl;
+    outputFile << "Shrinking Rate: " << shrinkingRate << endl;
+    outputFile << "terminationFactor: " << terminationFactor << endl;
+    outputFile.close();
+
+
+    // Start the computation
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
-                                        Nobjects, initialEnlargementFraction, shrinkingRate);
+                                        initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
     nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 

@@ -37,7 +37,7 @@ int main(int argc, char *argv[])
 
     // Setting Prior distribution and parameter space
 
-    int Ndimensions = 4;        // Number of free parameters (dimensions) of the problem
+    int Ndimensions = 6;        // Number of free parameters (dimensions) of the problem
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
@@ -70,23 +70,44 @@ int main(int argc, char *argv[])
     KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
-    // Start nested sampling process
+    // Configure nested sampling
     
     bool printOnTheScreen = true;                   // Print results on the screen
-    int Nobjects = 1500;                             // Number of active points evolving within the nested sampling process. 
-    int maxNdrawAttempts = 1000;                     // Maximum number of attempts when trying to draw a new sampling point.
-    int NinitialIterationsWithoutClustering = 10;  // The first N iterations, we assume that there is only 1 cluster.
-    int NiterationsWithSameClustering = 10;         // Clustering is only happening every X iterations.
+    int initialNobjects = 10000;                     // Initial number of active points evolving within the nested sampling process.
+    int minNobjects = 500;                          // Minimum number of active points allowed in the nesting process.
+    int maxNdrawAttempts = 5000;                    // Maximum number of attempts when trying to draw a new sampling point.
+    int NinitialIterationsWithoutClustering = 1000; // The first N iterations, we assume that there is only 1 cluster.
+    int NiterationsWithSameClustering = 50;         // Clustering is only happening every X iterations.
     double initialEnlargementFraction = 2.0;        // Fraction by which each axis in an ellipsoid has to be enlarged.
                                                     // It can be a number >= 0, where 0 means no enlargement.
     double shrinkingRate = 0.8;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                     // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                     // of the ellipsoids.
-    double terminationFactor = 0.01;                // Termination factor for nesting loop.
+    double terminationFactor = 0.05;                // Termination factor for nesting loop.
 
-    
+
+    // Save configuring parameters into an ASCII file
+
+    ofstream outputFile;
+    string fullPath = "demoSingleNDGaussian_configuringParameters.txt";
+    File::openOutputFile(outputFile, fullPath);
+    outputFile << "Initial Nojects: " << initialNobjects << endl;
+    outputFile << "Minimum Nobjects: " << minNobjects << endl;
+    outputFile << "Minimum Nclusters: " << minNclusters << endl;
+    outputFile << "Maximum Nclusters: " << maxNclusters << endl;
+    outputFile << "NinitialIterationsWithoutClustering: " << NinitialIterationsWithoutClustering << endl;
+    outputFile << "NiterationsWithSameClustering: " << NiterationsWithSameClustering << endl;
+    outputFile << "maxNdrawAttempts: " << maxNdrawAttempts << endl;
+    outputFile << "Initial EnlargementFraction: " << initialEnlargementFraction << endl;
+    outputFile << "Shrinking Rate: " << shrinkingRate << endl;
+    outputFile << "terminationFactor: " << terminationFactor << endl;
+    outputFile.close();
+   
+
+    // Start the computation
+
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
-                                        Nobjects, initialEnlargementFraction, shrinkingRate);
+                                        initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
     nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 

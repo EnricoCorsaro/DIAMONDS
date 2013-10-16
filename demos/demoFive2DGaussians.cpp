@@ -68,10 +68,11 @@ int main(int argc, char *argv[])
     KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
-    // Start nested sampling process
+    // Configure nested sampling
    
     bool printOnTheScreen = true;                   // Print results on the screen
-    int Nobjects = 200;                             // Number of active points evolving within the nested sampling process. 
+    int initialNobjects = 200;                      // Initial number of active points evolving within the nested sampling process.
+    int minNobjects = 200;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 20000;                   // Maximum number of attempts when trying to draw a new sampling point.
     int NinitialIterationsWithoutClustering = 100;  // The first N iterations, we assume that there is only 1 cluster.
     int NiterationsWithSameClustering = 20;         // Clustering is only happening every X iterations.
@@ -83,8 +84,28 @@ int main(int argc, char *argv[])
     double terminationFactor = 0.05;                // Termination factor for nesting loop.
 
 
+    // Save configuring parameters into an ASCII file
+
+    ofstream outputFile;
+    string fullPath = "demoFive2DGaussians_configuringParameters.txt";
+    File::openOutputFile(outputFile, fullPath);
+    outputFile << "Initial Nojects: " << initialNobjects << endl;
+    outputFile << "Minimum Nobjects: " << minNobjects << endl;
+    outputFile << "Minimum Nclusters: " << minNclusters << endl;
+    outputFile << "Maximum Nclusters: " << maxNclusters << endl;
+    outputFile << "NinitialIterationsWithoutClustering: " << NinitialIterationsWithoutClustering << endl;
+    outputFile << "NiterationsWithSameClustering: " << NiterationsWithSameClustering << endl;
+    outputFile << "maxNdrawAttempts: " << maxNdrawAttempts << endl;
+    outputFile << "Initial EnlargementFraction: " << initialEnlargementFraction << endl;
+    outputFile << "Shrinking Rate: " << shrinkingRate << endl;
+    outputFile << "terminationFactor: " << terminationFactor << endl;
+    outputFile.close();
+
+
+    // Start the computation
+
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
-                                        Nobjects, initialEnlargementFraction, shrinkingRate);
+                                        initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
     nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
