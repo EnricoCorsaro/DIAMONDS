@@ -396,7 +396,7 @@ void MultiEllipsoidSampler::computeEllipsoids(RefArrayXXd const totalSample, con
             beginIndex += clusterSizes[i];
 
 
-            // Compute the new enlargement fraction (it is the fraction by which each axis of an ellipsoid is enlarged.
+            // Compute the new enlargement fraction (it is the fraction by which each axis of an ellipsoid is enlarged).
             // This allows for improving the efficiency of the sampling by increasing the chance of having more
             // points of the cluster falling inside the bounding ellipsoid.
 
@@ -481,8 +481,8 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids(vector<unordered_set<int>>
 //
 // PURPOSE:
 //      Updates the enlargementFraction adopted for the axes of the ellipsoid.
-//      The formula takes into account the number of dimensions of the problem,
-//      hence it is a modified version of the one adopted by Feroz F. et al. 2008.
+//      The formula takes into account the number of dimensions of the problem
+//      and it is a modified version of the one adopted by Feroz F. et al. 2008.
 //
 // INPUT:
 //      clusterSize:    an integer specifying the number of points used to construct the
@@ -494,8 +494,9 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids(vector<unordered_set<int>>
 
 double MultiEllipsoidSampler::updateEnlargementFraction(const int clusterSize)
 {
-    double updatedEnlargementFraction = initialEnlargementFraction * exp( shrinkingRate * logRemainingPriorMass 
-                                            + 0.5 * log(static_cast<double>(Nobjects) / clusterSize) );
+    double updatedEnlargementFraction = pow(initialEnlargementFraction,1.0/Ndimensions) * exp( (shrinkingRate/Ndimensions) * logRemainingPriorMass 
+                                            + 0.5 * log(static_cast<double>(Nobjects) / clusterSize) 
+                                            - 1.0/(2*Ndimensions) * log(Ndimensions));
     
     return updatedEnlargementFraction;
 }
