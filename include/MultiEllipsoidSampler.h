@@ -12,13 +12,11 @@
 #define MULTIELLIPSOIDSAMPLER_H
 
 #include <random>
-#include <vector>
 #include <unordered_set>
 #include <algorithm>
 #include <Eigen/Dense>
 #include "NestedSampler.h"
 #include "Ellipsoid.h"
-#include "Prior.h"
 
 using namespace std;
 
@@ -45,6 +43,7 @@ class MultiEllipsoidSampler : public NestedSampler
                                const vector<int> &clusterIndices, const vector<int> &clusterSizes);
         void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
         double updateEnlargementFraction(const int clusterSize);
+
 
     private:
 
