@@ -26,7 +26,7 @@ class MultiEllipsoidSampler : public NestedSampler
     public:
        
         MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriors, 
-                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
+                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer, LivePointsReducer &livePointsReducer, 
                               const int initialNobjects, const int minNobjects, 
                               const double initialEnlargementFraction, const double shrinkingRate);
         ~MultiEllipsoidSampler();
