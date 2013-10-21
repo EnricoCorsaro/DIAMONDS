@@ -26,7 +26,7 @@ class MultiEllipsoidSampler : public NestedSampler
     public:
        
         MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriors, 
-                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer, LivePointsReducer &livePointsReducer, 
+                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
                               const int initialNobjects, const int minNobjects, 
                               const double initialEnlargementFraction, const double shrinkingRate);
         ~MultiEllipsoidSampler();
@@ -34,6 +34,7 @@ class MultiEllipsoidSampler : public NestedSampler
         virtual bool drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) override; 
+        
         vector<Ellipsoid> getEllipsoids();
    
 
@@ -51,6 +52,7 @@ class MultiEllipsoidSampler : public NestedSampler
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFraction;      // Initial fraction for enlargement of ellipsoids
         double shrinkingRate;                   // Prior volume shrinkage rate (between 0 and 1)
+        
         uniform_real_distribution<> uniform;  
 
 };

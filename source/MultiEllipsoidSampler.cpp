@@ -11,7 +11,6 @@
 //      likelihood:                     Likelihood class object used for likelihood sampling.
 //      metric:                         Metric class object to contain the metric used in the problem.
 //      clusterer:                      Clusterer class object specifying the type of clustering algorithm to be used.
-//      livePointsReducer:              An object of a class that takes care of the way the number of live points is reduced within the nesting process
 //      initialNobjects:                Initial number of active points to start the nesting process
 //      NobjectsMinimum:                Minimum number of active points allowed in the nesting process
 //      initialEnlargementFraction:     Initial value of the enlargement for the ellipsoids
@@ -19,10 +18,10 @@
 //
 
 MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriors, 
-                                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer, LivePointsReducer &livePointsReducer,
+                                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer,
                                              const int initialNobjects, const int minNobjects, 
                                              const double initialEnlargementFraction, const double shrinkingRate)
-: NestedSampler(printOnTheScreen, initialNobjects, minNobjects, ptrPriors, likelihood, metric, clusterer, livePointsReducer),
+: NestedSampler(printOnTheScreen, initialNobjects, minNobjects, ptrPriors, likelihood, metric, clusterer),
   initialEnlargementFraction(initialEnlargementFraction),
   shrinkingRate(shrinkingRate),
   uniform(0.0, 1.0)
