@@ -9,14 +9,15 @@
 //      Increases the number of live nested processes.
 //
 // INPUT:
-//      printOnTheScreen:   Boolean value specifying whether the results are to 
-//                          be printed on the screen or not.
-//      initialNobjects:    Initial number of live points to start the nesting process
-//      minNobjects:        Minimum number of live points allowed in the nesting process
-//      ptrPriors:          Vector of pointers to Prior class objects
-//      likelihood:         Likelihood class object used for likelihood sampling.
-//      metric:             Metric class object to contain the metric used in the problem.
-//      clusterer:          Clusterer class object specifying the type of clustering algorithm to be used.
+//      printOnTheScreen:       Boolean value specifying whether the results are to 
+//                              be printed on the screen or not.
+//      initialNobjects:        Initial number of live points to start the nesting process
+//      minNobjects:            Minimum number of live points allowed in the nesting process
+//      ptrPriors:              Vector of pointers to Prior class objects
+//      likelihood:             Likelihood class object used for likelihood sampling.
+//      metric:                 Metric class object to contain the metric used in the problem.
+//      clusterer:              Clusterer class object specifying the type of clustering algorithm to be used.
+//      livePointsReducer:      An object of a class that takes care of the way the number of live points is reduced within the nesting process
 //
 // REMARK:
 //      The desired model for predictions is to be given initially to 
@@ -25,11 +26,12 @@
 //
 
 NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
-                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
+                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer, LivePointsReducer &livePointsReducer)
 : ptrPriors(ptrPriors),
   likelihood(likelihood),
   metric(metric),
   clusterer(clusterer),
+  livePointsReducer(livePointsReducer),
   printOnTheScreen(printOnTheScreen),
   Nobjects(initialNobjects),
   logCumulatedPriorMass(numeric_limits<double>::lowest()),

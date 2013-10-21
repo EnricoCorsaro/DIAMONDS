@@ -22,6 +22,7 @@
 #include "Likelihood.h"
 #include "Metric.h"
 #include "Clusterer.h"
+#include "LivePointsReducer.h"
 
 
 using namespace std;
@@ -32,21 +33,20 @@ typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
 class NestedSampler
 {
-
     public:
         
-        ArrayXXd posteriorSample;                // parameter values for sampling the posterior
-        ArrayXd logLikelihoodOfPosteriorSample;  // logLikelihood values corresponding to the posterior sample 
-        ArrayXd logWeightOfPosteriorSample;      // logWeights corresponding to the posterior sample
+        ArrayXXd posteriorSample;                // parameter values in the final posterior sampling
+        ArrayXd logLikelihoodOfPosteriorSample;  // log(Likelihood) values corresponding to the posterior sample 
+        ArrayXd logWeightOfPosteriorSample;      // log(Weights) = log(Likelihood) + log(X) corresponding to the posterior sample
 
         NestedSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
-                      Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
+                      Likelihood &likelihood, Metric &metric, Clusterer &clusterer, LivePointsReducer &livePointsReducer); 
         ~NestedSampler();
         
         void run(const double maxRatioOfRemainderToCurrentEvidence = 0.05, const int NinitialIterationsWithoutClustering = 100, 
-                 const int NiterationsWithSameClustering = 10, const int maxNdrawAttempts = 5000);
+                 const int NiterationsWithSameClustering = 50, const int maxNdrawAttempts = 5000);
 
-        virtual bool drawWithConstraint(const RefArrayXXd sample, const int Nclusters, const vector<int> &clusterIndices,
+        virtual bool drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) = 0;
         
@@ -63,6 +63,7 @@ class NestedSampler
         Likelihood &likelihood;
         Metric &metric;
         Clusterer &clusterer;
+        LivePointsReducer &livePointsReducer;
         bool printOnTheScreen;
         int Ndimensions;
         int Nobjects;                           // Total number of objects at a given iteration
