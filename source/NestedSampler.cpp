@@ -36,7 +36,6 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobje
   Nobjects(initialNobjects),
   logCumulatedPriorMass(numeric_limits<double>::lowest()),
   logRemainingPriorMass(0.0),
-  uniform(0.0, 1.0),
   minNobjects(minNobjects),
   Niterations(0),
   informationGain(0.0), 
@@ -446,6 +445,7 @@ void NestedSampler::run(const double maxRatioOfRemainderToCurrentEvidence, const
                 
                 --NobjectsAtCurrentIteration;
             }
+
 
             // Update discreteUniform with final number of live points
 

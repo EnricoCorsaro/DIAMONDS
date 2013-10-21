@@ -24,7 +24,8 @@ MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector
                                              const double initialEnlargementFraction, const double shrinkingRate)
 : NestedSampler(printOnTheScreen, initialNobjects, minNobjects, ptrPriors, likelihood, metric, clusterer, livePointsReducer),
   initialEnlargementFraction(initialEnlargementFraction),
-  shrinkingRate(shrinkingRate)
+  shrinkingRate(shrinkingRate),
+  uniform(0.0, 1.0)
 {
 
 }

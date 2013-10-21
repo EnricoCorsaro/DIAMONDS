@@ -70,9 +70,7 @@ class NestedSampler
         double worstLiveLogLikelihood;          // The worst likelihood value of the current live sample
         double logCumulatedPriorMass;           // The total (cumulated) prior mass at a given nested iteration
         double logRemainingPriorMass;           // The remaining width in prior mass at a given nested iteration (log X_k)
-
         mt19937 engine;
-        uniform_real_distribution<> uniform;  
         
 
 	private:

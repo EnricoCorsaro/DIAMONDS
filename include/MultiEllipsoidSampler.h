@@ -51,6 +51,7 @@ class MultiEllipsoidSampler : public NestedSampler
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFraction;      // Initial fraction for enlargement of ellipsoids
         double shrinkingRate;                   // Prior volume shrinkage rate (between 0 and 1)
+        uniform_real_distribution<> uniform;  
 
 };
 
