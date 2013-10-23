@@ -67,7 +67,7 @@ Results::~Results()
 
 ArrayXd Results::posteriorProbability()
 {
-    ArrayXd logPosteriorDistribution = nestedSampler.logWeightOfPosteriorSample - nestedSampler.getLogEvidence();
+    ArrayXd logPosteriorDistribution = nestedSampler.getLogWeightOfPosteriorSample() - nestedSampler.getLogEvidence();
     ArrayXd posteriorDistribution = logPosteriorDistribution.exp();
     
     return posteriorDistribution/posteriorDistribution.sum();
@@ -101,9 +101,9 @@ ArrayXd Results::posteriorProbability()
 
 ArrayXXd Results::parameterEstimation(const double credibleLevel)
 {
-    int Ndimensions = nestedSampler.posteriorSample.rows();
+    int Ndimensions = nestedSampler.getPosteriorSample().rows();
     ArrayXd posteriorDistribution = posteriorProbability();
-    assert (nestedSampler.posteriorSample.cols() == posteriorDistribution.size());
+    assert (nestedSampler.getPosteriorSample().cols() == posteriorDistribution.size());
     ArrayXXd parameterEstimates(Ndimensions, 6);
 
 
@@ -111,7 +111,7 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
 
     for (int i = 0; i < Ndimensions; ++i)
     {
-        ArrayXd parameterValues = nestedSampler.posteriorSample.row(i);
+        ArrayXd parameterValues = nestedSampler.getPosteriorSample().row(i);
         ArrayXd marginalDistribution = posteriorDistribution;
 
 
@@ -318,7 +318,8 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
 
 void Results::writeParametersToFile(string pathPrefix, string outputFileExtension)
 {
-    File::arrayXXdRowsToFiles(nestedSampler.posteriorSample, pathPrefix, outputFileExtension);
+    ArrayXXd posteriorSample = nestedSampler.getPosteriorSample();
+    File::arrayXXdRowsToFiles(posteriorSample, pathPrefix, outputFileExtension);
 }
 
 
@@ -354,10 +355,53 @@ void Results::writeLogLikelihoodToFile(string fullPath)
     outputFile << "# Posterior sample from nested sampling" << endl;
     outputFile << "# log(Likelihood)" << endl;
     outputFile << scientific << setprecision(9);
-    File::arrayXdToFile(outputFile, nestedSampler.logLikelihoodOfPosteriorSample);
+    
+    ArrayXd logLikelihoodOfPosteriorSample = nestedSampler.getLogLikelihoodOfPosteriorSample();
+    File::arrayXdToFile(outputFile, logLikelihoodOfPosteriorSample);
     outputFile.close();
-
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Results::writeLogWeightsToFile()
+//
+// PURPOSE:
+//      writes the log(Weight) = log(Likelihood) + log(dX) values from the nested sampling
+//      into an ASCII file of one column format. The values are sorted according to the
+//      increasing order in likelihood.
+//
+// INPUT:
+//      fullPath:   a string variable containing the desired full path to save the output file.
+//
+// OUTPUT:
+//      void
+// 
+
+void Results::writeLogWeightsToFile(string fullPath)
+{
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+            
+    outputFile << "# Posterior sample from nested sampling" << endl;
+    outputFile << "# log(Weight) = log(Likelihood) + log(dX)" << endl;
+    outputFile << scientific << setprecision(9);
+    
+    ArrayXd logWeightOfPosteriorSample = nestedSampler.getLogWeightOfPosteriorSample();
+    File::arrayXdToFile(outputFile, logWeightOfPosteriorSample);
+    outputFile.close();
+}
+
+
 
 
 
