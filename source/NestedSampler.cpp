@@ -17,7 +17,6 @@
 //      likelihood:             Likelihood class object used for likelihood sampling.
 //      metric:                 Metric class object to contain the metric used in the problem.
 //      clusterer:              Clusterer class object specifying the type of clustering algorithm to be used.
-//      livePointsReducer:      An object of a class that takes care of the way the number of live points is reduced within the nesting process
 //
 // REMARK:
 //      The desired model for predictions is to be given initially to 
@@ -26,12 +25,11 @@
 //
 
 NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
-                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer, LivePointsReducer &livePointsReducer)
+                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
 : ptrPriors(ptrPriors),
   likelihood(likelihood),
   metric(metric),
   clusterer(clusterer),
-  livePointsReducer(livePointsReducer),
   printOnTheScreen(printOnTheScreen),
   Nobjects(initialNobjects),
   logCumulatedPriorMass(numeric_limits<double>::lowest()),
@@ -94,7 +92,7 @@ NestedSampler::~NestedSampler()
 //      logWeightOfPosteriorSample.
 //
 // INPUT:
-//      maxRatioOfRemainderToCurrentEvidence:  The fraction of remainder evidence to gained evidence used to terminate 
+//      maxRatioOfRemainderToCurrentEvidence: The fraction of remainder evidence to gained evidence used to terminate 
 //                                            the nested iteration loop. This value is also used as a tolerance on the final
 //                                            evidence to update the number of live points in the nesting process.
 //
@@ -108,6 +106,8 @@ NestedSampler::~NestedSampler()
 //      NiterationsWithSameClustering:        A new clustering will only happen every N iterations.
 //
 //      maxNdrawAttempts:                     The maximum number of attempts allowed when drawing from a single ellipsoid.
+//      livePointsReducer:                    An object of a class that takes care of the way the number of live points 
+//                                            is reduced within the nesting process
 //
 // OUTPUT:
 //      void
@@ -117,8 +117,7 @@ NestedSampler::~NestedSampler()
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-
-void NestedSampler::run(const double maxRatioOfRemainderToCurrentEvidence, const int NinitialIterationsWithoutClustering,
+void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRatioOfRemainderToCurrentEvidence, const int NinitialIterationsWithoutClustering,
                         const int NiterationsWithSameClustering, const int maxNdrawAttempts)
 {
     int startTime = time(0);
