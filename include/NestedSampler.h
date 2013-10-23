@@ -49,10 +49,18 @@ class NestedSampler
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) = 0;
         
         int getNiterations();
+        int getNobjects();
+        int getMinNobjects();
+        double getLogCumulatedPriorMass();
+        double getLogRemainingPriorMass();
         double getLogEvidence();
         double getLogEvidenceError();
         double getInformationGain();
+        double getLogMaxLikelihoodOfLivePoints();
         double getComputationalTime();
+        double getTerminationFactor();
+        ArrayXXd getNestedSample();
+        ArrayXd getLogLikelihood();
         ArrayXXd getPosteriorSample();
         ArrayXd getLogLikelihoodOfPosteriorSample();
         ArrayXd getLogWeightOfPosteriorSample();
@@ -64,29 +72,29 @@ class NestedSampler
         Likelihood &likelihood;
         Metric &metric;
         Clusterer &clusterer;
-        LivePointsReducer &livePointsReducer;
         bool printOnTheScreen;
         int Ndimensions;
-        int Nobjects;                           // Total number of objects at a given iteration
+        int Nobjects;                           // Total number of live points at a given iteration
+        int minNobjects;                        // Minimum number of live points allowed
         double worstLiveLogLikelihood;          // The worst likelihood value of the current live sample
         double logCumulatedPriorMass;           // The total (cumulated) prior mass at a given nested iteration
-        double logRemainingPriorMass;           // The remaining width in prior mass at a given nested iteration (log X_k)
+        double logRemainingPriorMass;           // The remaining width in prior mass at a given nested iteration (log X)
         mt19937 engine;
         
 
 	private:
 
-        int minNobjects;                         // Minimum number of live points allowed
         int Niterations;                         // Counter saving the number of nested loops used
-        double informationGain;                  // Information gain in moving from prior to posterior PDF
-        double logEvidence;                      // Skilling's evidence
-        double logEvidenceError;                 // Skilling's error on evidence (based on information gain)
-        double logMeanLikelihoodOfLivePoints;    // The logarithm of the mean likelihood value of the actual set of live points
-        double logMaxLikelihoodOfLivePoints;     // The logarithm of the maxumum likelihood value of the actual set of live points
-        double logMaxEvidenceContribution;       // The logarithm of the maximum evidence contribution at a given iteration of the nesting process
+        double informationGain;                  // Skilling's Information gain in moving from prior to posterior PDF
+        double logEvidence;                      // Skilling's Evidence
+        double logEvidenceError;                 // Skilling's error on Evidence (based on IG)
+        double logMaxLikelihoodOfLivePoints;     // The maximum log(Likelihood) of the set of live points
+        double logMeanLikelihoodOfLivePoints;    // The logarithm of the mean likelihood value of the current set of live points
         double computationalTime;                // Computational time of the process
-        ArrayXd logLikelihood;                   // log-likelihood values of the actual set of live points
-        ArrayXXd nestedSample;                   // parameters values (the free parameters of the problem) of the actual set of live points
+        double terminationFactor;                // The condition that sets the total number of nested iterations
+        ArrayXXd nestedSample;                   // Parameters values (for all the free parameters of the problem) of the current set of live points
+        ArrayXd logLikelihood;                   // log-likelihood values of the current set of live points
+                                                 // is removed from the sample.
         ArrayXXd posteriorSample;                // Parameter values (for all the free parameters of the problem) in the final posterior sampling
         ArrayXd logLikelihoodOfPosteriorSample;  // log(Likelihood) values corresponding to the posterior sample 
         ArrayXd logWeightOfPosteriorSample;      // log(Weights) = log(Likelihood) + log(dX) corresponding to the posterior sample
