@@ -660,6 +660,100 @@ bool NestedSampler::updateNobjects(double logMaxEvidenceContributionNew, double 
         return true;
     }
     else
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getPosteriorSample()
+//
+// PURPOSE:
+//      Get private data member posteriorSample.
+//
+// OUTPUT:
+//      An eigen array containing the coordinates of the
+//      final posterior sample.
+//
+
+ArrayXXd NestedSampler::getPosteriorSample()
+{
+    return posteriorSample;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogLikelihoodOfPosteriorSample()
+//
+// PURPOSE:
+//      Get private data member logLikelihoodOfPosteriorSample.
+//
+// OUTPUT:
+//      An eigen array containing the log(Likelihood) values of the
+//      final posterior sample.
+//
+
+ArrayXd NestedSampler::getLogLikelihoodOfPosteriorSample()
+{
+    return logLikelihoodOfPosteriorSample;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogWeightOfPosteriorSample()
+//
+// PURPOSE:
+//      Get private data member logWeightOfPosteriorSample.
+//
+// OUTPUT:
+//      An eigen array containing the log(Weight) values of the
+//      final posterior sample.
+//
+
+ArrayXd NestedSampler::getLogWeightOfPosteriorSample()
+{
+    return logWeightOfPosteriorSample;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     {
         // Otherwise continue the nesting process by using 
         // the minimum number of live points allowed

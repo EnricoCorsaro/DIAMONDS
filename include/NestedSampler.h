@@ -34,10 +34,6 @@ typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 class NestedSampler
 {
     public:
-        
-        ArrayXXd posteriorSample;                // parameter values in the final posterior sampling
-        ArrayXd logLikelihoodOfPosteriorSample;  // log(Likelihood) values corresponding to the posterior sample 
-        ArrayXd logWeightOfPosteriorSample;      // log(Weights) = log(Likelihood) + log(X) corresponding to the posterior sample
 
         NestedSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
                       Likelihood &likelihood, Metric &metric, Clusterer &clusterer, LivePointsReducer &livePointsReducer); 
@@ -55,6 +51,9 @@ class NestedSampler
         double getLogEvidenceError();
         double getInformationGain();
         double getComputationalTime();
+        ArrayXXd getPosteriorSample();
+        ArrayXd getLogLikelihoodOfPosteriorSample();
+        ArrayXd getLogWeightOfPosteriorSample();
 
 
     protected:
@@ -86,6 +85,9 @@ class NestedSampler
         double computationalTime;                // Computational time of the process
         ArrayXd logLikelihood;                   // log-likelihood values of the actual set of live points
         ArrayXXd nestedSample;                   // parameters values (the free parameters of the problem) of the actual set of live points
+        ArrayXXd posteriorSample;                // Parameter values (for all the free parameters of the problem) in the final posterior sampling
+        ArrayXd logLikelihoodOfPosteriorSample;  // log(Likelihood) values corresponding to the posterior sample 
+        ArrayXd logWeightOfPosteriorSample;      // log(Weights) = log(Likelihood) + log(dX) corresponding to the posterior sample
 
         bool updateNobjects(double logMaxEvidenceContributionNew, double maxRatioOfRemainderToCurrentEvidence);
         void printComputationalTime(const double startTime);
