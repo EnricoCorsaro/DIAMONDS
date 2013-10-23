@@ -17,8 +17,8 @@
 #include "Results.h"
 #include "Ellipsoid.h"
 #include "ZeroModel.h"
+#include "FerozReducer.h"
 #include "demoFive2DGaussians.h"
-
 
 
 int main(int argc, char *argv[])
@@ -89,16 +89,8 @@ int main(int argc, char *argv[])
     ofstream outputFile;
     string fullPath = "demoFive2DGaussians_configuringParameters.txt";
     File::openOutputFile(outputFile, fullPath);
-    outputFile << "Initial Nojects: " << initialNobjects << endl;
-    outputFile << "Minimum Nobjects: " << minNobjects << endl;
-    outputFile << "Minimum Nclusters: " << minNclusters << endl;
-    outputFile << "Maximum Nclusters: " << maxNclusters << endl;
-    outputFile << "NinitialIterationsWithoutClustering: " << NinitialIterationsWithoutClustering << endl;
-    outputFile << "NiterationsWithSameClustering: " << NiterationsWithSameClustering << endl;
-    outputFile << "maxNdrawAttempts: " << maxNdrawAttempts << endl;
-    outputFile << "Initial EnlargementFraction: " << initialEnlargementFraction << endl;
-    outputFile << "Shrinking Rate: " << shrinkingRate << endl;
-    outputFile << "terminationFactor: " << terminationFactor << endl;
+    File::configuringParametersToFile(outputFile, initialNobjects, minNobjects, inNclusters, maxNclusters, NinitialIterationsWithoutClustering,
+                                     NiterationsWithSameClustering, maxNdrawAttempts, initialEnlargementFraction, shrinkingRate, terminationFactor);
     outputFile.close();
 
 
@@ -106,6 +98,10 @@ int main(int argc, char *argv[])
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
+
+    double toleranceOnEvidence = 0.01;
+    FerozReducer ferozReducer(nestedSampler, toleranceOnEvidence);
+
     nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
@@ -117,7 +113,8 @@ int main(int argc, char *argv[])
     results.writeEvidenceInformationToFile("demoFive2DGaussians_Evidence.txt");
     results.writePosteriorProbabilityToFile("demoFive2DGaussians_Posterior.txt");
     results.writeParametersSummaryToFile("demoFive2DGaussians_ParametersSummary.txt");
- 
+
+
     // That's it!
 
     return EXIT_SUCCESS;

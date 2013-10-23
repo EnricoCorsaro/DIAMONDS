@@ -17,6 +17,7 @@
 #include "Results.h"
 #include "Ellipsoid.h"
 #include "ZeroModel.h"
+#include "FerozReducer.h"
 #include "demoTwoCircles.h"
 
 
@@ -90,16 +91,8 @@ int main(int argc, char *argv[])
     ofstream outputFile;
     string fullPath = "demoTwo2DCircles_configuringParameters.txt";
     File::openOutputFile(outputFile, fullPath);
-    outputFile << "Initial Nojects: " << initialNobjects << endl;
-    outputFile << "Minimum Nobjects: " << minNobjects << endl;
-    outputFile << "Minimum Nclusters: " << minNclusters << endl;
-    outputFile << "Maximum Nclusters: " << maxNclusters << endl;
-    outputFile << "NinitialIterationsWithoutClustering: " << NinitialIterationsWithoutClustering << endl;
-    outputFile << "NiterationsWithSameClustering: " << NiterationsWithSameClustering << endl;
-    outputFile << "maxNdrawAttempts: " << maxNdrawAttempts << endl;
-    outputFile << "Initial EnlargementFraction: " << initialEnlargementFraction << endl;
-    outputFile << "Shrinking Rate: " << shrinkingRate << endl;
-    outputFile << "terminationFactor: " << terminationFactor << endl;
+    File::configuringParametersToFile(outputFile, initialNobjects, minNobjects, inNclusters, maxNclusters, NinitialIterationsWithoutClustering,
+                                     NiterationsWithSameClustering, maxNdrawAttempts, initialEnlargementFraction, shrinkingRate, terminationFactor);
     outputFile.close();
 
 
@@ -107,6 +100,10 @@ int main(int argc, char *argv[])
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
+        
+    double toleranceOnEvidence = 0.01;
+    FerozReducer ferozReducer(nestedSampler, toleranceOnEvidence);
+    
     nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
@@ -118,7 +115,8 @@ int main(int argc, char *argv[])
     results.writeEvidenceInformationToFile("demoTwo2DCircles_Evidence.txt");
     results.writePosteriorProbabilityToFile("demoTwo2DCircles_Posterior.txt");
     results.writeParametersSummaryToFile("demoTwo2DCircles_ParametersSummary.txt");
- 
+
+
     // That's it!
 
     return EXIT_SUCCESS;
