@@ -36,12 +36,12 @@ class NestedSampler
     public:
 
         NestedSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
-                      Likelihood &likelihood, Metric &metric, Clusterer &clusterer, LivePointsReducer &livePointsReducer); 
+                      Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
-        void run(const double maxRatioOfRemainderToCurrentEvidence = 0.05, const int NinitialIterationsWithoutClustering = 100, 
+        void run(LivePointsReducer &livePointsReducer, const double maxRatioOfRemainderToCurrentEvidence = 0.05, const int NinitialIterationsWithoutClustering = 100, 
                  const int NiterationsWithSameClustering = 50, const int maxNdrawAttempts = 5000);
-
+        
         virtual bool drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) = 0;
