@@ -78,14 +78,9 @@ int FerozReducer::updateNobjects()
     // Evaluate the new number of live points to be used in the next iteration of the nesting process
    
     NobjectsAtCurrentIteration = nestedSampler.getNobjects();
-
     double numerator = exp(Functions::logExpDifference(logMaxEvidenceContribution,logMaxEvidenceContributionNew));
     double denominator = exp(logMaxEvidenceContributionNew);
-
     updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * numerator / (denominator * toleranceOnEvidence));
-    //updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * 
-    //                  exp(Functions::logExpDifference(logMaxEvidenceContribution,logMaxEvidenceContributionNew)) /
-    //                  (exp(logMaxEvidenceContributionNew)*(0.01) ));
     
 
     // Finally update max evidence contribution with newest value
