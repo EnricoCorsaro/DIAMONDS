@@ -32,9 +32,9 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobje
   clusterer(clusterer),
   printOnTheScreen(printOnTheScreen),
   Nobjects(initialNobjects),
+  minNobjects(minNobjects),
   logCumulatedPriorMass(numeric_limits<double>::lowest()),
   logRemainingPriorMass(0.0),
-  minNobjects(minNobjects),
   Niterations(0),
   informationGain(0.0), 
   logEvidence(numeric_limits<double>::lowest())
@@ -135,6 +135,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
     // can have different priors, so these have to be sampled individually.
 
     nestedSample.resize(Ndimensions, Nobjects);
+    
     int beginIndex = 0;
     int NdimensionsOfCurrentPrior;
     ArrayXXd priorSample;
@@ -165,7 +166,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
 
 
 
-    // Compute the log(Likelihood) for each of our sample points
+    // Compute the log(Likelihood) for each of our points in the live sample
 
     logLikelihood.resize(Nobjects);
     
@@ -175,20 +176,20 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
     }
 
 
-    // Initialize the prior mass interval
+    // Initialize the prior mass interval and cumulate it
 
-    double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));         // First prior interval in the computation
+    double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));         
     logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass,logWidthInPriorMass);
     
    
-    // Evaluate max evidence contribution for the first iteration 
+    // Find maximum log(Likelihood) value in the initial sample of live points. 
+    // This information can be useful when reducing the number of live points adopted within the nesting process.
 
     logMaxLikelihoodOfLivePoints = logLikelihood.maxCoeff();
-    logMaxEvidenceContribution = logMaxLikelihoodOfLivePoints;           // Initial remaining prior mass = 1
 
 
     // The nested sampling will involve finding clusters in the sample.
-    // This will require the following containers.
+    // This will require the containers clusterIndices and clusterSizes.
 
     int Nclusters = 0;
     vector<int> clusterIndices(Nobjects);           // clusterIndices must have the same number of elements as the number of live points
@@ -259,7 +260,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * (log(Nobjects) - log(Nobjects + 1));
 
 
-        // Compute the ratio of the evidence of the live sample to the actual Skilling's evidence.
+        // Compute the ratio of the evidence of the live sample to the current Skilling's evidence.
         // Only when we gathered enough evidence, this ratio will be sufficiently small so that we can stop the iterations.
 
         ratioOfRemainderToCurrentEvidence = exp(logMeanLiveEvidence - logEvidence);
@@ -342,12 +343,13 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         bool newPointIsFound = drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, 
                                                   drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
 
+
         // If we didn't find a point with a better likelihood, then we can stop right here.
         
         if (!newPointIsFound)
         {
             nestedSamplingShouldContinue = false;
-            cerr << "Can't find point with a better Likelihood" << endl; 
+            cerr << "Can't find point with a better Likelihood." << endl; 
             cerr << "Stopping the nested sampling loop prematurely." << endl;
             break;
         }
@@ -503,6 +505,71 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::printComputationalTime()
+//
+// PURPOSE:
+//      Computes the total computational time of the nested sampling process
+//      and prints the result expressed in either seconds, minutes or hours on the screen.
+//
+// INPUT:
+//      startTime a double specifying the seconds at the moment the process started
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::printComputationalTime(const double startTime)
+{
+    double endTime = time(0);
+    computationalTime = endTime - startTime; 
+    
+    cerr << endl;
+
+    if (computationalTime < 60)
+    {
+        cerr << "Total Computational Time: " << computationalTime << " seconds" << endl;
+    }
+    else 
+        if ((computationalTime >= 60) && (computationalTime < 60*60))
+        {
+            computationalTime = computationalTime/60.;
+            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " minutes" << endl;
+        }
+    else 
+        if (computationalTime >= 60*60)
+        {
+            computationalTime = computationalTime/(60.*60.);
+            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " hours" << endl;
+        }
+    else 
+        if (computationalTime >= 60*60*24)
+        {
+            computationalTime = computationalTime/(60.*60.*24.);
+            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " days" << endl;
+        }
+}
+
+
+
+
+
+
+
+
+
+
+
 // NestedSampler::getNiterations()
 //
 // PURPOSE:
@@ -517,6 +584,110 @@ int NestedSampler::getNiterations()
 {
     return Niterations;
 }
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getNobjects()
+//
+// PURPOSE:
+//      Get protected data member Nobjects.
+//
+// OUTPUT:
+//      An integer containing the current number of
+//      live points.
+//
+
+int NestedSampler::getNobjects()
+{
+    return Nobjects;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getMinNobjects()
+//
+// PURPOSE:
+//      Get protected data member minNobjects.
+//
+// OUTPUT:
+//      An integer containing the minimum number of
+//      live points allowed.
+//
+
+int NestedSampler::getMinNobjects()
+{
+    return minNobjects;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogCumulatedPriorMass()
+//
+// PURPOSE:
+//      Get protected data member logCumulatedPriorMass.
+//
+// OUTPUT:
+//      A double containing the natural logarithm of the cumulated prior mass.
+//
+
+double NestedSampler::getLogCumulatedPriorMass()
+{
+    return logCumulatedPriorMass;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogRemainingPriorMass()
+//
+// PURPOSE:
+//      Get protected data member logRemainingPriorMass.
+//
+// OUTPUT:
+//      A double containing the natural logarithm of the remaining prior mass.
+//
+
+double NestedSampler::getLogRemainingPriorMass()
+{
+    return logRemainingPriorMass;
+}
+
+
+
 
 
 
@@ -550,6 +721,7 @@ double NestedSampler::getLogEvidence()
 
 
 
+
 // NestedSampler::getLogEvidenceError()
 //
 // PURPOSE:
@@ -563,6 +735,8 @@ double NestedSampler::getLogEvidenceError()
 {
     return logEvidenceError;
 }
+
+
 
 
 
@@ -586,6 +760,34 @@ double NestedSampler::getInformationGain()
 {
     return informationGain;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogMaxLikelihoodOfLivePoints()
+//
+// PURPOSE:
+//      Get private data member logMaxLikelihoodOfLivePoints.
+//
+// OUTPUT:
+//      A double containing the maximum log(Likelihood) value of the set of live points.
+//
+
+double NestedSampler::getLogMaxLikelihoodOfLivePoints()
+{
+    return logMaxLikelihoodOfLivePoints;
+}
+
+
+
 
 
 
@@ -670,6 +872,59 @@ bool NestedSampler::updateNobjects(double logMaxEvidenceContributionNew, double 
 
 
 
+// NestedSampler::getNestedSample()
+//
+// PURPOSE:
+//      Get private data member nestedSample.
+//
+// OUTPUT:
+//      An eigen array containing the coordinates of the
+//      current set of live points.
+//
+
+ArrayXXd NestedSampler::getNestedSample()
+{
+    return nestedSample;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogLikelihood()
+//
+// PURPOSE:
+//      Get private data member logLikelihood.
+//
+// OUTPUT:
+//      An eigen array containing the log(Likelihood) values of the
+//      current set of live points.
+//
+
+ArrayXd NestedSampler::getLogLikelihood()
+{
+    return logLikelihood;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 // NestedSampler::getPosteriorSample()
 //
 // PURPOSE:
@@ -706,6 +961,14 @@ ArrayXXd NestedSampler::getPosteriorSample()
 //      final posterior sample.
 //
 
+
+
+    {
+        // Otherwise continue the nesting process by using 
+        // the minimum number of live points allowed
+
+        return false;
+    }
 ArrayXd NestedSampler::getLogLikelihoodOfPosteriorSample()
 {
     return logLikelihoodOfPosteriorSample;
@@ -737,83 +1000,5 @@ ArrayXd NestedSampler::getLogLikelihoodOfPosteriorSample()
 ArrayXd NestedSampler::getLogWeightOfPosteriorSample()
 {
     return logWeightOfPosteriorSample;
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    {
-        // Otherwise continue the nesting process by using 
-        // the minimum number of live points allowed
-
-        return false;
-    }
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-// NestedSampler::printComputationalTime()
-//
-// PURPOSE:
-//      Computes the total computational time of the nested sampling process
-//      and prints the result expressed in either seconds, minutes or hours on the screen.
-//
-// INPUT:
-//      startTime a double specifying the seconds at the moment the process started
-//
-// OUTPUT:
-//      void
-//
-
-void NestedSampler::printComputationalTime(const double startTime)
-{
-    double endTime = time(0);
-    computationalTime = endTime - startTime; 
-    
-    cerr << endl;
-
-    if (computationalTime < 60)
-    {
-        cerr << "Total Computational Time: " << computationalTime << " seconds" << endl;
-    }
-    else 
-        if ((computationalTime >= 60) && (computationalTime < 60*60))
-        {
-            computationalTime = computationalTime/60.;
-            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " minutes" << endl;
-        }
-    else 
-        if (computationalTime >= 60*60)
-        {
-            computationalTime = computationalTime/(60.*60.);
-            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " hours" << endl;
-        }
-    else 
-        if (computationalTime >= 60*60*24)
-        {
-            computationalTime = computationalTime/(60.*60.*24.);
-            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " days" << endl;
-        }
 }
 
