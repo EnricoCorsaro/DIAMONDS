@@ -58,7 +58,8 @@ class NestedSampler
         double getInformationGain();
         double getLogMaxLikelihoodOfLivePoints();
         double getComputationalTime();
-        double getTerminationFactor();
+        vector<int> getNobjectsPerIteration();
+        
         ArrayXXd getNestedSample();
         ArrayXd getLogLikelihood();
         ArrayXXd getPosteriorSample();
@@ -79,6 +80,8 @@ class NestedSampler
         double worstLiveLogLikelihood;          // The worst likelihood value of the current live sample
         double logCumulatedPriorMass;           // The total (cumulated) prior mass at a given nested iteration
         double logRemainingPriorMass;           // The remaining width in prior mass at a given nested iteration (log X)
+        vector<int> NobjectsPerIteration;       // A vector that stores the number of live points used at each iteration of the nesting process
+        
         mt19937 engine;
         
 
@@ -91,7 +94,6 @@ class NestedSampler
         double logMaxLikelihoodOfLivePoints;     // The maximum log(Likelihood) of the set of live points
         double logMeanLikelihoodOfLivePoints;    // The logarithm of the mean likelihood value of the current set of live points
         double computationalTime;                // Computational time of the process
-        double terminationFactor;                // The condition that sets the total number of nested iterations
         ArrayXXd nestedSample;                   // Parameters values (for all the free parameters of the problem) of the current set of live points
         ArrayXd logLikelihood;                   // log-likelihood values of the current set of live points
                                                  // is removed from the sample.
@@ -99,7 +101,8 @@ class NestedSampler
         ArrayXd logLikelihoodOfPosteriorSample;  // log(Likelihood) values corresponding to the posterior sample 
         ArrayXd logWeightOfPosteriorSample;      // log(Weights) = log(Likelihood) + log(dX) corresponding to the posterior sample
 
-        bool updateNobjects(double logMaxEvidenceContributionNew, double maxRatioOfRemainderToCurrentEvidence);
+        void removeLivePointsFromSample(const vector<int> &indicesOfLivePointsToRemove, 
+                                        vector<int> &clusterIndices, vector<int> &clusterSizes);
         void printComputationalTime(const double startTime);
 }; 
 
