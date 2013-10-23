@@ -31,6 +31,8 @@ typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
 typedef Eigen::Ref<Eigen::ArrayXi> RefArrayXi;
 typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
+class LivePointsReducer;
+
 class NestedSampler
 {
     public:
