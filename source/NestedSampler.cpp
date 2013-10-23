@@ -359,11 +359,6 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
 
         nestedSample.col(indexOfLivePointWithWorstLikelihood) = drawnPoint;
         logLikelihood(indexOfLivePointWithWorstLikelihood) = logLikelihoodOfDrawnPoint;
-        
-        
-        // Increase nested loop counter
-        
-        Niterations++;
 
 
         // Re-evaluate the stopping criterion, using the condition suggested by Keeton (2011)
@@ -371,100 +366,96 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         nestedSamplingShouldContinue = (ratioOfRemainderToCurrentEvidence > maxRatioOfRemainderToCurrentEvidence);
        
         
-        // If the current iteration is not the last iteratiom and 
-        // the number of live points has not reached the minimum allowed,
-        // then update the number of live points for the next iteration.
+        // If the current iteration is not the last iteratiom then 
+        // check if the number of live points has not reached the minimum allowed,
+        // and update it for the next iteration if needed.
 
-        if (nestedSamplingShouldContinue && livePointsShouldBeReduced)
+        if (nestedSamplingShouldContinue)
         {
-            // Evaluate max evidence contribution for the next iteration 
-
-            logMaxLikelihoodOfLivePoints = logLikelihood.maxCoeff();
-            double logMaxEvidenceContributionNew = logMaxLikelihoodOfLivePoints + logRemainingPriorMass;
-
-
-            // Number of live points for the actual iteration
-
-            int NobjectsAtCurrentIteration = Nobjects;
-
-
-            // Update the number of live points for the next iteration. If the number of live points reaches the minimum allowed
-            // then do not update their number anymore.
-
-            livePointsShouldBeReduced = updateNobjects(logMaxEvidenceContributionNew, maxRatioOfRemainderToCurrentEvidence);
-    
-            
-            // Number of live points to be removed
-
-            int NobjectsToRemove = NobjectsAtCurrentIteration - Nobjects;                
-           
-
-            // Resize all eigen arrays of dimensions Nobjects according to new number of live points evaluated.
-            // Pick one live point randomly and Remove it. Repeat the process up to the total number of live points to be removed.
-
-            ArrayXd nestedSamplePerLivePointCopy(Ndimensions);
-
-            for (int m = 0; m < NobjectsToRemove; ++m)
+            if (livePointsShouldBeReduced)
             {
-                // Rescale uniform random integer generator with new number of live points
+                // Update the number of live points for the current iteration based on the previous number.
+                // If the number of live points reaches the minimum allowed 
+                // then do not update the number anymore.
 
-                uniform_int_distribution<int> discreteUniform2(0, NobjectsAtCurrentIteration-1);
+                int updatedNobjects = livePointsReducer.updateNobjects();
+               
+
+                // Terminate program if new number of live points is greater than previous one
                 
+                if (Nobjects < updatedNobjects)
+                {
+                    cerr << "Something went wrong in the reduction of the live points." << endl;
+                    cerr << "The new number of live points is greater than the previous one." << endl;
+                    cerr << "Quitting program. " << endl;
+                    break;
+                }
 
-                // Select randomly one live point from the actual sample
 
-                int indexOfLivePointToRemove = discreteUniform2(engine);
+                if (updatedNobjects > minNobjects)
+                {
+                    // Resize all eigen arrays and vectors of dimensions Nobjects according to 
+                    // new number of live points evaluated. 
+                    // In case previos and new number of live points coincide, no resizing is done.
+                    
+                    vector<int> indicesOfLivePointsToRemove = livePointsReducer.findIndicesOfLivePointsToRemove(engine);
 
+                    if (indicesOfLivePointsToRemove.size() > 0)
+                    {
+                        // At least one live point has to be removed, hence update the sample
 
-                // Swap the last element of the set of live points with the chosen one 
-                // and erase the last element. This is done for all the arrays that store information
-                // about live points.
+                        removeLivePointsFromSample(indicesOfLivePointsToRemove, clusterIndices, clusterSizes);
+                        
+                        
+                        // Since everything is fine update new number of live points in NestedSampler class and 
+                        // discreteUniform with the corresponding new upper bound
 
-                nestedSamplePerLivePointCopy = nestedSample.col(NobjectsAtCurrentIteration-1);
-                nestedSample.col(NobjectsAtCurrentIteration-1) = nestedSample.col(indexOfLivePointToRemove);
-                nestedSample.col(indexOfLivePointToRemove) = nestedSamplePerLivePointCopy;
-                nestedSample.conservativeResize(Ndimensions, NobjectsAtCurrentIteration-1);       
-                
-                double logLikelihoodCopy = logLikelihood(NobjectsAtCurrentIteration-1);
-                logLikelihood(NobjectsAtCurrentIteration-1) = logLikelihood(indexOfLivePointToRemove);
-                logLikelihood(indexOfLivePointToRemove) = logLikelihoodCopy;
-                logLikelihood.conservativeResize(NobjectsAtCurrentIteration-1);
-              
+                        Nobjects = updatedNobjects;
+                        uniform_int_distribution<int> discreteUniform2(0, Nobjects-1);
+                        discreteUniform = discreteUniform2;
+                    }
 
-                // In the case of clusterIndices also subtract selected live point from 
-                // corresponding clusterSizes in order to update the size of the cluster to which
-                // the live point belongs.
-                
-                int clusterIndexCopy = clusterIndices[NobjectsAtCurrentIteration-1];
-                clusterIndices[NobjectsAtCurrentIteration-1] = clusterIndices[indexOfLivePointToRemove];
-                --clusterSizes[clusterIndices[indexOfLivePointToRemove]];
-                clusterIndices[indexOfLivePointToRemove] = clusterIndexCopy;
-                clusterIndices.pop_back();
-
-                
-                // Reduce the actual number of live points by one.
-                
-                --NobjectsAtCurrentIteration;
+                    
+                    // The lower bound for the number of live points has not been reached yet, 
+                    // hence the process should be repeated at the next iteration.
+                    
+                    livePointsShouldBeReduced = true;
+                }
+                else
+                {
+                    // Otherwise continue the nesting process by using 
+                    // the last number of live points that could be found
+                    // with the constraint >= minNobjects.
+                    
+                    livePointsShouldBeReduced = false;
+                }
             }
 
 
-            // Update discreteUniform with final number of live points
+            // If we got till here this is not the last iteration possible, hence 
+            // update all the information for the next iteration.
+            // Store the new number of live points in the vector containing this information.
+            // This is done even if the new number is the same as the previous one.
 
-            uniform_int_distribution<int> discreteUniform3(0, Nobjects-1);
-            discreteUniform = discreteUniform3;
-        }
+            NobjectsPerIteration.push_back(Nobjects);
+
+
+            // Shrink prior mass interval according to proper number of live points (TODO)
         
-
-        // Shrink prior mass interval according to proper number of live points
-        
-        logWidthInPriorMass -= 1.0 / Nobjects;
+            logWidthInPriorMass -= 1.0 / Nobjects;
 
         
-        // Update total width in prior mass and remaining width in prior mass from beginning to actual iteration
-        // and use this information for the next iteration (if any)
+            // Update total width in prior mass and remaining width in prior mass from beginning to current iteration
+            // and use this information for the next iteration (if any)
 
-        logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
-        logRemainingPriorMass = log(1.0 - exp(logCumulatedPriorMass));
+            logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
+            logRemainingPriorMass = log(1.0 - exp(logCumulatedPriorMass));
+            
+            
+            // Increase nested loop counter
+        
+            Niterations++;
+        }    
     }
     while (nestedSamplingShouldContinue);  
 
@@ -505,6 +496,71 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
 
 
 
+
+
+
+
+// NestedSampler::removeLivePointsFromSample()
+//
+// PURPOSE:
+//          Resizes all eigen arrays and vectors of dimensions Nobjects according to 
+//          new number of live points evaluated. The indices of the live points to be removed
+//          are give as an input.
+//          Also relative number of points in clusters are adjusted according to which live points
+//          are removed.
+//
+// INPUT:   
+//          indicesOfLivePointsToRemove:        A vector of integers containing the indices of the live points
+//                                              that must be removed from the sample.
+//          clusterIndices:                     A vector of integers containing the indices of the clusters
+//                                              all the live points belong to
+//          clusterSizes:                       A vector of integers containing the sizes of the clusters
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::removeLivePointsFromSample(const vector<int> &indicesOfLivePointsToRemove, 
+                                               vector<int> &clusterIndices, vector<int> &clusterSizes)
+{
+    int NobjectsToRemove = indicesOfLivePointsToRemove.size();
+    int NobjectsAtCurrentIteration = clusterIndices.size();
+
+    for (int m = 0; m < NobjectsToRemove; ++m)
+    {
+        // Swap the last element of the set of live points with the chosen one 
+        // and erase the last element. This is done for all the arrays that store information
+        // about live points.
+ 
+        ArrayXd nestedSamplePerLivePointCopy(Ndimensions);
+        nestedSamplePerLivePointCopy = nestedSample.col(NobjectsAtCurrentIteration-1);
+        nestedSample.col(NobjectsAtCurrentIteration-1) = nestedSample.col(indicesOfLivePointsToRemove[m]);
+        nestedSample.col(indicesOfLivePointsToRemove[m]) = nestedSamplePerLivePointCopy;
+        nestedSample.conservativeResize(Ndimensions, NobjectsAtCurrentIteration-1);       
+                
+        double logLikelihoodCopy = logLikelihood(NobjectsAtCurrentIteration-1);
+        logLikelihood(NobjectsAtCurrentIteration-1) = logLikelihood(indicesOfLivePointsToRemove[m]);
+        logLikelihood(indicesOfLivePointsToRemove[m]) = logLikelihoodCopy;
+        logLikelihood.conservativeResize(NobjectsAtCurrentIteration-1);
+              
+
+        // In the case of clusterIndices also subtract selected live point from 
+        // corresponding clusterSizes in order to update the size of the cluster 
+        // the live point belongs to.
+                
+        int clusterIndexCopy = clusterIndices[NobjectsAtCurrentIteration-1];
+        clusterIndices[NobjectsAtCurrentIteration-1] = clusterIndices[indicesOfLivePointsToRemove[m]];
+        --clusterSizes[clusterIndices[indicesOfLivePointsToRemove[m]]];
+        clusterIndices[indicesOfLivePointsToRemove[m]] = clusterIndexCopy;
+        clusterIndices.pop_back();
+
+                
+        // Reduce the current number of live points by one.
+                
+        --NobjectsAtCurrentIteration;
+    }
+
+
+}
 
 
 
@@ -824,43 +880,21 @@ double NestedSampler::getComputationalTime()
 
 
 
-// NestedSampler::updateNobjects()
+// NestedSampler::getNobjectsPerIteration()
 //
 // PURPOSE:
-//      Computes the updated number of live points based on the gaining of evidence
-//      achieved at the given iteration. The equation adopted was introduced
-//      by Feroz F. et al. (2009), MNRAS, 398, 1601.
-//
-// INPUT:
-//      logMaxEvidenceContributionNew:          The updated maximum contribution of the evidence
-//                                              expressed in natural logarithm.
-//      maxRatioOfRemainderToCurrentEvidence:    The fraction of remainder evidence to gained evidence used to terminate 
-//                                              the nested iteration loop. This value is also used as a tolerance on the final
-//                                              evidence to update the number of live points in the nesting process.
+//      Get protected data member NobjectsPerIteration.
 //
 // OUTPUT:
-//      An integer containing the new number of live points to be used.
+//      A double containing the Skilling's error on the logEvidence.
 //
 
-bool NestedSampler::updateNobjects(double logMaxEvidenceContributionNew, double maxRatioOfRemainderToCurrentEvidence)
+vector<int> NestedSampler::getNobjectsPerIteration()
 {
-    // Evaluate the new number of live points to be used in the next iteration of the nesting loop
-    
-    int updatedNobjects = static_cast<int>(Nobjects - minNobjects * 
-                          exp(Functions::logExpDifference(logMaxEvidenceContribution,logMaxEvidenceContributionNew)) /
-                          (exp(logMaxEvidenceContributionNew)*(1 - maxRatioOfRemainderToCurrentEvidence)));
-    
-    assert(updatedNobjects <= Nobjects);
+    return NobjectsPerIteration;
+}
 
-    if (updatedNobjects > minNobjects)
-    {
-        // If minimum number of live points allowed has not been reached, 
-        // save the new number and use it for the next nested iteration
 
-        Nobjects = updatedNobjects;
-        return true;
-    }
-    else
 
 
 
@@ -961,14 +995,6 @@ ArrayXXd NestedSampler::getPosteriorSample()
 //      final posterior sample.
 //
 
-
-
-    {
-        // Otherwise continue the nesting process by using 
-        // the minimum number of live points allowed
-
-        return false;
-    }
 ArrayXd NestedSampler::getLogLikelihoodOfPosteriorSample()
 {
     return logLikelihoodOfPosteriorSample;
