@@ -12,13 +12,11 @@
 #define MULTIELLIPSOIDSAMPLER_H
 
 #include <random>
-#include <vector>
 #include <unordered_set>
 #include <algorithm>
 #include <Eigen/Dense>
 #include "NestedSampler.h"
 #include "Ellipsoid.h"
-#include "Prior.h"
 
 using namespace std;
 
@@ -36,6 +34,7 @@ class MultiEllipsoidSampler : public NestedSampler
         virtual bool drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) override; 
+        
         vector<Ellipsoid> getEllipsoids();
    
 
@@ -46,12 +45,15 @@ class MultiEllipsoidSampler : public NestedSampler
         void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
         double updateEnlargementFraction(const int clusterSize);
 
+
     private:
 
         vector<Ellipsoid> ellipsoids;
         int Nellipsoids;                        // Total number of ellipsoids computed
         double initialEnlargementFraction;      // Initial fraction for enlargement of ellipsoids
         double shrinkingRate;                   // Prior volume shrinkage rate (between 0 and 1)
+        
+        uniform_real_distribution<> uniform;  
 
 };
 

@@ -415,3 +415,54 @@ void File::sniffFile(ifstream &inputFile, unsigned long &Nrows, int &Ncols, char
 
 
 
+
+
+
+
+
+
+
+
+
+
+// File::configuringParametersToFile()
+//
+// PURPOSE: 
+//      Saves all configuring parameters of MultiNest to file.
+//
+// INPUT:
+//      initialNobjects;                        Initial number of active points evolving within the nested sampling process.
+//      minNobjects;                            Minimum number of active points allowed in the nesting process.
+//      minNclusters;
+//      maxNclusters;
+//      NinitialIterationsWithoutClustering;    The first N iterations, we assume that there is only 1 cluster.
+//      NiterationsWithSameClustering;          Clustering is only happening every X iterations.
+//      maxNdrawAttempts;                       Maximum number of attempts when trying to draw a new sampling point.
+//      initialEnlargementFraction;             Fraction by which each axis in an ellipsoid has to be enlarged.
+//                                              It can be a number >= 0, where 0 means no enlargement.
+//      shrinkingRate;                          Exponent for remaining prior mass in ellipsoid enlargement fraction.
+//                                              It is a number between 0 and 1. The smaller the slower the shrinkage
+//                                              of the ellipsoids.
+//      terminationFactor;                      Termination factor for nesting loop.
+//
+// REMARKS:
+//      - the stream is not closed afterwards
+//      - this function can equally well be used to append to an existing file
+//
+
+void File::configuringParametersToFile(ofstream &outputFile, const int initialNobjects, const int minNobjects, 
+                                     const int minNclusters, const int maxNclusters, const int NinitialIterationsWithoutClustering,
+                                     const int NiterationsWithSameClustering, const int maxNdrawAttempts, 
+                                     const double initialEnlargementFraction, const double shrinkingRate, const double terminationFactor)
+{
+    outputFile << "Initial Nojects: " << initialNobjects << endl;
+    outputFile << "Minimum Nobjects: " << minNobjects << endl;
+    outputFile << "Minimum Nclusters: " << minNclusters << endl;
+    outputFile << "Maximum Nclusters: " << maxNclusters << endl;
+    outputFile << "NinitialIterationsWithoutClustering: " << NinitialIterationsWithoutClustering << endl;
+    outputFile << "NiterationsWithSameClustering: " << NiterationsWithSameClustering << endl;
+    outputFile << "maxNdrawAttempts: " << maxNdrawAttempts << endl;
+    outputFile << "Initial EnlargementFraction: " << initialEnlargementFraction << endl;
+    outputFile << "Shrinking Rate: " << shrinkingRate << endl;
+    outputFile << "terminationFactor: " << terminationFactor << endl;
+}

@@ -17,6 +17,7 @@
 #include "Results.h"
 #include "Ellipsoid.h"
 #include "ZeroModel.h"
+#include "FerozReducer.h"
 #include "demoSingle2DGaussian.h"
 
 
@@ -71,7 +72,7 @@ int main(int argc, char *argv[])
     // Configure nested sampling
     
     bool printOnTheScreen = true;                   // Print results on the screen
-    int initialNobjects = 300;                      // Initial number of active points evolving within the nested sampling process.
+    int initialNobjects = 10000;                      // Initial number of active points evolving within the nested sampling process.
     int minNobjects = 300;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 100;                     // Maximum number of attempts when trying to draw a new sampling point.
     int NinitialIterationsWithoutClustering = 100;  // The first N iterations, we assume that there is only 1 cluster.
@@ -89,16 +90,8 @@ int main(int argc, char *argv[])
     ofstream outputFile;
     string fullPath = "demoSingle2DGaussian_configuringParameters.txt";
     File::openOutputFile(outputFile, fullPath);
-    outputFile << "Initial Nojects: " << initialNobjects << endl;
-    outputFile << "Minimum Nobjects: " << minNobjects << endl;
-    outputFile << "Minimum Nclusters: " << minNclusters << endl;
-    outputFile << "Maximum Nclusters: " << maxNclusters << endl;
-    outputFile << "NinitialIterationsWithoutClustering: " << NinitialIterationsWithoutClustering << endl;
-    outputFile << "NiterationsWithSameClustering: " << NiterationsWithSameClustering << endl;
-    outputFile << "maxNdrawAttempts: " << maxNdrawAttempts << endl;
-    outputFile << "Initial EnlargementFraction: " << initialEnlargementFraction << endl;
-    outputFile << "Shrinking Rate: " << shrinkingRate << endl;
-    outputFile << "terminationFactor: " << terminationFactor << endl;
+    File::configuringParametersToFile(outputFile, initialNobjects, minNobjects, inNclusters, maxNclusters, NinitialIterationsWithoutClustering,
+                                     NiterationsWithSameClustering, maxNdrawAttempts, initialEnlargementFraction, shrinkingRate, terminationFactor);
     outputFile.close();
 
    
@@ -106,7 +99,11 @@ int main(int argc, char *argv[])
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
-    nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
+    
+    double toleranceOnEvidence = 0.01;
+    FerozReducer ferozReducer(nestedSampler, toleranceOnEvidence);
+    
+    nestedSampler.run(ferozReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
     // Save the results in output files

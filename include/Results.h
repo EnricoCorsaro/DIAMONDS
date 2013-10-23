@@ -49,6 +49,7 @@ class Results
         
         void writeParametersToFile(string pathPrefix, string outputFileExtension = ".txt");
         void writeLogLikelihoodToFile(string fullPath);
+        void writeLogWeightsToFile(string fullPath);
         void writeEvidenceInformationToFile(string fullPath);
         void writePosteriorProbabilityToFile(string fullPath);
         void writeParametersSummaryToFile(string fullPath, const double credibleLevel = 68.27);

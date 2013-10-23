@@ -18,12 +18,13 @@
 //
 
 MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriors, 
-                                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer, 
+                                             Likelihood &likelihood, Metric &metric, Clusterer &clusterer,
                                              const int initialNobjects, const int minNobjects, 
                                              const double initialEnlargementFraction, const double shrinkingRate)
 : NestedSampler(printOnTheScreen, initialNobjects, minNobjects, ptrPriors, likelihood, metric, clusterer),
   initialEnlargementFraction(initialEnlargementFraction),
-  shrinkingRate(shrinkingRate)
+  shrinkingRate(shrinkingRate),
+  uniform(0.0, 1.0)
 {
 
 }
