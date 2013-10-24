@@ -89,7 +89,7 @@ int main(int argc, char *argv[])
     ofstream outputFile;
     string fullPath = "demoFive2DGaussians_configuringParameters.txt";
     File::openOutputFile(outputFile, fullPath);
-    File::configuringParametersToFile(outputFile, initialNobjects, minNobjects, inNclusters, maxNclusters, NinitialIterationsWithoutClustering,
+    File::configuringParametersToFile(outputFile, initialNobjects, minNobjects, minNclusters, maxNclusters, NinitialIterationsWithoutClustering,
                                      NiterationsWithSameClustering, maxNdrawAttempts, initialEnlargementFraction, shrinkingRate, terminationFactor);
     outputFile.close();
 
