@@ -81,7 +81,16 @@ int FerozReducer::updateNobjects()
     double numerator = exp(Functions::logExpDifference(logMaxEvidenceContribution,logMaxEvidenceContributionNew));
     double denominator = exp(logMaxEvidenceContributionNew);
     updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * numerator / (denominator * toleranceOnEvidence));
-    
+  
+
+    // If new number of live points is lower than zero, do not accept the new number and stick to the
+    // previous one.
+
+    if (updatedNobjects < 0)
+    {
+        updatedNobjects = NobjectsAtCurrentIteration;
+    }
+
 
     // Finally update max evidence contribution with newest value
     
