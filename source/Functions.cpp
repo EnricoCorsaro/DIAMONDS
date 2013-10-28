@@ -370,7 +370,7 @@ double Functions::logExpSum(const double x, const double y)
 //      y : a second variable to be added
 //
 // OUTPUT: 
-//      The logarithmic difference of the exponentials log(exp(x)+exp(y)).
+//      The logarithmic difference of the exponentials log(exp(x)-exp(y)).
 //
 
 double Functions::logExpDifference(const double x, const double y)
