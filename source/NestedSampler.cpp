@@ -687,6 +687,31 @@ int NestedSampler::getNobjects()
 
 
 
+// NestedSampler::getInitialNobjects()
+//
+// PURPOSE:
+//      Get protected data member initialNobjects.
+//
+// OUTPUT:
+//      An integer containing the initial number of
+//      live points.
+//
+
+int NestedSampler::getInitialNobjects()
+{
+    return initialNobjects;
+}
+
+
+
+
+
+
+
+
+
+
+
 // NestedSampler::getMinNobjects()
 //
 // PURPOSE:
