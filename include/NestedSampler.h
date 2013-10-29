@@ -88,6 +88,8 @@ class NestedSampler
 	private:
 
         int Niterations;                         // Counter saving the number of nested loops used
+        int updatedNobjects;                     // The updated number of live points to be used in the next iteration
+        int initialNobjects;                     // The initial number of live points
         double informationGain;                  // Skilling's Information gain in moving from prior to posterior PDF
         double logEvidence;                      // Skilling's Evidence
         double logEvidenceError;                 // Skilling's error on Evidence (based on IG)

@@ -36,6 +36,7 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobje
   logCumulatedPriorMass(numeric_limits<double>::lowest()),
   logRemainingPriorMass(0.0),
   Niterations(0),
+  initialNobjects(initialNobjects),
   informationGain(0.0), 
   logEvidence(numeric_limits<double>::lowest())
 {
@@ -368,7 +369,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         
         // If the current iteration is not the last iteratiom then 
         // check if the number of live points has not reached the minimum allowed,
-        // and update it for the next iteration if needed.
+        // and update it for the next iteration.
 
         if (nestedSamplingShouldContinue)
         {
@@ -378,12 +379,12 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
                 // If the number of live points reaches the minimum allowed 
                 // then do not update the number anymore.
 
-                int updatedNobjects = livePointsReducer.updateNobjects();
+                updatedNobjects = livePointsReducer.updateNobjects();
                
 
                 // Terminate program if new number of live points is greater than previous one
                 
-                if (Nobjects < updatedNobjects)
+                if (updatedNobjects > Nobjects)
                 {
                     cerr << "Something went wrong in the reduction of the live points." << endl;
                     cerr << "The new number of live points is greater than the previous one." << endl;
@@ -392,42 +393,40 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
                 }
 
 
-                if (updatedNobjects > minNobjects)
+                if (updatedNobjects != Nobjects)
                 {
                     // Resize all eigen arrays and vectors of dimensions Nobjects according to 
-                    // new number of live points evaluated. 
-                    // In case previos and new number of live points coincide, no resizing is done.
+                    // new number of live points evaluated. In case previos and new number 
+                    // of live points coincide, no resizing is done.
                     
                     vector<int> indicesOfLivePointsToRemove = livePointsReducer.findIndicesOfLivePointsToRemove(engine);
 
-                    if (indicesOfLivePointsToRemove.size() > 0)
+                    
+                    // At least one live point has to be removed, hence update the sample
+
+                    removeLivePointsFromSample(indicesOfLivePointsToRemove, clusterIndices, clusterSizes);
+                        
+                        
+                    // Since everything is fine update discreteUniform with the corresponding new upper bound
+
+                    uniform_int_distribution<int> discreteUniform2(0, updatedNobjects-1);
+                    discreteUniform = discreteUniform2;
+
+
+                    if (updatedNobjects > minNobjects)
                     {
-                        // At least one live point has to be removed, hence update the sample
-
-                        removeLivePointsFromSample(indicesOfLivePointsToRemove, clusterIndices, clusterSizes);
-                        
-                        
-                        // Since everything is fine update new number of live points in NestedSampler class and 
-                        // discreteUniform with the corresponding new upper bound
-
-                        Nobjects = updatedNobjects;
-                        uniform_int_distribution<int> discreteUniform2(0, Nobjects-1);
-                        discreteUniform = discreteUniform2;
+                        // The lower bound for the number of live points has not been reached yet, 
+                        // hence the process should be repeated at the next iteration.
+                    
+                        livePointsShouldBeReduced = true;
                     }
-
+                    else
+                    {
+                        // Otherwise continue the nesting process by using 
+                        // the minimum number of live points allowed in the computation.
                     
-                    // The lower bound for the number of live points has not been reached yet, 
-                    // hence the process should be repeated at the next iteration.
-                    
-                    livePointsShouldBeReduced = true;
-                }
-                else
-                {
-                    // Otherwise continue the nesting process by using 
-                    // the last number of live points that could be found
-                    // with the constraint >= minNobjects.
-                    
-                    livePointsShouldBeReduced = false;
+                        livePointsShouldBeReduced = false;
+                    }
                 }
             }
 
@@ -440,22 +439,33 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
             NobjectsPerIteration.push_back(Nobjects);
 
 
-            // Shrink prior mass interval according to proper number of live points (TODO)
-        
-            logWidthInPriorMass -= 1.0 / Nobjects;
+            // Shrink prior mass interval according to proper number of live points. When reducing
+            // the number of live points the equation requires an additional correction factor
+            // that takes care of how much the previous prior width has to be stretched in order to cope
+            // with the new number of live points.
+       
+            // double stretchingFactor = Functions::logExpDifference(0, -1.0/updatedNobjects) - Functions::logExpDifference(0, -1.0/Nobjects);
+
+            logWidthInPriorMass -= 1.0 / updatedNobjects// + stretchingFactor; 
 
         
             // Update total width in prior mass and remaining width in prior mass from beginning to current iteration
             // and use this information for the next iteration (if any)
 
             logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
-            logRemainingPriorMass = log(1.0 - exp(logCumulatedPriorMass));
+            logRemainingPriorMass = log(1.0 - exp(logCumulatedPriorMass));    
+        
+
+            // Update new number of live points in NestedSampler class 
             
-            
+            Nobjects = updatedNobjects;
+
+
             // Increase nested loop counter
         
             Niterations++;
-        }    
+        }
+
     }
     while (nestedSamplingShouldContinue);  
 
