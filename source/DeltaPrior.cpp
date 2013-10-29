@@ -57,7 +57,7 @@ DeltaPrior::~DeltaPrior()
 
 ArrayXd DeltaPrior::getConstants()
 {
-    return constantParameter;    
+    return constantParameters;    
 }
 
 
