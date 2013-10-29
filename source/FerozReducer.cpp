@@ -83,10 +83,10 @@ int FerozReducer::updateNobjects()
     updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * numerator / (denominator * toleranceOnEvidence));
   
 
-    // If new number of live points is lower than zero, do not accept the new number and stick to the
+    // If new number of live points is lower than minNobjects, do not accept the new number and stick to the
     // previous one.
 
-    if (updatedNobjects < 0)
+    if (updatedNobjects < nestedSampler.getMinNobjects())
     {
         updatedNobjects = NobjectsAtCurrentIteration;
     }
