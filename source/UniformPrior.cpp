@@ -2,16 +2,16 @@
 
 
 
-// UniformPrior:UniformPrior()
+// UniformPrior::UniformPrior()
 //
 // PURPOSE: 
 //      Derived class constructor.
 //
 // INPUT:
-//      minima: array containing minimum values for setting 
-//      lower bounds of the free parameters. 
-//      maxima: array containing maximum values for setting
-//      upper bounds of the free parameters.
+//      minima:     array containing minimum values for setting 
+//                  lower bounds of the free parameters. 
+//      maxima:     array containing maximum values for setting
+//                  upper bounds of the free parameters.
 //
 
 UniformPrior::UniformPrior(const RefArrayXd minima, const RefArrayXd maxima)
