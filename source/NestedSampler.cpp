@@ -446,7 +446,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
        
             // double stretchingFactor = Functions::logExpDifference(0, -1.0/updatedNobjects) - Functions::logExpDifference(0, -1.0/Nobjects);
 
-            logWidthInPriorMass -= 1.0 / updatedNobjects// + stretchingFactor; 
+            logWidthInPriorMass -= 1.0 / updatedNobjects; // + stretchingFactor; 
 
         
             // Update total width in prior mass and remaining width in prior mass from beginning to current iteration
