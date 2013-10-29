@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     // Setting Prior distribution and parameter space
 
-    int Ndimensions = 6;        // Number of free parameters (dimensions) of the problem
+    int Ndimensions = 1;        // Number of free parameters (dimensions) of the problem
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
@@ -75,7 +75,7 @@ int main(int argc, char *argv[])
     
     bool printOnTheScreen = true;                   // Print results on the screen
     int initialNobjects = 10000;                     // Initial number of active points evolving within the nested sampling process.
-    int minNobjects = 500;                          // Minimum number of active points allowed in the nesting process.
+    int minNobjects = 300;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 5000;                    // Maximum number of attempts when trying to draw a new sampling point.
     int NinitialIterationsWithoutClustering = 1000; // The first N iterations, we assume that there is only 1 cluster.
     int NiterationsWithSameClustering = 50;         // Clustering is only happening every X iterations.
@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
     double shrinkingRate = 0.8;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                     // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                     // of the ellipsoids.
-    double terminationFactor = 0.05;                // Termination factor for nesting loop.
+    double terminationFactor = 0.01;                // Termination factor for nesting loop.
 
 
     // Save configuring parameters into an ASCII file
@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     double toleranceOnEvidence = 0.01;
     FerozReducer ferozReducer(nestedSampler, toleranceOnEvidence);
 
-    nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
+    nestedSampler.run(ferozReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
     // Save the results in output files
