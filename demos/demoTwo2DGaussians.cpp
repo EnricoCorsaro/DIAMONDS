@@ -105,7 +105,7 @@ int main(int argc, char *argv[])
     double toleranceOnEvidence = 0.01;
     FerozReducer ferozReducer(nestedSampler, toleranceOnEvidence);
     
-    nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
+    nestedSampler.run(ferozReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
     // Save the results in output files
