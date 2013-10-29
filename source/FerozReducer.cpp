@@ -69,7 +69,8 @@ int FerozReducer::updateNobjects()
     
         logMaxEvidenceContribution = nestedSampler.getLogMaxLikelihoodOfLivePoints();        // Initial prior mass = 1
     }
-       
+    
+
     // Evaluate max evidence contribution for the current iteration 
 
     double logMaxEvidenceContributionNew = nestedSampler.getLogLikelihood().maxCoeff() + nestedSampler.getLogRemainingPriorMass();

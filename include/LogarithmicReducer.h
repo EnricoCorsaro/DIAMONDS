@@ -16,13 +16,16 @@ class LogarithmicReducer : public LivePointsReducer
 
     public:
 
-        LogarithmicReducer(NestedSampler &nestedSampler);
+        LogarithmicReducer(NestedSampler &nestedSampler, const double reductionRate);
         ~LogarithmicReducer();
         
-        virtual int updateNobjects(){};
+        virtual int updateNobjects();
 
 
     protected:
+
+        double reductionRate;
+        double informationGain;
 
 
     private:
