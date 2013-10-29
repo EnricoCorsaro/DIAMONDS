@@ -1,5 +1,5 @@
 //
-// Compile with: clang++ -o demoTwoCircles demoTwoCircles.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
+// Compile with: clang++ -o demoTwo2DCircles demoTwo2DCircles.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
 // 
 
 #include <cstdlib>
@@ -18,7 +18,7 @@
 #include "Ellipsoid.h"
 #include "ZeroModel.h"
 #include "FerozReducer.h"
-#include "demoTwoCircles.h"
+#include "demoTwo2DCircles.h"
 
 
 
@@ -76,11 +76,11 @@ int main(int argc, char *argv[])
     int initialNobjects = 500;                      // Initial number of active points evolving within the nested sampling process.
     int minNobjects = 500;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 20000;                   // Maximum number of attempts when trying to draw a new sampling point.
-    int NinitialIterationsWithoutClustering = 300;  // The first N iterations, we assume that there is only 1 cluster.
+    int NinitialIterationsWithoutClustering = 200;  // The first N iterations, we assume that there is only 1 cluster.
     int NiterationsWithSameClustering = 10;         // Clustering is only happening every X iterations.
-    double initialEnlargementFraction = 5.0;        // Fraction by which each axis in an ellipsoid has to be enlarged.
+    double initialEnlargementFraction = 3.0;        // Fraction by which each axis in an ellipsoid has to be enlarged.
                                                     // It can be a number >= 0, where 0 means no enlargement.
-    double shrinkingRate = 0.2;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
+    double shrinkingRate = 0.3;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                     // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                     // of the ellipsoids.
     double terminationFactor = 0.01;                // Termination factor for nesting loop.
@@ -104,7 +104,7 @@ int main(int argc, char *argv[])
     double toleranceOnEvidence = 0.01;
     FerozReducer ferozReducer(nestedSampler, toleranceOnEvidence);
     
-    nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
+    nestedSampler.run(ferozReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
     // Save the results in output files
