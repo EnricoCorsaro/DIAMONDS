@@ -77,7 +77,7 @@ int LogarithmicReducer::updateNobjects()
     // Evaluate the new number of live points to be used in the next iteration of the nesting process
    
     NobjectsAtCurrentIteration = nestedSampler.getNobjects();
-    double numerator = log(nestedSampler.getInitialNobjects() - nestedSampler.getNobjects() + 1) * exp(informationGain - informationGainNew);
+    double numerator = log(nestedSampler.getInitialNobjects() - NobjectsAtCurrentIteration + 1) * exp(informationGain - informationGainNew);
     double denominator = log(nestedSampler.getInitialNobjects() - nestedSampler.getMinNobjects() + 1);
     updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * (numerator * reductionRate) / denominator);
 
