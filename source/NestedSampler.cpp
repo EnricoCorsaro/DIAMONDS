@@ -380,53 +380,55 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
                 // then do not update the number anymore.
 
                 updatedNobjects = livePointsReducer.updateNobjects();
-               
-
-                // Terminate program if new number of live points is greater than previous one
-                
+            
                 if (updatedNobjects > Nobjects)
                 {
+                    // Terminate program if new number of live points is greater than previous one
+                    
                     cerr << "Something went wrong in the reduction of the live points." << endl;
                     cerr << "The new number of live points is greater than the previous one." << endl;
                     cerr << "Quitting program. " << endl;
                     break;
                 }
 
+                
+                // If the lower bound for the number of live points has not been reached yet, 
+                // the process should be repeated at the next iteration.
+                // Otherwise the minimun number allowed is reached right now. In this case
+                // stop the reduction process starting from the next iteration.
+                
+                livePointsShouldBeReduced = (updatedNobjects > minNobjects);
 
-                if (updatedNobjects != Nobjects)
+                if (updatedNobjects >= minNobjects)
                 {
-                    // Resize all eigen arrays and vectors of dimensions Nobjects according to 
-                    // new number of live points evaluated. In case previos and new number 
-                    // of live points coincide, no resizing is done.
+                    // In this case it is still plausible to apply the reduction of the live points
+
+                    if (updatedNobjects != Nobjects)
+                    {
+                        // Resize all eigen arrays and vectors of dimensions Nobjects according to 
+                        // new number of live points evaluated. In case previos and new number 
+                        // of live points coincide, no resizing is done.
                     
-                    vector<int> indicesOfLivePointsToRemove = livePointsReducer.findIndicesOfLivePointsToRemove(engine);
+                        vector<int> indicesOfLivePointsToRemove = livePointsReducer.findIndicesOfLivePointsToRemove(engine);
 
                     
-                    // At least one live point has to be removed, hence update the sample
+                        // At least one live point has to be removed, hence update the sample
 
-                    removeLivePointsFromSample(indicesOfLivePointsToRemove, clusterIndices, clusterSizes);
+                        removeLivePointsFromSample(indicesOfLivePointsToRemove, clusterIndices, clusterSizes);
                         
                         
-                    // Since everything is fine update discreteUniform with the corresponding new upper bound
+                        // Since everything is fine update discreteUniform with the corresponding new upper bound
 
-                    uniform_int_distribution<int> discreteUniform2(0, updatedNobjects-1);
-                    discreteUniform = discreteUniform2;
-
-
-                    if (updatedNobjects > minNobjects)
-                    {
-                        // The lower bound for the number of live points has not been reached yet, 
-                        // hence the process should be repeated at the next iteration.
-                    
-                        livePointsShouldBeReduced = true;
+                        uniform_int_distribution<int> discreteUniform2(0, updatedNobjects-1);
+                        discreteUniform = discreteUniform2;
                     }
-                    else
-                    {
-                        // Otherwise continue the nesting process by using 
-                        // the minimum number of live points allowed in the computation.
-                    
-                        livePointsShouldBeReduced = false;
-                    }
+                }
+                else
+                {
+                    // The new number of live points is below the minimum allowed. 
+                    // Keep the minimum allowed, the reduction process is automatically stopped.
+
+                    updatedNobjects = minNobjects;
                 }
             }
 
@@ -439,14 +441,13 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
             NobjectsPerIteration.push_back(Nobjects);
 
 
-            // Shrink prior mass interval according to proper number of live points. When reducing
-            // the number of live points the equation requires an additional correction factor
-            // that takes care of how much the previous prior width has to be stretched in order to cope
-            // with the new number of live points.
-       
-            // double stretchingFactor = Functions::logExpDifference(0, -1.0/updatedNobjects) - Functions::logExpDifference(0, -1.0/Nobjects);
+            // Shrink prior mass interval according to proper number of live points 
+            // (see documentation by Enrico Corsaro). When reducing the number of live points 
+            // the equation is a generalized version of that used by Skilling 2004. The equation
+            // reduces to the standard case when the new number of live points is the same
+            // as the previous one.
 
-            logWidthInPriorMass -= 1.0 / updatedNobjects; // + stretchingFactor; 
+            logWidthInPriorMass -= 1.0 / updatedNobjects; 
 
         
             // Update total width in prior mass and remaining width in prior mass from beginning to current iteration
@@ -465,7 +466,6 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         
             Niterations++;
         }
-
     }
     while (nestedSamplingShouldContinue);  
 
