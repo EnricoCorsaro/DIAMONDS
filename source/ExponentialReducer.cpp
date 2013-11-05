@@ -85,15 +85,6 @@ int ExponentialReducer::updateNobjects()
     updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * exp((reductionRate * exponent1) + exponent2));
 
 
-    // If new number of live points is lower than minNobjects, do not accept the new number 
-    // and stick to the previous one.
-
-    if (updatedNobjects < nestedSampler.getMinNobjects())
-    {
-        updatedNobjects = NobjectsAtCurrentIteration;
-    }
-
-
     // Finally update information gain with newest value
     
     informationGain = informationGainNew;
