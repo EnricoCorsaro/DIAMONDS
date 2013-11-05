@@ -9,7 +9,10 @@
 // INPUT:
 //      nestedSampler:  a NestedSampler class object used as the container of
 //                      information to use when reducing the number of live points.
-//      reductionRate:  a double specifying the rate of the reduction process.
+//      reductionRate:  a double specifying the rate of the reduction process. This number
+//                      has to be > 0. For the case = 1, no change in the reduction function
+//                      is done. For accelerating the reduction process, the reduction
+//                      rate must be increased.
 //
 
 LogarithmicReducer::LogarithmicReducer(NestedSampler &nestedSampler, const double reductionRate)
@@ -77,18 +80,9 @@ int LogarithmicReducer::updateNobjects()
     // Evaluate the new number of live points to be used in the next iteration of the nesting process
    
     NobjectsAtCurrentIteration = nestedSampler.getNobjects();
-    double numerator = log(nestedSampler.getInitialNobjects() - NobjectsAtCurrentIteration + 1) * exp(informationGain - informationGainNew);
-    double denominator = log(nestedSampler.getInitialNobjects() - nestedSampler.getMinNobjects() + 1);
+    double numerator = log(nestedSampler.getInitialNobjects() - NobjectsAtCurrentIteration + 2) * exp(informationGain - informationGainNew);
+    double denominator = log(nestedSampler.getInitialNobjects() - nestedSampler.getMinNobjects() + 2);
     updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * (numerator * reductionRate) / denominator);
-
-
-    // If new number of live points is lower than minNobjects, do not accept the new number 
-    // and stick to the previous one.
-
-    if (updatedNobjects < nestedSampler.getMinNobjects())
-    {
-        updatedNobjects = NobjectsAtCurrentIteration;
-    }
 
 
     // Finally update information gain with newest value
