@@ -7,17 +7,19 @@
 //      Derived class constructor. 
 //
 // INPUT:
-//      nestedSampler:  a NestedSampler class object used as the container of
-//                      information to use when reducing the number of live points.
-//      reductionRate:  a double specifying the rate of the reduction process. For this 
-//                      specific case, this number either enhances or smoothes the effect
-//                      of the exponential reduction. It is a number > 0. If set = 1
-//                      a standard exponential reduction occurs.
+//      nestedSampler:      a NestedSampler class object used as the container of
+//                          information to use when reducing the number of live points.
+//      enhancingFactor:    a double specifying the rate of the reduction process. For this 
+//                          specific case, this number either enhances or smoothes the effect
+//                          of the exponential reduction. It is a number > 0. If set = 1
+//                          a standard exponential reduction occurs. For removing
+//                          even less points at the beginning and start removing more
+//                          at later steps, adopt a reduction rate greater than 1.
 //
 
-ExponentialReducer::ExponentialReducer(NestedSampler &nestedSampler, const double reductionRate)
+ExponentialReducer::ExponentialReducer(NestedSampler &nestedSampler, const double enhancingFactor)
 : LivePointsReducer(nestedSampler),
-  reductionRate(reductionRate)
+  enhancingFactor(enhancingFactor)
 {
 }
 
@@ -82,7 +84,7 @@ int ExponentialReducer::updateNobjects()
     NobjectsAtCurrentIteration = nestedSampler.getNobjects();
     double exponent1 = -1.0*(NobjectsAtCurrentIteration - nestedSampler.getMinNobjects());
     double exponent2 = informationGain - informationGainNew;
-    updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * exp((reductionRate * exponent1) + exponent2));
+    updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * exp((enhancingFactor * exponent1) + exponent2));
 
 
     // Finally update information gain with newest value
