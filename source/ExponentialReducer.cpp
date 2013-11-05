@@ -9,7 +9,10 @@
 // INPUT:
 //      nestedSampler:  a NestedSampler class object used as the container of
 //                      information to use when reducing the number of live points.
-//      reductionRate:  a double specifying the rate of the reduction process.
+//      reductionRate:  a double specifying the rate of the reduction process. For this 
+//                      specific case, this number either enhances or smoothes the effect
+//                      of the exponential reduction. It is a number > 0. If set = 1
+//                      a standard exponential reduction occurs.
 //
 
 ExponentialReducer::ExponentialReducer(NestedSampler &nestedSampler, const double reductionRate)
@@ -77,11 +80,9 @@ int ExponentialReducer::updateNobjects()
     // Evaluate the new number of live points to be used in the next iteration of the nesting process
    
     NobjectsAtCurrentIteration = nestedSampler.getNobjects();
-    double numerator = exp(-1.0*(NobjectsAtCurrentIteration - nestedSampler.getMinNobjects()))
-                       - exp(-1.0*(nestedSampler.getInitialNobjects() - nestedSampler.getMinNobjects())) 
-                       * exp(informationGain - informationGainNew);
-    double denominator = 1 - exp(-1.0*(nestedSampler.getInitialNobjects() - nestedSampler.getMinNobjects()));
-    updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * (numerator * reductionRate) / denominator);
+    double exponent1 = -1.0*(NobjectsAtCurrentIteration - nestedSampler.getMinNobjects());
+    double exponent2 = informationGain - informationGainNew;
+    updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * exp((reductionRate * exponent1) + exponent2));
 
 
     // If new number of live points is lower than minNobjects, do not accept the new number 
