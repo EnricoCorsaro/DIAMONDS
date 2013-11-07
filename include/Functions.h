@@ -63,7 +63,7 @@ namespace Functions
                                         RefArrayXXd eigenvectorsMatrix);
     
 
-    // Array algebra functions
+    // Array manipulation functions
     
     inline double product(const vector<double> &vec);
     inline double sum(const vector<double> &vec);
@@ -71,6 +71,7 @@ namespace Functions
     double logExpDifference(const double x, const double y);
     void sortElementsDouble(RefArrayXd array1, RefArrayXd array2);   // TODO: replace by much more efficient algorithms 
     void sortElementsInt(vector<int> &array1, RefArrayXd array2);    // Idem
+    vector<int> findArrayIndicesWithinBoundaries(RefArrayXd const array, double lowerBound, double upperBound);
 
 
     // Utility functions

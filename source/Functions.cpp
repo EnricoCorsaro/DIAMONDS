@@ -472,3 +472,50 @@ void Functions::sortElementsInt(vector<int> &array1, RefArrayXd array2)
 
 
 
+
+
+
+
+
+
+
+
+// Functions::findArrayIndicesWithinBoundaries()
+//
+// PURPOSE: 
+//      This function returns an array containing the indices of the input array that correspond
+//      to the elemtns contained within the input boundaries.
+//
+// INPUT:
+//      array:       an Eigen array whose indices we want to find
+//      lowerBound:  a double specifying the smallest value allowed in the search
+//      upperBound:  a double specifying the largest value allowed in the search
+//
+// OUTPUT:
+//      a vector<int> containing the indices of the input array that correspond to its elements
+//      that fall within the input boundaries.
+//
+// REMARKS:
+//      There is no requirement for the input array to have its element sorted in any order. 
+//      The finding of the indices is done correctly independently of the sorting of the input array elements.
+//
+
+vector<int> Functions::findArrayIndicesWithinBoundaries(RefArrayXd const array, double lowerBound, double upperBound)
+{
+    // At least one point is needed
+
+    assert(array.size() >= 1);
+    vector<int> arrayIndicesWithinBoundaries;
+
+    for (int i = 0; i < array.size(); i++)
+    {
+        if ((array(i) >= lowerBound) && (array(i) <= upperBound))
+        {
+            arrayIndicesWithinBoundaries.push_back(i);
+        }
+        else
+            continue;
+    }
+
+    return arrayIndicesWithinBoundaries;
+}
