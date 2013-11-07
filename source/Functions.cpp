@@ -519,3 +519,174 @@ vector<int> Functions::findArrayIndicesWithinBoundaries(RefArrayXd const array, 
 
     return arrayIndicesWithinBoundaries;
 }
+
+
+
+
+
+
+
+
+
+
+// Functions::AkimaInterpolation()
+// 
+// PURPOSE:
+//      This function computes an Akima cubic spline interpolation of some one-dimensional input data,
+//      given a grid of new values we want the input data to be interpolated. The algorithm is documented
+//      by Martin Rottinger, The Akima Interpolation, 1999 and by David Eberly, Akima Interpolation 
+//      for Nonuniform 1D Data, 2013.
+//      The advantage of Akima interpolation is that it is less affected by outliers in the input data
+//      and it is able to reproduce a more natural interpolation, having less wiggling with respect to the standard
+//      cubic spline interpolation.
+//
+// INPUT:
+//      observedAbscissa:       an Eigen array containing the input data covariates to be used for the interpolation
+//      observedOrdinate:       an Eigen array containing the corresponding dependent variables of the input abscissa
+//      interpolatedAbscissa:   an Eigen array containing the values of the covariates for which we need to compute the
+//                              interpolated dependent variables
+//
+// OUTPUT:
+//      An eigen array of doubles containing the newly compute ordinates (dependent variables) of the corresponding
+//      input grid of covariates for which the interpolation was required.
+//
+// REMARKS:
+//      It is required that all input abscissa arrays contain values sorted in increasing order.
+//      Obivously, input ordinates have to be sorted accordingly to their corresponding abscissa.
+//      In addition, observed abscissa boundaries must comprise those of the interpolated abscissa.
+//      This means that no extrapolation can be done.
+//
+
+ArrayXd Functions::AkimaInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, RefArrayXd const interpolatedAbscissa)
+{
+    // Number of data points. The number of intervals is clearly size-1
+    
+    int size = observedAbscissa.size();           
+    
+    
+    // Number of interpolation grid points.
+    
+    int interpolatedSize = interpolatedAbscissa.size();
+ 
+
+    // Since the formula requires at least 5 data points, check if array size is not below 5,
+    // if the interpolated grid has at least one point, and if input abscissa and ordinate 
+    // have same number of elements.
+    
+    assert(size >= 5);
+    assert(interpolatedSize >= 1);
+
+    
+    // Check if boundaries set by observed data points are respected by interpolated points
+    
+    assert (observedAbscissa(0) <= interpolatedAbscissa(0));
+    assert (observedAbscissa(size-1) >= interpolatedAbscissa(size-1)); 
+
+
+    // Initialize arrays of differences in both ordinate and abscissa
+
+    ArrayXd differenceOrdinate = observedOrdinate.segment(1,size-1) - observedOrdinate.segment(0,size-1);
+    ArrayXd differenceAbscissa = observedAbscissa.segment(1,size-1) - observedAbscissa.segment(0,size-1);
+    
+
+    // Compute the ratios for all the input values. These ratios are in number "size-1" (from ratio_2 to ratio_(size))
+    // + 2 ratios to the left (ratio_0, ratio_1) + 2 ratio to the right (ratio_(size+1), ratio_(size+2)). 
+    // The total number of ratios is then size+3. 
+    
+    int ratiosSize = size + 3;
+    ArrayXd ratios = ArrayXd::Zero(ratiosSize);
+    ratios.segment(2,size-1) = differenceOrdinate/differenceAbscissa;
+    ratios(1) = (2 * ratios(2)) - ratios(3);                                         // ratio_1
+    ratios(0) = (2 * ratios(1)) - ratios(2);                                         // ratio_0
+    ratios(ratiosSize-2) = (2 * ratios(ratiosSize-3)) - ratios(ratiosSize-4);        // ratio_(size+1)
+    ratios(ratiosSize-1) = (2 * ratios(ratiosSize-2)) - ratios(ratiosSize-3);        // ratio_(size+2)
+
+    
+    // Compute weights to be used in the formula of the first derivatives. 
+    // For each derivative, two weights are required.
+
+    ArrayXd weightsLeft(size);
+    ArrayXd weightsRight(size);
+    weightsLeft = (ratios.segment(3,size) - ratios.segment(2,size)).abs();
+    weightsRight = (ratios.segment(1,size) - ratios.segment(0,size)).abs();
+
+
+    // Compute the first derivatives at each data point
+
+    vector<double> firstDerivatives(size);
+
+    for (int i = 0; i < size; i++)
+    {
+        if ((weightsLeft(i) == weightsRight(i)) == 0)
+        {
+            // Both weights are zero, hence adopt the arithmetic average
+
+            firstDerivatives[i] = 0.5 * ( ratios(i+1) + ratios(i+2) );
+        }
+        else
+        {
+            // Since at least one of the weights is != 0, adopt the Akima rule for the first derivative
+
+            firstDerivatives[i] = (weightsLeft(i)*ratios(i+1) + weightsRight(i)*ratios(i+2)) /
+                                  (weightsLeft(i) + weightsRight(i));
+        }
+    }
+    
+
+    // Start a loop over each bin of the input data point, i.e. between 
+    // observedOrdinate(i) and observedOrdinate(i+1)
+
+    ArrayXd interpolatedOrdinate(interpolatedSize);
+    ArrayXd remainingInterpolatedAbscissa = interpolatedAbscissa;       // The remaining part of the array of interpolated abscissa
+    int cumulatedBinSize = 0;               // The cumulated number of interpolated points from the beginning
+
+    for (int i = 0; i < size-1; i++)
+    {
+        // For each bin given by the input data points array (we have size-1 bins in total), 
+        // compute the coefficients of the corresponding cubic polynomial and 
+        // the new ordinates for the corresponding interpolated abscissa.
+        
+        double coeff0 = observedOrdinate(i);
+        double coeff1 = firstDerivatives[i];
+        double coeff2 = 3*(observedOrdinate(i+1) - observedOrdinate(i) - firstDerivatives[i] ) - 
+                        (firstDerivatives[i+1] - firstDerivatives[i]);
+        double coeff3 = (firstDerivatives[i+1] - firstDerivatives[i]) - 2*(observedOrdinate(i+1) - 
+                        observedOrdinate(i) - firstDerivatives[i]);
+
+
+        // Find which values of interpolatedAbscissa are containined within the selected bin of observedAbscissa.
+        // Since elements in interpolatedAbscissa are monotonically increasing, we cut the input array each time
+        // we identify the elements of the current bin. This allows to speed up the process.
+
+        double lowerBound = observedAbscissa(i);
+        double upperBound = observedAbscissa(i+1);
+        vector<int> selectedIndices = findArrayIndicesWithinBoundaries(remainingInterpolatedAbscissa, lowerBound, upperBound);
+
+        int binSize = selectedIndices.size();       // Total number of interpolated points falling in the current bin
+        double binLength = differenceAbscissa(i);
+        ArrayXd interpolatedAbscissaInCurrentBin = remainingInterpolatedAbscissa.segment(0, binSize);
+
+        
+        // Compute interpolated ordinates for the current bin
+
+        ArrayXd normalizedAbscissa = (interpolatedAbscissaInCurrentBin - lowerBound)/binLength;
+        ArrayXd interpolatedOrdinateInCurrentBin = coeff0 + coeff1*normalizedAbscissa + coeff2*normalizedAbscissa.square() +
+                                                   coeff3*normalizedAbscissa.cube();
+       
+        
+        // Merge bin ordinate into total array of ordinate
+
+        interpolatedOrdinate.segment(cumulatedBinSize, binSize) = interpolatedOrdinateInCurrentBin;
+        
+
+        // Reduce size of array remainingInterpolatedAbscissa by binSize elements and initialize the array
+        // with remaining part of interpolatedAbscissa
+        
+        int currentRemainingSize = remainingInterpolatedAbscissa.size();
+        remainingInterpolatedAbscissa.resize(currentRemainingSize - binSize);
+        cumulatedBinSize += binSize;
+        remainingInterpolatedAbscissa = interpolatedAbscissa.segment(cumulatedBinSize, interpolatedSize-cumulatedBinSize);
+    }
+
+    return interpolatedOrdinate;
+}

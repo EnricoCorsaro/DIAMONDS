@@ -72,6 +72,7 @@ namespace Functions
     void sortElementsDouble(RefArrayXd array1, RefArrayXd array2);   // TODO: replace by much more efficient algorithms 
     void sortElementsInt(vector<int> &array1, RefArrayXd array2);    // Idem
     vector<int> findArrayIndicesWithinBoundaries(RefArrayXd const array, double lowerBound, double upperBound);
+    ArrayXd AkimaInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, RefArrayXd const interpolatedAbscissa);
 
 
     // Utility functions
