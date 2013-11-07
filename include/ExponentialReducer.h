@@ -16,7 +16,7 @@ class ExponentialReducer : public LivePointsReducer
 
     public:
 
-        ExponentialReducer(NestedSampler &nestedSampler, const double reductionRate);
+        ExponentialReducer(NestedSampler &nestedSampler, const double enhancingFactor);
         ~ExponentialReducer();
         
         virtual int updateNobjects();
@@ -24,7 +24,7 @@ class ExponentialReducer : public LivePointsReducer
 
     protected:
 
-        double reductionRate;
+        double enhancingFactor;
         double informationGain;
 
 
