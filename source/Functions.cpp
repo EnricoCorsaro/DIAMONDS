@@ -547,7 +547,7 @@ vector<int> Functions::findArrayIndicesWithinBoundaries(RefArrayXd const array, 
 //                              interpolated dependent variables
 //
 // OUTPUT:
-//      An eigen array of doubles containing the newly compute ordinates (dependent variables) of the corresponding
+//      An eigen array of doubles containing the newly computed ordinates (dependent variables) of the corresponding
 //      input grid of covariates for which the interpolation was required.
 //
 // REMARKS:
