@@ -180,7 +180,8 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
     // Initialize the prior mass interval and cumulate it
 
     double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));         
-    logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass,logWidthInPriorMass);
+    logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
+    logRemainingPriorMass = Functions::logExpDifference(logRemainingPriorMass, logWidthInPriorMass);
     
    
     // Find maximum log(Likelihood) value in the initial sample of live points. 
@@ -433,6 +434,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
             }
 
 
+            // The computations for the current iterations are completed here.
+            // What follows is to be used for the next nested iteration.
+
             // If we got till here this is not the last iteration possible, hence 
             // update all the information for the next iteration.
             // Store the new number of live points in the vector containing this information.
@@ -447,15 +451,16 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
             // reduces to the standard case when the new number of live points is the same
             // as the previous one.
 
-            logWidthInPriorMass -= 1.0 / updatedNobjects; 
-
+            double logStretchingFactor = Niterations*((1.0/Nobjects) - (1.0/updatedNobjects)); 
+            logWidthInPriorMass = logRemainingPriorMass + Functions::logExpDifference(0.0, logStretchingFactor - 1.0/updatedNobjects);
+            
         
             // Update total width in prior mass and remaining width in prior mass from beginning to current iteration
             // and use this information for the next iteration (if any)
 
             logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
-            logRemainingPriorMass = log(1.0 - exp(logCumulatedPriorMass));    
-        
+            logRemainingPriorMass = logStretchingFactor + logRemainingPriorMass - 1.0/updatedNobjects;
+            
 
             // Update new number of live points in NestedSampler class 
             
