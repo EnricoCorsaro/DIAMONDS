@@ -179,11 +179,17 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
 
     // Initialize the prior mass interval and cumulate it
 
-    double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));         
-    logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
-    logRemainingPriorMass = Functions::logExpDifference(logRemainingPriorMass, logWidthInPriorMass);
-    
-   
+    double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));                                             // X_0 - X_1    First width in prior mass
+    logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);               // 1 - X_1
+    logRemainingPriorMass = Functions::logExpDifference(logRemainingPriorMass, logWidthInPriorMass);        // X_1
+
+
+    // Initialize first part of width in prior mass for trapezoidal rule
+
+    double logRemainingPriorMassRightBound = Functions::logExpDifference(log(2), logRemainingPriorMass);    // X_0 = (2 - X_1), right-hand side boundary condition for trapezoidal rule
+    double logWidthInPriorMassRight = Functions::logExpDifference(logRemainingPriorMassRightBound,logRemainingPriorMass);
+
+
     // Find maximum log(Likelihood) value in the initial sample of live points. 
     // This information can be useful when reducing the number of live points adopted within the nesting process.
 
@@ -222,30 +228,21 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         
         int indexOfLivePointWithWorstLikelihood;
         worstLiveLogLikelihood = logLikelihood.minCoeff(&indexOfLivePointWithWorstLikelihood);
-        double logWeight = logWidthInPriorMass + worstLiveLogLikelihood;                
-
-
-        // Update the evidence and the information Gain
-        
-        double logEvidenceNew = Functions::logExpSum(logEvidence, logWeight);
-        informationGain = exp(logWeight - logEvidenceNew) * worstLiveLogLikelihood 
-                                        + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
-                                        - logEvidenceNew;
-        logEvidence = logEvidenceNew;
 
         
         // Although we will replace the point with the worst likelihood in the live sample, we will save
-        // it in our collection of posterior sample. Also save its likelihood value and its weight.
+        // it in our collection of posterior sample. Also save its likelihood value. The weight is 
+        // computed and collected at the end of each iteration.
 
         posteriorSample.col(Niterations) = nestedSample.col(indexOfLivePointWithWorstLikelihood); 
         logLikelihoodOfPosteriorSample(Niterations) = worstLiveLogLikelihood; 
-        logWeightOfPosteriorSample(Niterations) = logWeight;
 
 
         // Compute the (logarithm of) the mean likelihood of the set of live points.
         // Note that we are not computing mean(log(likelihood)) but log(mean(likelhood)).
         // Since we are only storing the log(likelihood) values, this results in a peculiar
-        // way of computing the mean.
+        // way of computing the mean. This will be used for computing the mean live evidence
+        // at the end of the iteration.
         
         logMeanLikelihoodOfLivePoints = logLikelihood(0);
 
@@ -255,18 +252,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         }
 
         logMeanLikelihoodOfLivePoints -= log(Nobjects);
-        
-        
-        // Compute mean live evidence (see Keeton 2011, MNRAS) 
-
-        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * (log(Nobjects) - log(Nobjects + 1));
-
-
-        // Compute the ratio of the evidence of the live sample to the current Skilling's evidence.
-        // Only when we gathered enough evidence, this ratio will be sufficiently small so that we can stop the iterations.
-
-        ratioOfRemainderToCurrentEvidence = exp(logMeanLiveEvidence - logEvidence);
-        
+                
 
         // Find clusters in our live sample of points. Don't do this every iteration but only
         // every x iterations, where x is given by 'NiterationsWithSameClustering'.
@@ -294,24 +280,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
             {
                 // After the first N initial iterations, we do a proper clustering.
                 
-                Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes, printOnTheScreen);
-            }
-        }
-
-
-        // Print current information on the screen, if required
-
-        if (printOnTheScreen)
-        {
-            if ((Niterations % 50) == 0)
-            {
-                cerr << "Nit: " << Niterations << "   Ncl: " << Nclusters 
-                     << "   Nlive: " << Nobjects
-                     << "   CPM: " << exp(logCumulatedPriorMass)
-                     << "   Ratio: " << ratioOfRemainderToCurrentEvidence
-                     << "   log(E): " << logEvidence 
-                     << "   IG: " << informationGain
-                     << endl;
+                Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes);
             }
         }
 
@@ -361,116 +330,175 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
 
         nestedSample.col(indexOfLivePointWithWorstLikelihood) = drawnPoint;
         logLikelihood(indexOfLivePointWithWorstLikelihood) = logLikelihoodOfDrawnPoint;
+       
+        
+        // If we got till here this is not the last iteration possible, hence 
+        // update all the information for the next iteration. 
+        // Check if the number of live points has not reached the minimum allowed,
+        // and update it for the next iteration.
+
+        if (livePointsShouldBeReduced)
+        {
+            // Update the number of live points for the current iteration based on the previous number.
+            // If the number of live points reaches the minimum allowed 
+            // then do not update the number anymore.
+
+            updatedNobjects = livePointsReducer.updateNobjects();
+            
+            if (updatedNobjects > Nobjects)
+            {
+                // Terminate program if new number of live points is greater than previous one
+                    
+                cerr << "Something went wrong in the reduction of the live points." << endl;
+                cerr << "The new number of live points is greater than the previous one." << endl;
+                cerr << "Quitting program. " << endl;
+                break;
+            }
+
+                
+            // If the lower bound for the number of live points has not been reached yet, 
+            // the process should be repeated at the next iteration.
+            // Otherwise the minimun number allowed is reached right now. In this case
+            // stop the reduction process starting from the next iteration.
+                
+            livePointsShouldBeReduced = (updatedNobjects > minNobjects);
+
+            if (updatedNobjects >= minNobjects)
+            {
+                // In this case it is still plausible to apply the reduction of the live points
+
+                if (updatedNobjects != Nobjects)
+                {
+                    // Resize all eigen arrays and vectors of dimensions Nobjects according to 
+                    // new number of live points evaluated. In case previos and new number 
+                    // of live points coincide, no resizing is done.
+                    
+                    vector<int> indicesOfLivePointsToRemove = livePointsReducer.findIndicesOfLivePointsToRemove(engine);
+
+                    
+                    // At least one live point has to be removed, hence update the sample
+
+                    removeLivePointsFromSample(indicesOfLivePointsToRemove, clusterIndices, clusterSizes);
+                        
+                        
+                    // Since everything is fine update discreteUniform with the corresponding new upper bound
+
+                    uniform_int_distribution<int> discreteUniform2(0, updatedNobjects-1);
+                    discreteUniform = discreteUniform2;
+                }
+            }
+            else
+            {
+                // The new number of live points is below the minimum allowed. 
+                // Keep the minimum allowed, the reduction process is automatically stopped.
+
+                updatedNobjects = minNobjects;
+            }
+        }
+
+
+        // Store the new number of live points in the vector containing this information.
+        // This is done even if the new number is the same as the previous one.
+
+        NobjectsPerIteration.push_back(Nobjects);
+
+            
+        // Compute the mean live evidence given the previous set of live points (see Keeton 2011, MNRAS) 
+
+        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * (log(Nobjects) - log(Nobjects + 1));
+
+
+        // Compute the ratio of the evidence of the live sample to the current Skilling's evidence.
+        // Only when we gathered enough evidence, this ratio will be sufficiently small so that we can stop the iterations.
+
+        ratioOfRemainderToCurrentEvidence = exp(logMeanLiveEvidence - logEvidence);
 
 
         // Re-evaluate the stopping criterion, using the condition suggested by Keeton (2011)
 
         nestedSamplingShouldContinue = (ratioOfRemainderToCurrentEvidence > maxRatioOfRemainderToCurrentEvidence);
-       
-        
-        // If the current iteration is not the last iteratiom then 
-        // check if the number of live points has not reached the minimum allowed,
-        // and update it for the next iteration.
 
-        if (nestedSamplingShouldContinue)
+
+        // Shrink prior mass interval according to proper number of live points 
+        // (see documentation by Enrico Corsaro October 2013). When reducing the number of live points 
+        // the equation is a generalized version of that used by Skilling 2004. The equation
+        // reduces to the standard case when the new number of live points is the same
+        // as the previous one.
+
+        double logStretchingFactor = Niterations*((1.0/Nobjects) - (1.0/updatedNobjects)); 
+        logWidthInPriorMass = logRemainingPriorMass + Functions::logExpDifference(0.0, logStretchingFactor - 1.0/updatedNobjects);  // X_i - X_(i+1)
+
+        
+        // Compute the logWeight according to the trapezoidal rule 0.5*(X_(i-1) - X_(i+1)) 
+        // and new contribution of evidence to be cumulated to the total evidence.
+        // This is done in logarithmic scale by summing the right (X_(i-1) - X_i) and left part (X_i - X_(i+1)) 
+        // of the total width in prior mass required for the trapezoidal rule. We do this computation at the end 
+        // of the nested iteration because we need to know the new remaining prior mass of the next iteration.
+            
+        double logWidthInPriorMassLeft = logWidthInPriorMass; 
+        
+        if (!nestedSamplingShouldContinue)
         {
-            if (livePointsShouldBeReduced)
-            {
-                // Update the number of live points for the current iteration based on the previous number.
-                // If the number of live points reaches the minimum allowed 
-                // then do not update the number anymore.
+            // If the current iteration is the last iteration, adopt left boundary condition for computing trapezoidal rule (see Skilling 2004)
 
-                updatedNobjects = livePointsReducer.updateNobjects();
-            
-                if (updatedNobjects > Nobjects)
-                {
-                    // Terminate program if new number of live points is greater than previous one
-                    
-                    cerr << "Something went wrong in the reduction of the live points." << endl;
-                    cerr << "The new number of live points is greater than the previous one." << endl;
-                    cerr << "Quitting program. " << endl;
-                    break;
-                }
-
-                
-                // If the lower bound for the number of live points has not been reached yet, 
-                // the process should be repeated at the next iteration.
-                // Otherwise the minimun number allowed is reached right now. In this case
-                // stop the reduction process starting from the next iteration.
-                
-                livePointsShouldBeReduced = (updatedNobjects > minNobjects);
-
-                if (updatedNobjects >= minNobjects)
-                {
-                    // In this case it is still plausible to apply the reduction of the live points
-
-                    if (updatedNobjects != Nobjects)
-                    {
-                        // Resize all eigen arrays and vectors of dimensions Nobjects according to 
-                        // new number of live points evaluated. In case previos and new number 
-                        // of live points coincide, no resizing is done.
-                    
-                        vector<int> indicesOfLivePointsToRemove = livePointsReducer.findIndicesOfLivePointsToRemove(engine);
-
-                    
-                        // At least one live point has to be removed, hence update the sample
-
-                        removeLivePointsFromSample(indicesOfLivePointsToRemove, clusterIndices, clusterSizes);
-                        
-                        
-                        // Since everything is fine update discreteUniform with the corresponding new upper bound
-
-                        uniform_int_distribution<int> discreteUniform2(0, updatedNobjects-1);
-                        discreteUniform = discreteUniform2;
-                    }
-                }
-                else
-                {
-                    // The new number of live points is below the minimum allowed. 
-                    // Keep the minimum allowed, the reduction process is automatically stopped.
-
-                    updatedNobjects = minNobjects;
-                }
-            }
-
-
-            // The computations for the current iterations are completed here.
-            // What follows is to be used for the next nested iteration.
-
-            // If we got till here this is not the last iteration possible, hence 
-            // update all the information for the next iteration.
-            // Store the new number of live points in the vector containing this information.
-            // This is done even if the new number is the same as the previous one.
-
-            NobjectsPerIteration.push_back(Nobjects);
-
-
-            // Shrink prior mass interval according to proper number of live points 
-            // (see documentation by Enrico Corsaro). When reducing the number of live points 
-            // the equation is a generalized version of that used by Skilling 2004. The equation
-            // reduces to the standard case when the new number of live points is the same
-            // as the previous one.
-
-            double logStretchingFactor = Niterations*((1.0/Nobjects) - (1.0/updatedNobjects)); 
-            logWidthInPriorMass = logRemainingPriorMass + Functions::logExpDifference(0.0, logStretchingFactor - 1.0/updatedNobjects);
-            
-        
-            // Update total width in prior mass and remaining width in prior mass from beginning to current iteration
-            // and use this information for the next iteration (if any)
-
-            logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
-            logRemainingPriorMass = logStretchingFactor + logRemainingPriorMass - 1.0/updatedNobjects;
-            
-
-            // Update new number of live points in NestedSampler class 
-            
-            Nobjects = updatedNobjects;
-
-
-            // Increase nested loop counter
-        
-            Niterations++;
+            logWidthInPriorMassLeft = log(2) + logRemainingPriorMass;
         }
+
+        double logWeight = log(0.5) + Functions::logExpSum(logWidthInPriorMassLeft, logWidthInPriorMassRight);
+        double logEvidenceContributionNew = logWeight + worstLiveLogLikelihood;
+
+
+        // Save log(Weight) of the current iteration
+
+        logWeightOfPosteriorSample(Niterations) = logWeight;
+
+
+        // Update the right part of the width in prior mass interval by the left part
+
+        logWidthInPriorMassRight = logWidthInPriorMass;
+
+
+        // Update the evidence and the information Gain
+        
+        double logEvidenceNew = Functions::logExpSum(logEvidence, logEvidenceContributionNew);
+        informationGain = exp(logEvidenceContributionNew - logEvidenceNew) * worstLiveLogLikelihood 
+                        + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
+                        - logEvidenceNew;
+        logEvidence = logEvidenceNew;
+
+
+        // Print current information on the screen, if required
+
+        if (printOnTheScreen)
+        {
+            if ((Niterations % 50) == 0)
+            {
+                cerr << "Nit: " << Niterations << "   Ncl: " << Nclusters 
+                    << "   Nlive: " << Nobjects
+                    << "   CPM: " << exp(logCumulatedPriorMass)
+                    << "   Ratio: " << ratioOfRemainderToCurrentEvidence
+                    << "   log(E): " << logEvidence 
+                    << "   IG: " << informationGain
+                    << endl;
+            }
+        }
+
+
+        // Update total width in prior mass and remaining width in prior mass from beginning to current iteration
+        // and use this information for the next iteration (if any)
+
+        logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
+        logRemainingPriorMass = logStretchingFactor + logRemainingPriorMass - 1.0/updatedNobjects;
+
+
+        // Update new number of live points in NestedSampler class 
+            
+        Nobjects = updatedNobjects;
+
+
+        // Increase nested loop counter
+        
+        Niterations++;
     }
     while (nestedSamplingShouldContinue);  
 
