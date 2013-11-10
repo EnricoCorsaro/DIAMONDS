@@ -434,15 +434,12 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 //      optimalClusterIndices(Npoints): for each point the index of the cluster it belongs to. This index
 //                                      runs from 0 to Nclusters-1.
 //      optimalClusterSizes(Nclusters): for each of the clusters, this vector contains the number of points
-//      printOnTheScreen: a boolean value specifying whether the BIC values and corresponding number of clusters 
-//                        are to be printed on the screen while the process is running.
 // 
 // OUTPUT:
 //      The optimal number of clusters
 //
 
-int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices, 
-                             vector<int> &optimalClusterSizes, const bool printOnTheScreen)
+int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices, vector<int> &optimalClusterSizes)
 {
     bool convergedSuccessfully;
     unsigned int Npoints = sample.cols();

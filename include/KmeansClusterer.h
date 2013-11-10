@@ -21,9 +21,9 @@ class KmeansClusterer : public Clusterer
         KmeansClusterer(Metric &metric, unsigned int minNclusters, unsigned int maxNclusters, unsigned int Ntrials, double relTolerance);
         ~KmeansClusterer();
     
-        virtual int cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices, vector<int> &optimalClusterSizes, 
-                            const bool printOnTheScreen);
-   
+        virtual int cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices, vector<int> &optimalClusterSizes);
+  
+
     protected:
    
 
