@@ -186,7 +186,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
 
     // Initialize first part of width in prior mass for trapezoidal rule
 
-    double logRemainingPriorMassRightBound = Functions::logExpDifference(log(2), logRemainingPriorMass);    // X_0 = (2 - X_1), right-hand side boundary condition for trapezoidal rule
+    double logRemainingPriorMassRightBound = Functions::logExpDifference(log(2), logRemainingPriorMass);    // X_0 = (2 - X_1), right-side boundary condition for trapezoidal rule
     double logWidthInPriorMassRight = Functions::logExpDifference(logRemainingPriorMassRightBound,logRemainingPriorMass);
 
 
@@ -439,9 +439,10 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         
         if (!nestedSamplingShouldContinue)
         {
-            // If the current iteration is the last iteration, adopt left boundary condition for computing trapezoidal rule (see Skilling 2004)
+            // The current iteration is the last iteration, hence adopt left-boundary reflecting condition 
+            // for computing trapezoidal rule (see Skilling 2004)
 
-            logWidthInPriorMassLeft = log(2) + logRemainingPriorMass;
+            logWidthInPriorMassLeft = log(2) + logRemainingPriorMass;       // X_(m+1) = - X_m, hence X_m - X_(m+1) = 2*X_m
         }
 
         double logWeight = log(0.5) + Functions::logExpSum(logWidthInPriorMassLeft, logWidthInPriorMassRight);
@@ -453,7 +454,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         logWeightOfPosteriorSample(Niterations) = logWeight;
 
 
-        // Update the right part of the width in prior mass interval by the left part
+        // Update the right part of the width in prior mass interval by replacing it with the left part
 
         logWidthInPriorMassRight = logWidthInPriorMass;
 
