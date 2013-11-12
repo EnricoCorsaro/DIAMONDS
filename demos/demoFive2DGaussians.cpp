@@ -100,7 +100,7 @@ int main(int argc, char *argv[])
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
 
     double toleranceOnEvidence = 0.01;
-    FerozReducer ferozReducer(nestedSampler, toleranceOnEvidence);
+    FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
 
     nestedSampler.run(terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 

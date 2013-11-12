@@ -38,7 +38,7 @@ int main(int argc, char *argv[])
 
     // Setting Prior distribution and parameter space
 
-    int Ndimensions = 1;        // Number of free parameters (dimensions) of the problem
+    int Ndimensions = 3;        // Number of free parameters (dimensions) of the problem
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
@@ -74,7 +74,7 @@ int main(int argc, char *argv[])
     // Configure nested sampling
     
     bool printOnTheScreen = true;                   // Print results on the screen
-    int initialNobjects = 10000;                     // Initial number of active points evolving within the nested sampling process.
+    int initialNobjects = 5000;                     // Initial number of active points evolving within the nested sampling process.
     int minNobjects = 300;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 5000;                    // Maximum number of attempts when trying to draw a new sampling point.
     int NinitialIterationsWithoutClustering = 1000; // The first N iterations, we assume that there is only 1 cluster.
@@ -103,9 +103,9 @@ int main(int argc, char *argv[])
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
         
     double toleranceOnEvidence = 0.01;
-    FerozReducer ferozReducer(nestedSampler, toleranceOnEvidence);
+    FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
 
-    nestedSampler.run(ferozReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
+    nestedSampler.run(livePointsReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
     // Save the results in output files

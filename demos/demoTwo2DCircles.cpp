@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
     // Configure nested sampling
 
     bool printOnTheScreen = true;                   // Print results on the screen
-    int initialNobjects = 500;                      // Initial number of active points evolving within the nested sampling process.
+    int initialNobjects = 10000;                    // Initial number of active points evolving within the nested sampling process.
     int minNobjects = 500;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 20000;                   // Maximum number of attempts when trying to draw a new sampling point.
     int NinitialIterationsWithoutClustering = 200;  // The first N iterations, we assume that there is only 1 cluster.
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
     double shrinkingRate = 0.3;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                     // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                     // of the ellipsoids.
-    double terminationFactor = 0.01;                // Termination factor for nesting loop.
+    double terminationFactor = 0.001;                // Termination factor for nesting loop.
 
 
     // Save configuring parameters into an ASCII file
@@ -102,9 +102,9 @@ int main(int argc, char *argv[])
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
         
     double toleranceOnEvidence = 0.01;
-    FerozReducer ferozReducer(nestedSampler, toleranceOnEvidence);
+    FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
     
-    nestedSampler.run(ferozReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
+    nestedSampler.run(livePointsReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
     // Save the results in output files
