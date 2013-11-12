@@ -50,26 +50,36 @@ Results::~Results()
 // Results::posteriorProbability()
 //
 // PURPOSE:
-//      Saves the posterior probability for the sample obtained from the 
-//      nested sampling into a one dimensional Eigen Array. 
+//      Saves the posterior probability for the sample, obtained by
+//      applying the Bayes theorem to the information coming from the 
+//      nested sampling, into a one-dimensional Eigen Array. 
 //
 // OUTPUT:
 //      An Eigen Array containing the values of the posterior probability
-//      sorted according to the nesting process. The array computed
-//      according to the definition of posterior probability
-//      from the nesting algorithm is finally normalized by the sum
-//      of its elements. This allows to get rid of small deviations
-//      caused by a non-exact value of the evidence.
+//      sorted according to the nesting process. 
 // 
 // REMARK:
-//      Values are probabilities (and not probability densities).
+//      Values are probabilities (and not probability densities),
+//      hence their sum must equal the unity.
+//      The array computed according to the definition of posterior probability
+//      from the nesting algorithm is finally normalized by the sum
+//      of its elements. This allows to get rid of small deviations
+//      caused by the approximated value of the evidence.
 //
 
 ArrayXd Results::posteriorProbability()
 {
-    ArrayXd logPosteriorDistribution = nestedSampler.getLogWeightOfPosteriorSample() - nestedSampler.getLogEvidence();
+    // Apply Bayes Theorem in logarithmic expression
+
+    ArrayXd logPosteriorDistribution = nestedSampler.getLogWeightOfPosteriorSample() + 
+                                       nestedSampler.getLogLikelihoodOfPosteriorSample() - 
+                                       nestedSampler.getLogEvidence();
     ArrayXd posteriorDistribution = logPosteriorDistribution.exp();
-    
+   
+   
+    // Since evidence is approximate, ensure that the sum of all probabilities equals the unity
+    // when returning the array.
+
     return posteriorDistribution/posteriorDistribution.sum();
 }
 
@@ -157,7 +167,7 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
 
        
         // Save the second moment of the distribution
-        
+       
         parameterEstimates(i,3) = secondMoment;
        
 
