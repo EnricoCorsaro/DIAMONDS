@@ -125,10 +125,11 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
         ArrayXd marginalDistribution = posteriorDistribution;
 
 
-        // Sort elements of array parameterValues in increasing
-        // order and sort elements of array marginalDistribution accordingly
+        // Sort elements of array parameterValues in ascending
+        // order and sort elements of array marginalDistribution accordingly.
+        // Use a mergesort algorithm for more efficiency with a large number of array elements.
         
-        Functions::sortElementsDouble(parameterValues, marginalDistribution); 
+        Functions::topDownMergeSort(parameterValues, marginalDistribution); 
         
 
         // Compute the mean value (expectation value, or first moment) of the sample distribution
