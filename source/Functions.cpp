@@ -389,6 +389,174 @@ double Functions::logExpDifference(const double x, const double y)
 
 
 
+
+
+// Functions::topDownMerge()
+//
+// PURPOSE: 
+//      This function does the sorting of the input array1 and sorts the elements of
+//      array2 according to this sorting.
+//
+// INPUT: 
+//      array1: a first Eigen Array of double numbers to be sorted in increasing order 
+//      array2: a second Eigen Array to be sorted according to array1
+//      arrayCopy1: a copy of array1 containing the effect of the merge sorting
+//      arrayCopy2: a copy of array2 reflecting the sorting performed on arrayCopy1
+//      beginIndex: an integer specifying the starting index of the sorting process
+//      middleIndex: an integer specifying the mid-point of the array to be sorted
+//      endIndex: an integer specifying the ending index of the sorting process
+//
+// OUTPUT: 
+//      void
+//
+// REMARK:
+//      This function is not intented to be used separately
+//      but only through the call to topDownMergeSort. It is used
+//      within the function topDownSplitMerge.
+//
+
+void Functions::topDownMerge(RefArrayXd array1, RefArrayXd arrayCopy1, RefArrayXd array2, RefArrayXd arrayCopy2, int beginIndex, int middleIndex, int endIndex)
+{
+    // Specify the initial indices of first and second-half of the input array
+
+    int firstIndexFirstPart = beginIndex;
+    int firstIndexSecondPart = middleIndex;
+
+
+    // Do the sorting
+
+    for (int i = beginIndex; i < endIndex; i++)
+    {
+        if ((firstIndexFirstPart < middleIndex) && (firstIndexSecondPart >= endIndex || (array1(firstIndexFirstPart) <= array1(firstIndexSecondPart))))
+        {
+            arrayCopy1(i) = array1(firstIndexFirstPart);
+            arrayCopy2(i) = array2(firstIndexFirstPart);
+            firstIndexFirstPart++;      // Move to the next element
+        }
+        else
+        {
+            arrayCopy1(i) = array1(firstIndexSecondPart);
+            arrayCopy2(i) = array2(firstIndexSecondPart);
+            firstIndexSecondPart++;     // Move to the next element
+        }
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// Functions::topDownMergeSort()
+//
+// PURPOSE: 
+//      This function splits the input array in two parts and repeat the process 
+//      until only 1-element segments are found. Then sorts all the segments and
+//      merges them into a total, sorted array.
+//
+// INPUT: 
+//      array1: a first Eigen Array of double numbers to be sorted in increasing order 
+//      array2: a second Eigen Array to be sorted according to array1
+//      arrayCopy1: a copy of array1 containing the effect of the merge sorting
+//      arrayCopy2: a copy of array2 reflecting the sorting performed on arrayCopy1
+//      beginIndex: an integer specifying the starting index of the sorting process
+//      endIndex: an integer specifying the ending index of the sorting process
+//
+// OUTPUT: 
+//      void
+//
+// REMARK:
+//      This function calls itself recursively. It is not intented to be used separately
+//      but only through the call to topDownMergeSort.
+//
+
+void Functions::topDownSplitMerge(RefArrayXd array1, RefArrayXd arrayCopy1, RefArrayXd array2, RefArrayXd arrayCopy2, int beginIndex, int endIndex)
+{
+    // If input array1 contains only 1 element it is already sorted
+
+    if (endIndex - beginIndex < 2)
+        return;
+
+
+    // Find mid-point of the input array
+
+    int middleIndex = (endIndex + beginIndex) / 2;
+    
+    
+    // Separate first-half and second-half of the array and repeat the process
+
+    topDownSplitMerge(array1, arrayCopy1, array2, arrayCopy2, beginIndex, middleIndex);
+    topDownSplitMerge(array1, arrayCopy1, array2, arrayCopy2, middleIndex, endIndex);
+
+    
+    // Order elements in each half and merge them into a single, sorted, array
+
+    topDownMerge(array1, arrayCopy1, array2, arrayCopy2, beginIndex, middleIndex, endIndex);
+   
+
+    // Copy elements of array sorted into original array
+    
+    int length = endIndex - beginIndex;
+    array1.segment(beginIndex, length) = arrayCopy1.segment(beginIndex, length);
+    array2.segment(beginIndex, length) = arrayCopy2.segment(beginIndex, length);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// Functions::topDownMergeSort()
+//
+// PURPOSE: 
+//      Sorts the element of the first input array in increasing order 
+//      and the elements of the second input array according to the 
+//      sorting of the first array. This is done according to the
+//      top-down implementation of the mergesort algorithm.
+//
+// INPUT: 
+//      array1: a first Eigen Array of double numbers to be sorted in increasing order 
+//      array2: a second Eigen Array to be sorted according to array1
+//
+// OUTPUT: 
+//      void
+//
+// REMARK:
+//      This function uses the separate function topDownSplitMerge defined above.
+//
+
+void Functions::topDownMergeSort(RefArrayXd array1, RefArrayXd array2)
+{
+    assert(array1.size() == array2.size());
+    ArrayXd arrayCopy1 = array1;
+    ArrayXd arrayCopy2 = array2;
+    topDownSplitMerge(array1, arrayCopy1, array2, arrayCopy2, 0, arrayCopy1.size());
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Functions::sortElementsDouble()
 //
 // PURPOSE: 
@@ -406,6 +574,8 @@ double Functions::logExpDifference(const double x, const double y)
 
 void Functions::sortElementsDouble(RefArrayXd array1, RefArrayXd array2)
 {
+    assert(array1.size() == array2.size());
+    
     for (int i = 0; i < array1.size(); i++)
     {
         for (int j = 1; j < (array1.size()-i); j++)
