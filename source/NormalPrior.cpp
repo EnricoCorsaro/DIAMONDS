@@ -20,6 +20,7 @@ NormalPrior::NormalPrior(const RefArrayXd mean, const RefArrayXd standardDeviati
   standardDeviation(standardDeviation)
 {
     assert(mean.size() == standardDeviation.size());
+    assert(standardDeviation.any() >= 0);
     normalDistributionVector.resize(mean.size());
 
     for (int i = 0; i < mean.size(); i++)
