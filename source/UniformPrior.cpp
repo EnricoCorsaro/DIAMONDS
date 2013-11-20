@@ -21,6 +21,7 @@ UniformPrior::UniformPrior(const RefArrayXd minima, const RefArrayXd maxima)
   maxima(maxima)
 {
     assert (minima.size() == maxima.size());
+    assert (minima.any() <= maxima.any());
 }
 
 
