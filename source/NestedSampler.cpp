@@ -185,8 +185,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
 
 
     // Initialize first part of width in prior mass for trapezoidal rule
+    // X_0 = (2 - X_1), right-side boundary condition for trapezoidal rule
 
-    double logRemainingPriorMassRightBound = Functions::logExpDifference(log(2), logRemainingPriorMass);    // X_0 = (2 - X_1), right-side boundary condition for trapezoidal rule
+    double logRemainingPriorMassRightBound = Functions::logExpDifference(log(2), logRemainingPriorMass);    
     double logWidthInPriorMassRight = Functions::logExpDifference(logRemainingPriorMassRightBound,logRemainingPriorMass);
 
 
@@ -425,6 +426,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
         // reduces to the standard case when the new number of live points is the same
         // as the previous one.
 
+        // double logWeight = logWidthInPriorMass;              // Use this line for simple rectangular rule
         double logStretchingFactor = Niterations*((1.0/Nobjects) - (1.0/updatedNobjects)); 
         logWidthInPriorMass = logRemainingPriorMass + Functions::logExpDifference(0.0, logStretchingFactor - 1.0/updatedNobjects);  // X_i - X_(i+1)
 
