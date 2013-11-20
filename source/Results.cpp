@@ -106,7 +106,13 @@ ArrayXd Results::posteriorProbability()
 //      
 // OUTPUT:
 //      A bidimensional Eigen Array containing all the estimators of the
-//      free parameters (one parameter per row).
+//      free parameters (one parameter per row). The output order is:
+//      (1) Mean
+//      (2) Median
+//      (3) Mode
+//      (4) II Moment
+//      (5) Lower CL
+//      (6) Upper CL
 // 
 
 ArrayXXd Results::parameterEstimation(const double credibleLevel)
@@ -170,138 +176,89 @@ ArrayXXd Results::parameterEstimation(const double credibleLevel)
         // Save the second moment of the distribution
        
         parameterEstimates(i,3) = secondMoment;
-       
-
-        /* COMMENTED OUT - COMPUTATION OF CREDIBLE INTERVALS
-        // Compute third moment of the sample distribution (including skewness)
-        
-        // double thirdMoment = ((parameterValues - parameterMean).pow(3) * marginalDistribution).sum();
-        // double skewness = thirdMoment/pow(secondMoment,3.0/2.0);
-        
-
-        // Compute optimal bin size for rebinning marginal distribution according to its symmetry properties
-
-        int Nbins = 0;
-        int sampleSize = parameterValues.size();
-        double binWidth = 0;
-        double parameterMaximum = parameterValues.maxCoeff();
-        double parameterMinimum = parameterValues.minCoeff();
-        
-
-        // Scott's normal reference rule is adopted
-            
-        binWidth = 3.5*sqrt(secondMoment)/pow(sampleSize,1.0/3.0);
-        Nbins = floor((parameterMaximum - parameterMinimum)/binWidth);
 
 
-        // Rebin marginal distribution for computing credible intervals        
+        // Compute the "shortest" credible intervals (CI) and save the corresponding credible limits
 
-        int beginIndex = 0;
-        ArrayXd marginalDistributionRebinned = ArrayXd::Zero(Nbins);
-        ArrayXd parameterValuesRebinned(Nbins);
-
-
-        // Merge marginal distribution for each bin up to the second last bin
-
-        for (int j = 0; j < Nbins-1; ++j)
-        {
-            parameterValuesRebinned(j) = parameterMinimum + j*binWidth + 0.5*binWidth;
-            
-            for (int h = beginIndex; h < sampleSize; ++h)
-            {
-                if ((parameterValues(h) >= parameterMinimum + j*binWidth) && (parameterValues(h) < parameterMinimum + (j+1)*binWidth))
-                {
-                    marginalDistributionRebinned(j) += marginalDistribution(h);
-                    beginIndex = h;         // Save last useful index for the selected bin
-                }
-            }
-        }
-
-
-        // Merge marginal distribution in the last bin
-
-        parameterValuesRebinned(Nbins-1) = parameterMinimum + (Nbins-1)*binWidth + 0.5*(parameterMaximum - parameterMinimum - (Nbins-1)*binWidth);
-            
-        for (int h = beginIndex; h < sampleSize; ++h)
-        {
-            if ((parameterValues(h) >= parameterMinimum + (Nbins-1)*binWidth) && (parameterValues(h) <= parameterMaximum))
-            {
-                marginalDistributionRebinned(Nbins-1) += marginalDistribution(h);
-            }
-        }
-
-
-        // Compute the "shortest" credible intervals (CI)
-
-        marginalDistributionMode = marginalDistributionRebinned.maxCoeff(&max);
-        ArrayXd marginalDistributionLeft(max + 1);       // Marginal distribution up to mode value
-        ArrayXd parameterValuesLeft(max + 1);            // Parameter range up to mode value
-        double limitProbabilityRight = marginalDistributionRebinned(max);
-        double limitParameterRight = parameterValuesRebinned(max);
+        marginalDistributionMode = marginalDistribution.maxCoeff(&max);
+        ArrayXd marginalDistributionLeft(max + 1);       // Marginal distribution up to mode value (included)
+        ArrayXd parameterValuesLeft(max + 1);            // Parameter range up to mode value (included)
+        double limitProbabilityRight = marginalDistribution(max);
+        double limitParameterRight = parameterValues(max);
         double limitProbabilityLeft = limitProbabilityRight;
         double limitParameterLeft = limitParameterRight;
 
 
-        // Difference distribution to find point belonging to the distribution the left of mode 
-        // value having closest probability to that identified in the part of the
-        // distribution to the right of the mode value.
+        // Difference distribution to find point belonging to the distribution to the left
+        // of the mode having closest probability to that identified in the part of the
+        // distribution to the right of the mode.
 
-        ArrayXd marginalDifferenceLeft = marginalDistributionLeft;          
+        ArrayXd marginalDifferenceLeft = ArrayXd::Zero(max + 1);          
                                                 
 
-        // Consider left-hand distribution (up to mode value)
-        // Save that part of the parameter values corresponding to the
-        // left-hand distribution
+        // Copy left-hand part of total marginal distributon into separate array.
+        // Also copy the corresponding parameter values inro a separate array.
+        // Since parameterValues is already sorted in ascending order this can be done quickly.
 
-        for (int nn = 0; nn <= max; ++nn)
-        {
-            marginalDistributionLeft(nn) = marginalDistributionRebinned(nn);
-            parameterValuesLeft(nn) = parameterValuesRebinned(nn);                                                                                               }
+        marginalDistributionLeft = marginalDistribution.segment(0, max+1);
+        parameterValuesLeft = parameterValues.segment(0, max+1);
 
 
-        // Count number of steps in the distribution to the right of the modal value
-        // and stop when probability >= credibleLevel probability.
+        // Count number of bins in the distribution to the righti side of the modal value.
         // Define the limit probability on the right-hand distribution 
         // and the corresponding value of the parameter.
-        // Then compute the difference of the left-hand distribution to the limit probability.
-        // Finally find the point having closest probability to the limit and save its 
-        // probability and the corresponding value of the parameter.
+        // Then compute the difference of the left-hand distribution with the right limit probability.
+        // Finally find the point in the left part having closest probability to the right limit,
+        // save its probability and the corresponding value of the parameter.
+        // Compute the total probability within the range and repeat the process until 
+        // probability >= probability(credibleLevel).
 
         int stepRight = 0;          
         int min = 0;
+        int sampleSize = parameterValues.size();
 
-        while (totalProbability < (credibleLevel/100.) && (max + stepRight < Nbins))             
+        while (totalProbability < (credibleLevel/100.) && (max + stepRight < sampleSize))             
         {
-
             totalProbability = 0.0;
-            limitProbabilityRight = marginalDistributionRebinned(max + stepRight);  
-            limitParameterRight = parameterValuesRebinned(max + stepRight);         
-            marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();                                                                                                         
+
+
+            // Find the probability and the corresponding value of the parameter at the right edge of the interval
+
+            limitProbabilityRight = marginalDistribution(max + stepRight);  
+            limitParameterRight = parameterValues(max + stepRight);         
+
+            
+            // Find which point in the left part is the closest in probability to that of the right edge.
+
+            marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();                                      
             limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);       
-            limitProbabilityLeft = marginalDistributionRebinned(min);           
-            limitParameterLeft = parameterValuesRebinned(min);                 
 
 
-            // Loop over the interval identified in order to cumulate the probability and compute the total one
+            // Save the point and its probability is the left edge of the search interval
+
+            limitProbabilityLeft = marginalDistributionLeft(min);           
+            limitParameterLeft = parameterValuesLeft(min);                 
+
+
+            // Loop within all the bins in the interval identified in order to compute the total probability
 
             for (int t = min; t <= max + stepRight; ++t)     
             {
-                totalProbability += marginalDistributionRebinned(t);        // Evaluate total probability within the range
+                totalProbability += marginalDistribution(t);
             }
+
+
+            // Move one bin further to the right
 
             ++stepRight;
         }
         
-        double lowerCredibleInterval = parameterMean - limitParameterLeft;      // Compute the left-hand side ...
-        double upperCredibleInterval = limitParameterRight - parameterMean;     // and the right-hand side of the credible interval
+        double lowerCredibleLimit = limitParameterLeft;      // Save the left
+        double upperCredibleLimit = limitParameterRight;     // and the righ credible limit
            
-        parameterEstimates(i,4) = lowerCredibleInterval;
-        parameterEstimates(i,5) = upperCredibleInterval;
-        */
+        parameterEstimates(i,4) = lowerCredibleLimit;
+        parameterEstimates(i,5) = upperCredibleLimit;
         
-        parameterEstimates(i,4) = 0.0;
-        parameterEstimates(i,5) = 0.0;
-
     }   // END for loop over the parameters
 
     return parameterEstimates;
@@ -387,9 +344,9 @@ void Results::writeLogLikelihoodToFile(string fullPath)
 // Results::writeLogWeightsToFile()
 //
 // PURPOSE:
-//      writes the log(Weight) = log(Likelihood) + log(dX) values from the nested sampling
+//      writes the log(Weight) = log(dX) values from the nested sampling
 //      into an ASCII file of one column format. The values are sorted according to the
-//      increasing order in likelihood.
+//      ascending order in likelihood.
 //
 // INPUT:
 //      fullPath:   a string variable containing the desired full path to save the output file.
@@ -404,7 +361,7 @@ void Results::writeLogWeightsToFile(string fullPath)
     File::openOutputFile(outputFile, fullPath);
             
     outputFile << "# Posterior sample from nested sampling" << endl;
-    outputFile << "# log(Weight) = log(Likelihood) + log(dX)" << endl;
+    outputFile << "# log(Weight) = log(dX)" << endl;
     outputFile << scientific << setprecision(9);
     
     ArrayXd logWeightOfPosteriorSample = nestedSampler.getLogWeightOfPosteriorSample();
@@ -474,6 +431,9 @@ void Results::writeEvidenceInformationToFile(string fullPath)
 //
 // OUTPUT:
 //      void
+//
+// REMARK:
+//      Note that these values are probabilities and not probability densities.
 // 
 
 void Results::writePosteriorProbabilityToFile(string fullPath)
@@ -508,8 +468,8 @@ void Results::writePosteriorProbabilityToFile(string fullPath)
 // INPUT:
 //      fullPath:       a string variable containing the desired full path to save the output file.
 //      credibleLevel:  a double number providing the desired credible 
-//                      level to be computed. Default value correspond to most 
-//                      used credible level of 68.27 %.
+//                      level to be computed. Default value corresponds 
+//                      to a credible level of 68.27 %.
 //      
 // OUTPUT:
 //
@@ -533,8 +493,8 @@ void Results::writeParametersSummaryToFile(string fullPath, const double credibl
     outputFile << "# Column #2: Median" << endl;
     outputFile << "# Column #3: Mode" << endl;
     outputFile << "# Column #4: II Moment (Variance if Normal Distribution)" << endl;
-    outputFile << "# Column #5: Lower Credible Interval (CI)" << endl;
-    outputFile << "# Column #6: Upper Credible Interval (CI)" << endl;
+    outputFile << "# Column #5: Lower Credible Limit" << endl;
+    outputFile << "# Column #6: Upper Credible Limit" << endl;
     outputFile << scientific << setprecision(9);
     File::arrayXXdToFile(outputFile, parameterEstimates);
     outputFile.close();
