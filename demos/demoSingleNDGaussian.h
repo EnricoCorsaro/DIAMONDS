@@ -60,7 +60,7 @@ SingleNDGaussianLikelihood::SingleNDGaussianLikelihood(const RefArrayXd observat
     clock_t clockticks = clock();
     engine.seed(clockticks);
 
-    uniform_real_distribution<double> uniform1(0.5,1.0);
+    uniform_real_distribution<double> uniform1(0.1,0.5);
     uniform_real_distribution<double> uniform2(-10.0,10.0);
 
     cout << "Gaussian Likelihood in " << Ndimensions << " dimensions" << endl;
