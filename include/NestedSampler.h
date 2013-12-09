@@ -90,6 +90,7 @@ class NestedSampler
 
 	private:
 
+        string outputPathPrefix;                 // The path of the directory where all the results have to be saved
         int Niterations;                         // Counter saving the number of nested loops used
         int updatedNobjects;                     // The updated number of live points to be used in the next iteration
         int initialNobjects;                     // The initial number of live points
