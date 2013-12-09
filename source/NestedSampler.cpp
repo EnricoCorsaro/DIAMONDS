@@ -93,6 +93,10 @@ NestedSampler::~NestedSampler()
 //      logWeightOfPosteriorSample.
 //
 // INPUT:
+//      livePointsReducer:                    An object of a class that takes care of the way the number of live points
+//                                            is reduced within the nesting process
+//      pathPrefix:                           A string specifying the path where the output information from the Nested Sampler
+//                                            has to be saved.
 //      maxRatioOfRemainderToCurrentEvidence: The fraction of remainder evidence to gained evidence used to terminate 
 //                                            the nested iteration loop. This value is also used as a tolerance on the final
 //                                            evidence to update the number of live points in the nesting process.
@@ -107,8 +111,6 @@ NestedSampler::~NestedSampler()
 //      NiterationsWithSameClustering:        A new clustering will only happen every N iterations.
 //
 //      maxNdrawAttempts:                     The maximum number of attempts allowed when drawing from a single ellipsoid.
-//      livePointsReducer:                    An object of a class that takes care of the way the number of live points 
-//                                            is reduced within the nesting process
 //
 // OUTPUT:
 //      void
@@ -118,13 +120,19 @@ NestedSampler::~NestedSampler()
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRatioOfRemainderToCurrentEvidence, const int NinitialIterationsWithoutClustering,
+void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix, 
+                        const double maxRatioOfRemainderToCurrentEvidence, const int NinitialIterationsWithoutClustering,
                         const int NiterationsWithSameClustering, const int maxNdrawAttempts)
 {
     int startTime = time(0);
     double logMeanLiveEvidence;
     double ratioOfRemainderToCurrentEvidence;
+    outputPathPrefix = pathPrefix;
 
+    cout << "------------------------------------------------" << endl;
+    cout << "Bayesian Inference problem has " << Ndimensions << " dimensions." << endl;
+    cout << "------------------------------------------------" << endl;
+    
 
     // Set up the random number generator. It generates integers random numbers
     // between 0 and Nobjects-1, inclusive.
@@ -135,11 +143,13 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
     // Draw the initial sample from the prior PDF. Different coordinates of a point
     // can have different priors, so these have to be sampled individually.
 
+    cout << "Doing initial sampling of parameter space..." << endl;
+    cout << endl;
     nestedSample.resize(Ndimensions, Nobjects);
-    
     int beginIndex = 0;
     int NdimensionsOfCurrentPrior;
     ArrayXXd priorSample;
+
 
     for (int i = 0; i < ptrPriors.size(); i++)
     {
@@ -210,6 +220,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
     // New points are drawn from the prior, but with the constraint that they should have a likelihood
     // that is better than the currently worst one.
 
+    cout << "Starting nested sampling..." << endl;
     bool nestedSamplingShouldContinue = true;
     bool livePointsShouldBeReduced = true;
     Niterations = 0;
@@ -527,6 +538,11 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const double maxRa
     // Add Mean Live Evidence of the remaining live sample of points to the total log(Evidence) collected
 
     logEvidence = Functions::logExpSum(logMeanLiveEvidence, logEvidence);
+    cout << endl;
+    cout << "Termination condition reached. Nested sampling completed successfully." << endl;
+    cout << "------------------------------------------------" << endl;
+    cout << "Final log(E): " << logEvidence << " +/- " << logEvidenceError << endl;
+    cout << "------------------------------------------------" << endl;
 
 
     // Compute and print total computational time

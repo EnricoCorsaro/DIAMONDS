@@ -41,7 +41,7 @@ class NestedSampler
                       Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
-        void run(LivePointsReducer &livePointsReducer, const double maxRatioOfRemainderToCurrentEvidence = 0.05, 
+        void run(LivePointsReducer &livePointsReducer, string pathPrefix, const double maxRatioOfRemainderToCurrentEvidence = 0.05, 
                  const int NinitialIterationsWithoutClustering = 100, const int NiterationsWithSameClustering = 50, 
                  const int maxNdrawAttempts = 5000);
         
