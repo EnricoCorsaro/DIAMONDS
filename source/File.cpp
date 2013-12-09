@@ -91,7 +91,7 @@ ArrayXXd File::arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, 
     string line;
     unsigned long iRow = 0;
     int iCol = 0;
-    ArrayXXd array(Nrows, Ncols);
+    ArrayXXd array = ArrayXXd::Zero(Nrows, Ncols);
   
     while(!inputFile.eof())
     {
