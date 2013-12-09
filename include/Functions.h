@@ -75,13 +75,14 @@ namespace Functions
     void topDownSplitMerge(RefArrayXd array1, RefArrayXd arrayCopy1,    // Only used within topDownMergeSort
                            RefArrayXd array2, RefArrayXd arrayCopy2, 
                            int beginIndex, int endIndex);
-    void topDownMergeSort(RefArrayXd array1, RefArrayXd array2);        // Mergesort algorithm to sort array1 in ascending order and array2 accordingly
+    void topDownMergeSort(RefArrayXd array1, RefArrayXd array2);        // Mergesort algorithm to sort array1 in ascending order and array2 according to array1
     void sortElementsDouble(RefArrayXd array1, RefArrayXd array2);   
     void sortElementsInt(vector<int> &array1, RefArrayXd array2);
 
 
     vector<int> findArrayIndicesWithinBoundaries(RefArrayXd const array, double lowerBound, double upperBound);
-    ArrayXd AkimaInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, RefArrayXd const interpolatedAbscissa);
+    int countArrayIndicesWithinBoundaries(RefArrayXd const array, double lowerBound, double upperBound);
+    ArrayXd cubicSplineInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, RefArrayXd const interpolatedAbscissaUntruncated);
 
 
     // Utility functions

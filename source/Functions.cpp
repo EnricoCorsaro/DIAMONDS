@@ -654,7 +654,7 @@ void Functions::sortElementsInt(vector<int> &array1, RefArrayXd array2)
 //
 // PURPOSE: 
 //      This function returns an array containing the indices of the input array that correspond
-//      to the elemtns contained within the input boundaries.
+//      to the elements contained within the input boundaries.
 //
 // INPUT:
 //      array:       an Eigen array whose indices we want to find
@@ -677,14 +677,15 @@ vector<int> Functions::findArrayIndicesWithinBoundaries(RefArrayXd const array, 
     assert(array.size() >= 1);
     vector<int> arrayIndicesWithinBoundaries;
 
-    for (int i = 0; i < array.size(); i++)
+    if (lowerBound < upperBound)
     {
-        if ((array(i) >= lowerBound) && (array(i) <= upperBound))
+        for (int i = 0; i < array.size(); ++i)
         {
-            arrayIndicesWithinBoundaries.push_back(i);
+            if ((array(i) >= lowerBound) && (array(i) <= upperBound))
+                arrayIndicesWithinBoundaries.push_back(i);
+            else
+                continue;
         }
-        else
-            continue;
     }
 
     return arrayIndicesWithinBoundaries;
@@ -699,163 +700,234 @@ vector<int> Functions::findArrayIndicesWithinBoundaries(RefArrayXd const array, 
 
 
 
-// Functions::AkimaInterpolation()
-// 
-// PURPOSE:
-//      This function computes an Akima cubic spline interpolation of some one-dimensional input data,
-//      given a grid of new values we want the input data to be interpolated. The algorithm is documented
-//      by Martin Rottinger, The Akima Interpolation, 1999 and by David Eberly, Akima Interpolation 
-//      for Nonuniform 1D Data, 2013.
-//      The advantage of Akima interpolation is that it is less affected by outliers in the input data
-//      and it is able to reproduce a more natural interpolation, having less wiggling with respect to the standard
-//      cubic spline interpolation.
+
+
+// Functions::countArrayIndicesWithinBoundaries()
+//
+// PURPOSE: 
+//      This function counts the number of elements of an input array that
+//      fall within the input boundaries.
 //
 // INPUT:
-//      observedAbscissa:       an Eigen array containing the input data covariates to be used for the interpolation
-//      observedOrdinate:       an Eigen array containing the corresponding dependent variables of the input abscissa
-//      interpolatedAbscissa:   an Eigen array containing the values of the covariates for which we need to compute the
-//                              interpolated dependent variables
+//      array:       an Eigen array whose indices we want to find
+//      lowerBound:  a double specifying the smallest value allowed in the search
+//      upperBound:  a double specifying the largest value allowed in the search
+//
+// OUTPUT:
+//      an integer containing the indices of the input array that correspond to its elements
+//      that fall within the input boundaries.
+//
+// REMARKS:
+//      There is no requirement for the input array to have its element sorted in any order. 
+//      The finding of the indices is done correctly independently of the sorting of the input array elements.
+//
+
+int Functions::countArrayIndicesWithinBoundaries(RefArrayXd const array, double lowerBound, double upperBound)
+{
+    // At least one point is needed
+
+    assert(array.size() >= 1);
+    int binSize = 0;
+    
+    if (lowerBound < upperBound)
+    {
+        for (int i = 0; i < array.size(); ++i)
+        {
+            if ((array(i) >= lowerBound) && (array(i) <= upperBound))
+                binSize++;
+        }
+    }
+
+    return binSize;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Functions::cubicSplineInterpolation()
+// 
+// PURPOSE:
+//      This function computes a cubic spline interpolation of one-dimensional input data,
+//      given a grid of new values we want the input data to be interpolated. The algorithm adopted is adapted
+//      from Press W. et all, Numerical Recipes: The Art of Scientific Computing, 3rd Ed., 2007.
+//
+// INPUT:
+//      observedAbscissa:                   an Eigen array containing the input data covariates to be used for the interpolation
+//      observedOrdinate:                   an Eigen array containing the corresponding dependent variables of the input abscissa
+//      interpolatedAbscissaUntruncated:    an Eigen array containing the values of the covariates for which we need to compute the
+//                                          interpolated dependent variables. These values has not necessarily to be within the 
+//                                          observed bounds
 //
 // OUTPUT:
 //      An eigen array of doubles containing the newly computed ordinates (dependent variables) of the corresponding
 //      input grid of covariates for which the interpolation was required.
 //
 // REMARKS:
-//      It is required that all input abscissa arrays contain values sorted in increasing order.
-//      Obivously, input ordinates have to be sorted accordingly to their corresponding abscissa.
-//      In addition, observed abscissa boundaries must comprise those of the interpolated abscissa.
-//      This means that no extrapolation can be done.
+//      It is required that all input abscissa arrays contain values sorted in ascending order.
+//      No extrapolation can be done.
 //
 
-ArrayXd Functions::AkimaInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, RefArrayXd const interpolatedAbscissa)
+ArrayXd Functions::cubicSplineInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, RefArrayXd const interpolatedAbscissaUntruncated)
 {
-    // Number of data points. The number of intervals is clearly size-1
+    // Number of data points
     
     int size = observedAbscissa.size();           
-    
-    
+   
+
     // Number of interpolation grid points.
     
-    int interpolatedSize = interpolatedAbscissa.size();
- 
-
-    // Since the formula requires at least 5 data points, check if array size is not below 5,
+    int interpolatedSize = interpolatedAbscissaUntruncated.size();
+    
+   
+    // Since the formula requires at least 2 data points, check if array size is not below 2,
     // if the interpolated grid has at least one point, and if input abscissa and ordinate 
     // have same number of elements.
     
-    assert(size >= 5);
+    assert(size >= 2);
     assert(interpolatedSize >= 1);
+    assert(observedOrdinate.size() == size);
 
+
+    // Check if lower bound set by observed abscissa is respected by interpolated abscissa
+   
+    assert(observedAbscissa(0) <= interpolatedAbscissaUntruncated(0));
     
-    // Check if boundaries set by observed data points are respected by interpolated points
-    
-    assert (observedAbscissa(0) <= interpolatedAbscissa(0));
-    assert (observedAbscissa(size-1) >= interpolatedAbscissa(size-1)); 
+
+    // Compare upper bound of observed and interpolated abscissas and truncate the latter if it exceeds the observed upper limit
+
+    double largestObservedAbscissa = observedAbscissa(size-1);
+    double largestInterpolatedAbscissa = interpolatedAbscissaUntruncated(interpolatedSize-1);
+    ArrayXd interpolatedAbscissa;
+
+    if (largestObservedAbscissa < largestInterpolatedAbscissa)
+    {
+        // Since upper bound of observed abscissa is lower, and the routine is not doing any extrapolation, truncate the array of
+        // interpolated abscissa at this upper bound.
+
+        int extraSize = Functions::countArrayIndicesWithinBoundaries(interpolatedAbscissaUntruncated, largestObservedAbscissa, largestInterpolatedAbscissa);
+        interpolatedSize = interpolatedSize - extraSize;
+        interpolatedAbscissa = interpolatedAbscissaUntruncated.segment(0,interpolatedSize);
+    }
+    else
+        interpolatedAbscissa = interpolatedAbscissaUntruncated;
 
 
-    // Initialize arrays of differences in both ordinate and abscissa
+    // Define some array differences
 
     ArrayXd differenceOrdinate = observedOrdinate.segment(1,size-1) - observedOrdinate.segment(0,size-1);
     ArrayXd differenceAbscissa = observedAbscissa.segment(1,size-1) - observedAbscissa.segment(0,size-1);
+    ArrayXd differenceAbscissa2 = observedAbscissa.segment(2,size-2) - observedAbscissa.segment(0,size-2);
+
+
+    // Lower bound condition for natural spline 
+
+    vector<double> secondDerivatives(size);
+    vector<double> partialSolution(size-1);
+    secondDerivatives[0] = 0.0;
+    partialSolution[0] = 0.0;
     
-
-    // Compute the ratios for all the input values. These ratios are in number "size-1" (from ratio_2 to ratio_(size))
-    // + 2 ratios to the left (ratio_0, ratio_1) + 2 ratio to the right (ratio_(size+1), ratio_(size+2)). 
-    // The total number of ratios is then size+3. 
     
-    int ratiosSize = size + 3;
-    ArrayXd ratios = ArrayXd::Zero(ratiosSize);
-    ratios.segment(2,size-1) = differenceOrdinate/differenceAbscissa;
-    ratios(1) = (2 * ratios(2)) - ratios(3);                                         // ratio_1
-    ratios(0) = (2 * ratios(1)) - ratios(2);                                         // ratio_0
-    ratios(ratiosSize-2) = (2 * ratios(ratiosSize-3)) - ratios(ratiosSize-4);        // ratio_(size+1)
-    ratios(ratiosSize-1) = (2 * ratios(ratiosSize-2)) - ratios(ratiosSize-3);        // ratio_(size+2)
+    // Do tridiagonal decomposition for computing second derivatives of observed ordinate
+    
+    ArrayXd sigma = differenceAbscissa.segment(0,size-2)/differenceAbscissa2.segment(0,size-2);
+    double beta;
 
     
-    // Compute weights to be used in the formula of the first derivatives. 
-    // For each derivative, two weights are required.
+    // Forward computation of partial solutions in tridiagonal system
 
-    ArrayXd weightsLeft(size);
-    ArrayXd weightsRight(size);
-    weightsLeft = (ratios.segment(3,size) - ratios.segment(2,size)).abs();
-    weightsRight = (ratios.segment(1,size) - ratios.segment(0,size)).abs();
-
-
-    // Compute the first derivatives at each data point
-
-    vector<double> firstDerivatives(size);
-
-    for (int i = 0; i < size; i++)
+    for (int i = 1; i < size-1; ++i)
     {
-        if ((weightsLeft(i) == weightsRight(i)) == 0)
-        {
-            // Both weights are zero, hence adopt the arithmetic average
-
-            firstDerivatives[i] = 0.5 * ( ratios(i+1) + ratios(i+2) );
-        }
-        else
-        {
-            // Since at least one of the weights is != 0, adopt the Akima rule for the first derivative
-
-            firstDerivatives[i] = (weightsLeft(i)*ratios(i+1) + weightsRight(i)*ratios(i+2)) /
-                                  (weightsLeft(i) + weightsRight(i));
-        }
+        beta = sigma(i-1) * secondDerivatives[i-1] + 2.0;
+        secondDerivatives[i] = (sigma(i-1) - 1.0)/beta;
+        partialSolution[i] = differenceOrdinate(i)/differenceAbscissa(i) - differenceOrdinate(i-1)/differenceAbscissa(i-1);
+        partialSolution[i] = (6.0*partialSolution[i]/differenceAbscissa2(i-1)-sigma(i-1)*partialSolution[i-1])/beta;
     }
+
     
+    // Upper bound condition for natural spline
+    
+    secondDerivatives[size-1] = 0.0;
 
-    // Start a loop over each bin of the input data point, i.e. between 
-    // observedOrdinate(i) and observedOrdinate(i+1)
 
-    ArrayXd interpolatedOrdinate(interpolatedSize);
-    ArrayXd remainingInterpolatedAbscissa = interpolatedAbscissa;       // The remaining part of the array of interpolated abscissa
-    int cumulatedBinSize = 0;               // The cumulated number of interpolated points from the beginning
+    // Backward substitution
 
-    for (int i = 0; i < size-1; i++)
+    for (int k = (size-2); k >= 0; --k)
     {
-        // For each bin given by the input data points array (we have size-1 bins in total), 
-        // compute the coefficients of the corresponding cubic polynomial and 
-        // the new ordinates for the corresponding interpolated abscissa.
-        
-        double coeff0 = observedOrdinate(i);
-        double coeff1 = firstDerivatives[i];
-        double coeff2 = 3*(observedOrdinate(i+1) - observedOrdinate(i) - firstDerivatives[i] ) - 
-                        (firstDerivatives[i+1] - firstDerivatives[i]);
-        double coeff3 = (firstDerivatives[i+1] - firstDerivatives[i]) - 2*(observedOrdinate(i+1) - 
-                        observedOrdinate(i) - firstDerivatives[i]);
+        secondDerivatives[k] = secondDerivatives[k]*secondDerivatives[k+1]+partialSolution[k];
+    }
 
 
+    // Initialize arrays of differences in both ordinate and abscissa
+    
+    ArrayXd interpolatedOrdinate = ArrayXd::Zero(interpolatedSize);
+    ArrayXd remainingInterpolatedAbscissa = interpolatedAbscissa;       // The remaining part of the array of interpolated abscissa
+    int cumulatedBinSize = 0;                                           // The cumulated number of interpolated points from the beginning
+    int i = 0;                                                          // Bin counter
+
+    while ((i < size-1) && (cumulatedBinSize < interpolatedSize))
+    {
         // Find which values of interpolatedAbscissa are containined within the selected bin of observedAbscissa.
         // Since elements in interpolatedAbscissa are monotonically increasing, we cut the input array each time
         // we identify the elements of the current bin. This allows to speed up the process.
 
-        double lowerBound = observedAbscissa(i);
-        double upperBound = observedAbscissa(i+1);
-        vector<int> selectedIndices = findArrayIndicesWithinBoundaries(remainingInterpolatedAbscissa, lowerBound, upperBound);
+        double lowerAbscissa = observedAbscissa(i);
+        double upperAbscissa = observedAbscissa(i+1);
 
-        int binSize = selectedIndices.size();       // Total number of interpolated points falling in the current bin
-        double binLength = differenceAbscissa(i);
-        ArrayXd interpolatedAbscissaInCurrentBin = remainingInterpolatedAbscissa.segment(0, binSize);
 
+        // Find total number of interpolated points falling in the current bin
+
+        int binSize = Functions::countArrayIndicesWithinBoundaries(remainingInterpolatedAbscissa, lowerAbscissa, upperAbscissa);
+      
+
+        // Do interpolation only if interpolated points are found within the bin
+
+        if (binSize > 0)
+        {
+            double lowerOrdinate = observedOrdinate(i);
+            double upperOrdinate = observedOrdinate(i+1);
+            double denominator = differenceAbscissa(i);
+            double upperSecondDerivative = secondDerivatives[i+1];
+            double lowerSecondDerivative = secondDerivatives[i];
+            ArrayXd interpolatedAbscissaInCurrentBin = remainingInterpolatedAbscissa.segment(0, binSize);
+            ArrayXd interpolatedOrdinateInCurrentBin = ArrayXd::Zero(binSize);
+
+
+            // Compute coefficients for cubic spline interpolation function
+
+            ArrayXd a = (upperAbscissa - interpolatedAbscissaInCurrentBin) / denominator;
+            ArrayXd b = 1.0 - a;
+            ArrayXd c = (1.0/6.0) * (a.cube() - a)*denominator*denominator;
+            ArrayXd d = (1.0/6.0) * (b.cube() - b)*denominator*denominator;
+            interpolatedOrdinateInCurrentBin = a*lowerOrdinate + b*upperOrdinate + c*lowerSecondDerivative + d*upperSecondDerivative;
+
+                
+            // Merge bin ordinate into total array of ordinate
         
-        // Compute interpolated ordinates for the current bin
+            interpolatedOrdinate.segment(cumulatedBinSize, binSize) = interpolatedOrdinateInCurrentBin;
 
-        ArrayXd normalizedAbscissa = (interpolatedAbscissaInCurrentBin - lowerBound)/binLength;
-        ArrayXd interpolatedOrdinateInCurrentBin = coeff0 + coeff1*normalizedAbscissa + coeff2*normalizedAbscissa.square() +
-                                                   coeff3*normalizedAbscissa.cube();
-       
-        
-        // Merge bin ordinate into total array of ordinate
 
-        interpolatedOrdinate.segment(cumulatedBinSize, binSize) = interpolatedOrdinateInCurrentBin;
+            // Reduce size of array remainingInterpolatedAbscissa by binSize elements and initialize the array
+            // with remaining part of interpolatedAbscissa
         
+            int currentRemainingSize = interpolatedSize - cumulatedBinSize;
+            remainingInterpolatedAbscissa.resize(currentRemainingSize - binSize);
+            cumulatedBinSize += binSize;
+            remainingInterpolatedAbscissa = interpolatedAbscissa.segment(cumulatedBinSize, interpolatedSize-cumulatedBinSize);
+        }  
 
-        // Reduce size of array remainingInterpolatedAbscissa by binSize elements and initialize the array
-        // with remaining part of interpolatedAbscissa
-        
-        int currentRemainingSize = remainingInterpolatedAbscissa.size();
-        remainingInterpolatedAbscissa.resize(currentRemainingSize - binSize);
-        cumulatedBinSize += binSize;
-        remainingInterpolatedAbscissa = interpolatedAbscissa.segment(cumulatedBinSize, interpolatedSize-cumulatedBinSize);
+
+        // Move to next bin
+
+        ++i;
     }
 
     return interpolatedOrdinate;
