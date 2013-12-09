@@ -67,6 +67,7 @@ class NestedSampler
         ArrayXXd getPosteriorSample();
         ArrayXd getLogLikelihoodOfPosteriorSample();
         ArrayXd getLogWeightOfPosteriorSample();
+        string getOutputPathPrefix();
 
 
     protected:

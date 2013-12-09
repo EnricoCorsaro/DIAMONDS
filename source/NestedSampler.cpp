@@ -1115,3 +1115,28 @@ ArrayXd NestedSampler::getLogWeightOfPosteriorSample()
     return logWeightOfPosteriorSample;
 }
 
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getOutputPathPrefix()
+//
+// PURPOSE:
+//      Get private data member outputPathPrefix.
+//
+// OUTPUT:
+//      A string containing the full path of the output folder where all results
+//      have to be saved.
+//
+
+string NestedSampler::getOutputPathPrefix()
+{
+    return outputPathPrefix;
+}
