@@ -42,7 +42,8 @@ class Results
         void writeLogWeightsToFile(string fullPath);
         void writeEvidenceInformationToFile(string fullPath);
         void writePosteriorProbabilityToFile(string fullPath);
-        void writeParametersSummaryToFile(string fullPath, const double credibleLevel = 68.27);
+        void writeParametersSummaryToFile(string pathPrefix, string outputFileName, 
+                                          const double credibleLevel = 68.27, const bool writeMarginalDistribution = true);
         void writeObjectsIdentificationToFile(){};          // TO DO
 
 
