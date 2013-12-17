@@ -13,7 +13,6 @@
 #include <cfloat>
 #include <cmath>
 #include <string>
-#include <iostream>
 #include <iomanip>
 #include <cassert>
 #include <limits>
@@ -54,6 +53,17 @@ class Results
         void writePosteriorProbabilityToFile(string fullPath);
         void writeParametersSummaryToFile(string fullPath, const double credibleLevel = 68.27);
         void writeObjectsIdentificationToFile(){};          // TO DO
+
+
+    protected:
+
+        double marginalDistributionMode;
+        ArrayXd parameterValues;
+        ArrayXd marginalDistribution;
+        ArrayXd parameterValuesRebinned;
+        ArrayXd parameterValuesInterpolated;
+        ArrayXd marginalDistributionRebinned;
+        ArrayXd marginalDistributionInterpolated;
 
 
     private:
