@@ -129,11 +129,14 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
     double ratioOfRemainderToCurrentEvidence;
     outputPathPrefix = pathPrefix;
 
-    cout << "------------------------------------------------" << endl;
-    cout << "Bayesian Inference problem has " << Ndimensions << " dimensions." << endl;
-    cout << "------------------------------------------------" << endl;
+    if (printOnTheScreen)
+    {
+        cerr << "------------------------------------------------" << endl;
+        cerr << " Bayesian Inference problem has " << Ndimensions << " dimensions." << endl;
+        cerr << "------------------------------------------------" << endl;
+        cerr << endl;
+    }
     
-
     // Set up the random number generator. It generates integers random numbers
     // between 0 and Nobjects-1, inclusive.
 
@@ -142,14 +145,19 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
 
     // Draw the initial sample from the prior PDF. Different coordinates of a point
     // can have different priors, so these have to be sampled individually.
-
-    cout << "Doing initial sampling of parameter space..." << endl;
-    cout << endl;
+    
+    if (printOnTheScreen)
+    {
+        cerr << "------------------------------------------------" << endl;
+        cerr << " Doing initial sampling of parameter space..." << endl;
+        cerr << "------------------------------------------------" << endl;
+        cerr << endl;
+    }
+        
     nestedSample.resize(Ndimensions, Nobjects);
     int beginIndex = 0;
     int NdimensionsOfCurrentPrior;
     ArrayXXd priorSample;
-
 
     for (int i = 0; i < ptrPriors.size(); i++)
     {
@@ -219,8 +227,15 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
     // Start the nested sampling loop. Each iteration, we'll replace the point with the worst likelihood.
     // New points are drawn from the prior, but with the constraint that they should have a likelihood
     // that is better than the currently worst one.
-
-    cout << "Starting nested sampling..." << endl;
+    
+    if (printOnTheScreen)
+    {
+        cerr << "-------------------------------" << endl;
+        cerr << " Starting nested sampling...   " << endl;
+        cerr << "-------------------------------" << endl;
+        cerr << endl;
+    }
+        
     bool nestedSamplingShouldContinue = true;
     bool livePointsShouldBeReduced = true;
     Niterations = 0;
@@ -437,7 +452,10 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
         // reduces to the standard case when the new number of live points is the same
         // as the previous one.
 
-        // double logWeight = logWidthInPriorMass;              // Use this line for simple rectangular rule
+        // ---- Use the line below for simple rectangular rule ----
+        // double logWeight = logWidthInPriorMass;
+        // --------------------------------------------------------
+        
         double logStretchingFactor = Niterations*((1.0/Nobjects) - (1.0/updatedNobjects)); 
         logWidthInPriorMass = logRemainingPriorMass + Functions::logExpDifference(0.0, logStretchingFactor - 1.0/updatedNobjects);  // X_i - X_(i+1)
 
@@ -538,14 +556,15 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
     // Add Mean Live Evidence of the remaining live sample of points to the total log(Evidence) collected
 
     logEvidence = Functions::logExpSum(logMeanLiveEvidence, logEvidence);
-    cout << endl;
-    cout << "Termination condition reached. Nested sampling completed successfully." << endl;
-    cout << "------------------------------------------------" << endl;
-    cout << "Final log(E): " << logEvidence << " +/- " << logEvidenceError << endl;
-    cout << "------------------------------------------------" << endl;
+    
+    if (printOnTheScreen)
+    {
+        cerr << "------------------------------------------------" << endl;
+        cerr << " Final log(E): " << logEvidence << " +/- " << logEvidenceError << endl;
+        cerr << "------------------------------------------------" << endl;
+    }
 
-
-    // Compute and print total computational time
+    // Print total computational time
 
     printComputationalTime(startTime);
 }
@@ -603,9 +622,9 @@ void NestedSampler::removeLivePointsFromSample(const vector<int> &indicesOfLiveP
         logLikelihood(NobjectsAtCurrentIteration-1) = logLikelihood(indicesOfLivePointsToRemove[m]);
         logLikelihood(indicesOfLivePointsToRemove[m]) = logLikelihoodCopy;
         logLikelihood.conservativeResize(NobjectsAtCurrentIteration-1);
-              
+        
 
-        // In the case of clusterIndices also subtract selected live point from 
+        // In the case of clusterIndices also subtract selected live point from
         // corresponding clusterSizes in order to update the size of the cluster 
         // the live point belongs to.
                 
@@ -620,8 +639,6 @@ void NestedSampler::removeLivePointsFromSample(const vector<int> &indicesOfLiveP
                 
         --NobjectsAtCurrentIteration;
     }
-
-
 }
 
 
@@ -656,25 +673,25 @@ void NestedSampler::printComputationalTime(const double startTime)
 
     if (computationalTime < 60)
     {
-        cerr << "Total Computational Time: " << computationalTime << " seconds" << endl;
+        cerr << " Total Computational Time: " << computationalTime << " seconds" << endl;
     }
     else 
         if ((computationalTime >= 60) && (computationalTime < 60*60))
         {
             computationalTime = computationalTime/60.;
-            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " minutes" << endl;
+            cerr << " Total Computational Time: " << setprecision(3) << computationalTime << " minutes" << endl;
         }
     else 
         if (computationalTime >= 60*60)
         {
             computationalTime = computationalTime/(60.*60.);
-            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " hours" << endl;
+            cerr << " Total Computational Time: " << setprecision(3) << computationalTime << " hours" << endl;
         }
     else 
         if (computationalTime >= 60*60*24)
         {
             computationalTime = computationalTime/(60.*60.*24.);
-            cerr << "Total Computational Time: " << setprecision(3) << computationalTime << " days" << endl;
+            cerr << " Total Computational Time: " << setprecision(3) << computationalTime << " days" << endl;
         }
 }
 
