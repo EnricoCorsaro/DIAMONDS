@@ -92,6 +92,244 @@ ArrayXd Results::posteriorProbability()
 
 
 
+
+// Results:writeMarginalDistributionToFile()
+//
+// PURPOSE:
+//      Writes the interpolated grid of parameter values and its 
+//      corresponding marginal distribution as derived from parameterEstimation()
+//      in an output ASCII file of two-columns format. 
+//      This information can then be used for plotting the marginal distribution  
+//      and for computing further operations on it, such as the derivation of error bars on the free parameter.
+//
+// INPUT:
+//      pathPrefix:                 a string variable containing the desired path for saving the output file.
+//      parameterNumber:            an integer containing the number of the free parameter to save, together with
+//                                  its marginal distribution.
+//      
+// OUTPUT:
+//      void.
+// 
+
+void Results::writeMarginalDistributionToFile(string pathPrefix, const int parameterNumber)
+{
+    // Input arrays must contain the same number of elements 
+
+    int Nrows = parameterValuesInterpolated.size();
+    assert(Nrows == marginalDistributionInterpolated.size());
+
+    ArrayXXd parameterDistribution(Nrows,2);
+    parameterDistribution.col(0) = parameterValuesInterpolated;
+    parameterDistribution.col(1) = marginalDistributionInterpolated;
+
+
+    // Include the row number with preceding zeros in the filename
+        
+    ostringstream numberString;
+    numberString << setfill('0') << setw(3) << parameterNumber;
+    string outputFileName = "marginal";
+    string fullPath = pathPrefix + outputFileName + numberString.str() + ".txt";
+    
+    
+    // Write the two-columns array in an ASCII file
+
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+    outputFile << "# Marginal distribution of Akima-interpolated points from nested sampling." << endl;
+    outputFile << "# Column #1: Parameter values" << endl;
+    outputFile << "# Column #2: Marginal distribution values (probability only)" << endl;
+    outputFile << scientific << setprecision(9);
+    File::arrayXXdToFile(outputFile, parameterDistribution);
+    outputFile.close();
+}
+
+
+
+
+
+
+
+
+
+
+
+
+// Results:computeCredibleLimits()
+//
+// PURPOSE:
+//      Computes the shortest Bayesian credible intervals (CI) from a marginal distribution.
+//
+// INPUT:
+//      credibleLevel:              a double number providing the desired credible 
+//                                  level to be computed.
+//      Nbins:                      an integer specifying the number of points of the distribution to interpolate
+//      NinterpolationsPerBin:      an integer containing the number of desired points to interpolate between.
+//                                  two consecutive input data points.
+//      
+// OUTPUT:
+//      A one-dimensional Eigen Array containing the lower and upper credible limits, i.e. the boundaries
+//      of the shortest credible intervals identified.
+//
+// REMARK:
+//      The input number of interpolated points is to be considered as an estimate of the real number of interpolations occurring.
+//      This is because the number of interpolations also depends on the spacing of the input grid for each bin, which is
+//      not required to be regular.
+//
+
+ArrayXd Results::computeCredibleLimits(const double credibleLevel, const int Nbins, const int NinterpolationsPerBin)
+{
+    // Interpolate rebinned marginal distribution by using a NinterpolationsPerBin times finer grid. 
+    // This allows for a better computation of the credible intervals. Note that while the rebinned 
+    // marginal distribution has still sum equal to 1, the interpolated marginal distribution must 
+    // be renormalized after interpolation. This will scale down the amplitudes of a factor of the order of NinterpolationsPerBin. 
+    // Such a rescaling has no effect on the computation of the credible intervals,
+    // which instead depend upon the relative variation from point to point in the distribution.
+
+    int Ninterpolations = Nbins*NinterpolationsPerBin;
+
+
+    // Take the average bin width of the rebinned data for computing the bin width of the interpolated data. This information is more
+    // realistic as it better resembles the original sampling from the nesting process.
+
+    double binWidth = (parameterValuesRebinned.segment(1, Nbins-1) - parameterValuesRebinned.segment(0, Nbins-1)).sum() / (Nbins*1.0);
+    double interpolatedBinWidth = binWidth/(NinterpolationsPerBin*1.0);
+    double parameterMinimumRebinned = parameterValuesRebinned.minCoeff();
+
+    
+    // Initialize the abscissa of the interpolated distribution
+    
+    parameterValuesInterpolated.resize(Ninterpolations);
+
+    for (int j = 0; j < Ninterpolations; ++j)
+    {
+        parameterValuesInterpolated(j) = parameterMinimumRebinned + j*interpolatedBinWidth;
+    }
+
+
+    // Apply a cubic spline interpolation for the new interpolated values of the marginal distribution
+
+    marginalDistributionInterpolated = Functions::cubicSplineInterpolation(parameterValuesRebinned, marginalDistributionRebinned, parameterValuesInterpolated);
+
+
+    // Check if negative values (even if small) are present and if so, set them to zero.
+    // This may occur in the case of small fluctuations around zero from the cubic spline. Probabilities cannot be negative.
+
+    vector<int> selectedIndices = Functions::findArrayIndicesWithinBoundaries(marginalDistributionInterpolated, -1e99, -1e-99);
+    
+    for (int i = 0; i < selectedIndices.size(); ++i)
+    {
+        marginalDistributionInterpolated(selectedIndices[i]) = 0.0;
+    }
+        
+
+    // Renormalize interpolated marginal distribution by the sum of its elements
+
+    marginalDistributionInterpolated /= marginalDistributionInterpolated.sum();
+
+
+    // Resize corresponding abscissa because total number of interpolated bins might be changed after interpolation (e.g. if truncated)
+
+    if (marginalDistributionInterpolated.size() != Ninterpolations)
+    {
+        Ninterpolations = marginalDistributionInterpolated.size();
+        parameterValuesInterpolated.conservativeResize(Ninterpolations);
+    }
+
+
+    // Compute the "shortest" credible intervals (CI) and save the corresponding credible limits
+
+    int max = 0;
+    marginalDistributionMode = marginalDistributionInterpolated.maxCoeff(&max);
+    ArrayXd marginalDistributionLeft(max + 1);       // Marginal distribution up to mode value (included)
+    ArrayXd parameterValuesLeft(max + 1);            // Parameter range up to mode value (included)
+    double limitProbabilityRight = marginalDistributionInterpolated(max);
+    double limitParameterRight = parameterValuesInterpolated(max);
+    double limitProbabilityLeft = limitProbabilityRight;
+    double limitParameterLeft = limitParameterRight;
+
+
+    // Difference distribution to find point belonging to the distribution to the left
+    // of the mode having closest probability to that identified in the part of the
+    // distribution to the right of the mode.
+
+    ArrayXd marginalDifferenceLeft = ArrayXd::Zero(max + 1);          
+                                                
+
+    // Copy left-hand part of total marginal distributon into separate array.
+    // Also copy the corresponding parameter values inro a separate array.
+    // Since parameterValues is already sorted in ascending order this can be done quickly.
+
+    marginalDistributionLeft = marginalDistributionInterpolated.segment(0, max + 1);
+    parameterValuesLeft = parameterValuesInterpolated.segment(0, max + 1);
+
+
+    // Count number of steps (bins) in the distribution to the right side of its modal value.
+    // Define the limit probability on the right-hand distribution 
+    // and the corresponding value of the parameter.
+    // Then compute the difference of the left-hand distribution with the right limit probability.
+    // Finally find the point in the left part having closest probability to the right limit,
+    // save its probability and the corresponding value of the parameter.
+    // Cumulate the probability within the range and repeat the process until 
+    // probability >= probability(credibleLevel).
+
+    int stepRight = 0;          
+    int min = 0;
+    double credibleLevelFraction = credibleLevel/100.;
+    double totalProbability = 0.0;
+
+    while (totalProbability < (credibleLevelFraction) && (max + stepRight < Ninterpolations))             
+    {
+        totalProbability = 0.0;
+
+
+        // Find the probability and the corresponding value of the parameter at the right edge of the interval
+
+        limitProbabilityRight = marginalDistributionInterpolated(max + stepRight);  
+        limitParameterRight = parameterValuesInterpolated(max + stepRight);         
+
+            
+        // Find which point in the left part is the closest in probability to that of the right edge.
+
+        marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();                                      
+        limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);       
+
+
+        // Save the point and its probability as the left edge of the search interval
+
+        limitProbabilityLeft = marginalDistributionLeft(min);           
+        limitParameterLeft = parameterValuesLeft(min);                 
+
+
+        // Cumulate the probability within the identified interval
+
+        int intervalSize = max + stepRight + 1 - min;
+        totalProbability = marginalDistributionInterpolated.segment(min, intervalSize).sum();
+
+
+        // Move one step further to the right
+
+        ++stepRight;
+    }
+
+    ArrayXd credibleLimits(2);
+    credibleLimits << limitParameterLeft, limitParameterRight; 
+    
+    return credibleLimits;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // Results:parameterEstimation()
 //
 // PURPOSE:
