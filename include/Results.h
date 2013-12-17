@@ -62,6 +62,8 @@ class Results
         NestedSampler &nestedSampler;
        
         ArrayXd posteriorProbability();
+        void writeMarginalDistributionToFile(string pathPrefix, const int parameterNumber);
+        ArrayXd computeCredibleLimits(const double credibleLevel, const int Nbins, const int NinterpolationsPerBin = 10);
         ArrayXXd parameterEstimation(string pathPrefix, const double credibleLevel, const bool writeMarginalDistribution);
 
 };
