@@ -529,3 +529,54 @@ vector<Ellipsoid> MultiEllipsoidSampler::getEllipsoids()
 {
     return ellipsoids;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// MultiEllipsoidSampler::getInitialEnlargementFraction()
+//
+// PURPOSE:
+//      Gets private data member initialEnlargementFraction.
+//
+// OUTPUT:
+//      a double containing the value of the initial enlargement fraction
+//      of the ellipsoids.
+//
+
+double MultiEllipsoidSampler::getInitialEnlargementFraction()
+{
+    return initialEnlargementFraction;
+}
+
+
+
+
+
+
+
+
+
+
+
+// MultiEllipsoidSampler::getShrinkingRate()
+//
+// PURPOSE:
+//      Gets private data member shrinkingRate.
+//
+// OUTPUT:
+//      a double containing the value of the shrinking rate
+//      of the ellipsoids.
+//
+
+double MultiEllipsoidSampler::getShrinkingRate()
+{
+    return shrinkingRate;
+}

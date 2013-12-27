@@ -36,7 +36,9 @@ class MultiEllipsoidSampler : public NestedSampler
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) override; 
         
         vector<Ellipsoid> getEllipsoids();
-   
+        double getInitialEnlargementFraction();
+        double getShrinkingRate();
+
 
     protected:
       
