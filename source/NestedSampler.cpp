@@ -36,6 +36,7 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobje
   logCumulatedPriorMass(numeric_limits<double>::lowest()),
   logRemainingPriorMass(0.0),
   Niterations(0),
+  updatedNobjects(initialNobjects),
   initialNobjects(initialNobjects),
   informationGain(0.0), 
   logEvidence(numeric_limits<double>::lowest())
@@ -76,6 +77,16 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobje
 NestedSampler::~NestedSampler()
 {
 }
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -225,7 +236,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
     // The nested sampling will involve finding clusters in the sample.
     // This will require the containers clusterIndices and clusterSizes.
 
-    int Nclusters = 0;
+    unsigned int Nclusters = 0;
     vector<int> clusterIndices(Nobjects);           // clusterIndices must have the same number of elements as the number of live points
     vector<int> clusterSizes;                       // The number of live points counted in each cluster is updated everytime one live point
                                                     // is removed from the sample.
@@ -244,7 +255,8 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
     }
         
     bool nestedSamplingShouldContinue = true;
-    bool livePointsShouldBeReduced = true;
+    bool livePointsShouldBeReduced = (initialNobjects > minNobjects);       // Update live points only if required
+    
     Niterations = 0;
 
     do 
@@ -512,13 +524,14 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
         {
             if ((Niterations % 50) == 0)
             {
-                cerr << "Nit: " << Niterations << "   Ncl: " << Nclusters 
-                    << "   Nlive: " << Nobjects
-                    << "   CPM: " << exp(logCumulatedPriorMass)
-                    << "   Ratio: " << ratioOfRemainderToCurrentEvidence
-                    << "   log(E): " << logEvidence 
-                    << "   IG: " << informationGain
-                    << endl;
+                cerr << "Nit: " << Niterations 
+                     << "   Ncl: " << Nclusters 
+                     << "   Nlive: " << Nobjects
+                     << "   CPM: " << exp(logCumulatedPriorMass)
+                     << "   Ratio: " << ratioOfRemainderToCurrentEvidence
+                     << "   log(E): " << logEvidence 
+                     << "   IG: " << informationGain
+                     << endl;
             }
         }
 
@@ -539,7 +552,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
         
         Niterations++;
     }
-    while (nestedSamplingShouldContinue);  
+    while (nestedSamplingShouldContinue);
 
 
     // Append information to existing output file and close stream afterwards
@@ -551,7 +564,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
     // Add the remaining live sample of points to our collection of posterior points 
     // (i.e parameter coordinates, likelihood values and weights)
 
-    int oldNpointsInPosterior = posteriorSample.cols();
+    unsigned int oldNpointsInPosterior = posteriorSample.cols();
     
     posteriorSample.conservativeResize(Ndimensions, oldNpointsInPosterior + Nobjects);          // First make enough room
     posteriorSample.block(0, oldNpointsInPosterior, Ndimensions, Nobjects) = nestedSample;      // Then copy the live sample to the posterior array
@@ -772,10 +785,36 @@ void NestedSampler::printComputationalTime(const double startTime)
 //      nested loop iterations.
 //
 
-int NestedSampler::getNiterations()
+unsigned int NestedSampler::getNiterations()
 {
     return Niterations;
 }
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getNdimensions()
+//
+// PURPOSE:
+//      Get private data member Ndimensions.
+//
+// OUTPUT:
+//      An integer containing the total number of
+//      dimensions of the inference problem.
+//
+
+unsigned int NestedSampler::getNdimensions()
+{
+    return Ndimensions;
+}
+
 
 
 
@@ -797,7 +836,7 @@ int NestedSampler::getNiterations()
 //      live points.
 //
 
-int NestedSampler::getNobjects()
+unsigned int NestedSampler::getNobjects()
 {
     return Nobjects;
 }
@@ -823,7 +862,7 @@ int NestedSampler::getNobjects()
 //      live points.
 //
 
-int NestedSampler::getInitialNobjects()
+unsigned int NestedSampler::getInitialNobjects()
 {
     return initialNobjects;
 }
@@ -848,7 +887,7 @@ int NestedSampler::getInitialNobjects()
 //      live points allowed.
 //
 
-int NestedSampler::getMinNobjects()
+unsigned int NestedSampler::getMinNobjects()
 {
     return minNobjects;
 }

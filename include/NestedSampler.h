@@ -54,6 +54,7 @@ class NestedSampler
         // Define the set of get functions
 
         unsigned int getNiterations();
+        unsigned int getNdimensions();
         unsigned int getNobjects();
         unsigned int getInitialNobjects();
         unsigned int getMinNobjects();
