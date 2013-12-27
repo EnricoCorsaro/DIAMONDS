@@ -23,6 +23,7 @@
 #include "Metric.h"
 #include "Clusterer.h"
 #include "LivePointsReducer.h"
+#include "File.h"
 
 
 using namespace std;
@@ -84,6 +85,7 @@ class NestedSampler
         double logCumulatedPriorMass;           // The total (cumulated) prior mass at a given nested iteration
         double logRemainingPriorMass;           // The remaining width in prior mass at a given nested iteration (log X)
         vector<int> NobjectsPerIteration;       // A vector that stores the number of live points used at each iteration of the nesting process
+        ofstream outputFile;                     // An output file stream to save configuring parameters also from derived classes 
         
         mt19937 engine;
         
@@ -107,6 +109,8 @@ class NestedSampler
         ArrayXd logLikelihoodOfPosteriorSample;  // log(Likelihood) values corresponding to the posterior sample 
         ArrayXd logWeightOfPosteriorSample;      // log(Weights) = log(Likelihood) + log(dX) corresponding to the posterior sample
 
+        void writeConfiguringParametersToFile(const int NinitialIterationsWithoutClustering, const int NiterationsWithSameClustering, 
+                                              const int maxNdrawAttempts, const double terminationFactor, string fileName = "configuringParameters.txt");
         void removeLivePointsFromSample(const vector<int> &indicesOfLivePointsToRemove, 
                                         vector<int> &clusterIndices, vector<int> &clusterSizes);
         void printComputationalTime(const double startTime);

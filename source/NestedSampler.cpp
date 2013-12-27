@@ -136,7 +136,14 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
         cerr << "------------------------------------------------" << endl;
         cerr << endl;
     }
-    
+
+
+    // Save configuring parameters to an output ASCII file
+
+    writeConfiguringParametersToFile(NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
+                                     maxNdrawAttempts, maxRatioOfRemainderToCurrentEvidence);
+
+
     // Set up the random number generator. It generates integers random numbers
     // between 0 and Nobjects-1, inclusive.
 
@@ -534,7 +541,13 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
     }
     while (nestedSamplingShouldContinue);  
 
+
+    // Append information to existing output file and close stream afterwards
     
+    outputFile << "Niterations: " << Niterations << endl;
+    outputFile.close();
+
+
     // Add the remaining live sample of points to our collection of posterior points 
     // (i.e parameter coordinates, likelihood values and weights)
 
@@ -569,6 +582,50 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix,
     printComputationalTime(startTime);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::writeConfiguringParametersToFile()
+//
+// PURPOSE: 
+//      Saves all configuring parameters of nested sampling to an output ASCII file.
+//
+// INPUT:
+//      NinitialIterationsWithoutClustering;    The first N iterations, we assume that there is only 1 cluster.
+//      NiterationsWithSameClustering;          Clustering is only happening every X iterations.
+//      maxNdrawAttempts;                       Maximum number of attempts when trying to draw a new sampling point.
+//      terminationFactor;                      Termination factor for nesting loop.
+//
+// OUTPUT:
+//      void
+//
+// REMARKS:
+//      - the stream is not closed afterwards
+//
+
+void NestedSampler::writeConfiguringParametersToFile(const int NinitialIterationsWithoutClustering, const int NiterationsWithSameClustering, 
+                                      const int maxNdrawAttempts, const double terminationFactor, string fileName)
+{
+    string fullPath = outputPathPrefix + fileName;
+    File::openOutputFile(outputFile, fullPath);
+    
+    outputFile << "Ndimensions: " << Ndimensions << endl;
+    outputFile << "Initial(Maximum) Nobjects: " << initialNobjects << endl;
+    outputFile << "Minimum Nobjects: " << minNobjects << endl;
+    outputFile << "NinitialIterationsWithoutClustering: " << NinitialIterationsWithoutClustering << endl;
+    outputFile << "NiterationsWithSameClustering: " << NiterationsWithSameClustering << endl;
+    outputFile << "maxNdrawAttempts: " << maxNdrawAttempts << endl;
+    outputFile << "terminationFactor: " << terminationFactor << endl;
+    
+}
 
 
 
