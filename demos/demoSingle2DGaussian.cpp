@@ -18,8 +18,8 @@
 #include "Ellipsoid.h"
 #include "ZeroModel.h"
 #include "FerozReducer.h"
+#include "ExponentialReducer.h"
 #include "demoSingle2DGaussian.h"
-
 
 
 int main(int argc, char *argv[])
@@ -35,7 +35,20 @@ int main(int argc, char *argv[])
     ArrayXd observations;
 
 
-    // Setting Prior distribution and parameter space
+    // -------------------------------------------------------------------
+    // ----- First step. Set up the models for the inference problem ----- 
+    // ------------------------------------------------------------------- 
+
+    // Set up a dummy model. This won't be used because we're computing
+    // the Likelihood directly, but the Likelihood nevertheless expects a model in 
+    // its constructor.
+    
+    ZeroModel model(covariates);
+
+
+    // -------------------------------------------------------
+    // ----- Second step. Set up all prior distributions -----
+    // -------------------------------------------------------
 
     int Ndimensions = 2;        // Number of free parameters (dimensions) of the problem
     vector<Prior*> ptrPriors(1);
@@ -44,21 +57,19 @@ int main(int argc, char *argv[])
     parametersMinima <<  0.0, 10.0;         // Centroid x direction, Centroid y direction
     parametersMaxima << 20.0, 30.0;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
-    ptrPriors[0] = &uniformPrior;
-    
-    // Set up a dummy model. This won't be used because we're computing
-    // the Likelihood directly, but the Likelihood nevertheless expects a model in 
-    // its constructor.
-    
-    ZeroModel model(covariates);
+    ptrPriors[0] = &uniformPrior;   
 
 
-    // Set up the likelihood function to be used
-    
+    // -----------------------------------------------------------------
+    // ----- Third step. Set up the likelihood function to be used -----
+    // -----------------------------------------------------------------
+
     Single2DGaussianLikelihood likelihood(observations, model);
     
 
-    // Set up the K-means clusterer using an Euclidean metric
+    // -------------------------------------------------------------------------------
+    // ----- Fourth step. Set up the K-means clusterer using an Euclidean metric -----
+    // -------------------------------------------------------------------------------
 
     EuclideanMetric myMetric;
     int minNclusters = 1;
@@ -69,7 +80,9 @@ int main(int argc, char *argv[])
     KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
-    // Configure nested sampling
+    // ---------------------------------------------------------------------
+    // ----- Sixth step. Configure and start nested sampling inference -----
+    // ---------------------------------------------------------------------
     
     bool printOnTheScreen = true;                   // Print results on the screen
     int initialNobjects = 10000;                      // Initial number of active points evolving within the nested sampling process.
@@ -85,16 +98,6 @@ int main(int argc, char *argv[])
     double terminationFactor = 0.01;                // Termination factor for nesting loop.
 
 
-    // Save configuring parameters into an ASCII file
-
-    ofstream outputFile;
-    string fullPath = "demoSingle2DGaussian_configuringParameters.txt";
-    File::openOutputFile(outputFile, fullPath);
-    File::configuringParametersToFile(outputFile, initialNobjects, minNobjects, minNclusters, maxNclusters, NinitialIterationsWithoutClustering,
-                                     NiterationsWithSameClustering, maxNdrawAttempts, initialEnlargementFraction, shrinkingRate, terminationFactor);
-    outputFile.close();
-
-   
     // Start the computation
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
@@ -103,17 +106,23 @@ int main(int argc, char *argv[])
     double toleranceOnEvidence = 0.01;
     FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
     
-    nestedSampler.run(livePointsReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
+    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts, terminationFactor);
 
 
-    // Save the results in output files
+    // -------------------------------------------------------
+    // ----- Last step. Save the results in output files -----
+    // -------------------------------------------------------
 
     Results results(nestedSampler);
     results.writeParametersToFile("demoSingle2DGaussian_Parameter");
-    results.writeLogLikelihoodToFile("demoSingle2DGaussian_LogLikelihood.txt");
-    results.writeEvidenceInformationToFile("demoSingle2DGaussian_Evidence.txt");
-    results.writePosteriorProbabilityToFile("demoSingle2DGaussian_Posterior.txt");
-    results.writeParametersSummaryToFile("demoSingle2DGaussian_ParametersSummary.txt");
+    results.writeLogLikelihoodToFile("demoSingle2DGaussian_LikelihoodDistribution.txt");
+    results.writeEvidenceInformationToFile("demoSingle2DGaussian_EvidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("demoSingle2DGaussian_PosteriorDistribution.txt");
+
+    double credibleLevel = 68.3;
+    bool writeMarginalDistributionToFile = true;
+    results.writeParametersSummaryToFile("demoSingle2DGaussian_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+
  
     // That's it!
 

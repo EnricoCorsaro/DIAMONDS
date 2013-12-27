@@ -18,8 +18,8 @@
 #include "Ellipsoid.h"
 #include "ZeroModel.h"
 #include "FerozReducer.h"
+#include "ExponentialReducer.h"
 #include "demoTwo2DCircles.h"
-
 
 
 int main(int argc, char *argv[])
@@ -27,15 +27,29 @@ int main(int argc, char *argv[])
     unsigned long Nrows;
     int Ncols;
     ArrayXXd data;
-  
+ 
+ 
     // Creating dummy arrays for the covariates and the observations.
     // They're not used because we compute our Likelihood directly. 
 
     ArrayXd covariates;
     ArrayXd observations;
 
+    
+    // -------------------------------------------------------------------
+    // ----- First step. Set up the models for the inference problem ----- 
+    // -------------------------------------------------------------------
 
-    // Setting Prior distribution and parameter space
+    // Set up a dummy model. This won't be used because we're computing
+    // the Likelihood directly, but the Likelihood nevertheless expects a model in 
+    // its constructor.
+    
+    ZeroModel model(covariates);
+
+
+    // -------------------------------------------------------
+    // ----- Second step. Set up all prior distributions -----
+    // -------------------------------------------------------
 
     int Ndimensions = 2;                      // Number of free parameters (dimensions) of the problem
     vector<Prior*> ptrPriors(1);              // One prior, covering both coordinates
@@ -47,19 +61,16 @@ int main(int argc, char *argv[])
     ptrPriors[0] = &uniformPrior;
 
 
-    // Set up a dummy model. This won't be used because we're computing
-    // the Likelihood directly, but the Likelihood nevertheless expects a model in 
-    // its constructor.
-    
-    ZeroModel model(covariates);
-
-
-    // Set up the likelihood function to be used
+    // -----------------------------------------------------------------
+    // ----- Third step. Set up the likelihood function to be used -----
+    // ----------------------------------------------------------------- 
     
     TwoCirclesLikelihood likelihood(observations, model);
     
 
-    // Set up the K-means clusterer using an Euclidean metric
+    // -------------------------------------------------------------------------------
+    // ----- Fourth step. Set up the K-means clusterer using an Euclidean metric -----
+    // -------------------------------------------------------------------------------
 
     EuclideanMetric myMetric;
     int minNclusters = 1;
@@ -70,7 +81,9 @@ int main(int argc, char *argv[])
     KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
-    // Configure nested sampling
+    // ---------------------------------------------------------------------
+    // ----- Sixth step. Configure and start nested sampling inference -----
+    // --------------------------------------------------------------------- 
 
     bool printOnTheScreen = true;                   // Print results on the screen
     int initialNobjects = 10000;                    // Initial number of active points evolving within the nested sampling process.
@@ -86,16 +99,6 @@ int main(int argc, char *argv[])
     double terminationFactor = 0.001;                // Termination factor for nesting loop.
 
 
-    // Save configuring parameters into an ASCII file
-
-    ofstream outputFile;
-    string fullPath = "demoTwo2DCircles_configuringParameters.txt";
-    File::openOutputFile(outputFile, fullPath);
-    File::configuringParametersToFile(outputFile, initialNobjects, minNobjects, minNclusters, maxNclusters, NinitialIterationsWithoutClustering,
-                                     NiterationsWithSameClustering, maxNdrawAttempts, initialEnlargementFraction, shrinkingRate, terminationFactor);
-    outputFile.close();
-
-
     // Start the computation
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
@@ -104,17 +107,22 @@ int main(int argc, char *argv[])
     double toleranceOnEvidence = 0.01;
     FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
     
-    nestedSampler.run(livePointsReducer, terminationFactor, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
+    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts, terminationFactor);
 
 
-    // Save the results in output files
-
+    // -------------------------------------------------------
+    // ----- Last step. Save the results in output files -----
+    // -------------------------------------------------------
+   
     Results results(nestedSampler);
     results.writeParametersToFile("demoTwo2DCircles_Parameter");
-    results.writeLogLikelihoodToFile("demoTwo2DCircles_LogLikelihood.txt");
-    results.writeEvidenceInformationToFile("demoTwo2DCircles_Evidence.txt");
-    results.writePosteriorProbabilityToFile("demoTwo2DCircles_Posterior.txt");
-    results.writeParametersSummaryToFile("demoTwo2DCircles_ParametersSummary.txt");
+    results.writeLogLikelihoodToFile("demoTwo2DCircles_LikelihoodDistribution.txt");
+    results.writeEvidenceInformationToFile("demoTwo2DCircles_EvidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("demoTwo2DCircles_PosteriorDistribution.txt");
+
+    double credibleLevel = 68.3;
+    bool writeMarginalDistributionToFile = true;
+    results.writeParametersSummaryToFile("demoTwo2DCircles_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
 
     // That's it!
