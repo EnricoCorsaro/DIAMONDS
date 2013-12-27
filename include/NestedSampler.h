@@ -42,9 +42,9 @@ class NestedSampler
                       Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
-        void run(LivePointsReducer &livePointsReducer, string pathPrefix, const double maxRatioOfRemainderToCurrentEvidence = 0.05, 
-                 const int NinitialIterationsWithoutClustering = 100, const int NiterationsWithSameClustering = 50, 
-                 const int maxNdrawAttempts = 5000);
+        void run(LivePointsReducer &livePointsReducer, const int NinitialIterationsWithoutClustering = 100, 
+                 const int NiterationsWithSameClustering = 50, const int maxNdrawAttempts = 5000, 
+                 const double maxRatioOfRemainderToCurrentEvidence = 0.05, string pathPrefix = "");
         
         virtual bool drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, RefArrayXd drawnPoint, 

@@ -106,22 +106,19 @@ NestedSampler::~NestedSampler()
 // INPUT:
 //      livePointsReducer:                    An object of a class that takes care of the way the number of live points
 //                                            is reduced within the nesting process
-//      pathPrefix:                           A string specifying the path where the output information from the Nested Sampler
-//                                            has to be saved.
-//      maxRatioOfRemainderToCurrentEvidence: The fraction of remainder evidence to gained evidence used to terminate 
-//                                            the nested iteration loop. This value is also used as a tolerance on the final
-//                                            evidence to update the number of live points in the nesting process.
-//
 //      NinitialIterationsWithoutClustering:  The first N iterations, no clustering will happen. I.e. It will be assumed that
 //                                            there is only 1 cluster containing all the points. This is often useful because 
 //                                            initially the points may be sampled from a uniform prior, and we therefore don't 
 //                                            expect any clustering before the algorithm is able to tune in on the island(s) of 
 //                                            high likelihood. Clusters found in the first N initial iterations are therefore 
 //                                            likely purely noise.
-//
 //      NiterationsWithSameClustering:        A new clustering will only happen every N iterations.
-//
 //      maxNdrawAttempts:                     The maximum number of attempts allowed when drawing from a single ellipsoid.
+//      maxRatioOfRemainderToCurrentEvidence: The fraction of remainder evidence to gained evidence used to terminate 
+//                                            the nested iteration loop. This value is also used as a tolerance on the final
+//                                            evidence to update the number of live points in the nesting process.
+//      pathPrefix:                           A string specifying the path where the output information from the Nested Sampler
+//                                            has to be saved.
 //
 // OUTPUT:
 //      void
@@ -131,9 +128,9 @@ NestedSampler::~NestedSampler()
 //      (Ndimensions, ...), rather than (... , Ndimensions).
 //
 
-void NestedSampler::run(LivePointsReducer &livePointsReducer, string pathPrefix, 
-                        const double maxRatioOfRemainderToCurrentEvidence, const int NinitialIterationsWithoutClustering,
-                        const int NiterationsWithSameClustering, const int maxNdrawAttempts)
+void NestedSampler::run(LivePointsReducer &livePointsReducer, const int NinitialIterationsWithoutClustering, 
+                        const int NiterationsWithSameClustering, const int maxNdrawAttempts, 
+                        const double maxRatioOfRemainderToCurrentEvidence, string pathPrefix)
 {
     int startTime = time(0);
     double logMeanLiveEvidence;
