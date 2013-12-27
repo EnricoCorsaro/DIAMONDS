@@ -103,7 +103,6 @@ ArrayXd Results::posteriorProbability()
 //      and for computing further operations on it, such as the derivation of error bars on the free parameter.
 //
 // INPUT:
-//      pathPrefix:                 a string variable containing the desired path for saving the output file.
 //      parameterNumber:            an integer containing the number of the free parameter to save, together with
 //                                  its marginal distribution.
 //      
@@ -111,7 +110,7 @@ ArrayXd Results::posteriorProbability()
 //      void.
 // 
 
-void Results::writeMarginalDistributionToFile(string pathPrefix, const int parameterNumber)
+void Results::writeMarginalDistributionToFile(const int parameterNumber)
 {
     // Input arrays must contain the same number of elements 
 
@@ -127,8 +126,8 @@ void Results::writeMarginalDistributionToFile(string pathPrefix, const int param
         
     ostringstream numberString;
     numberString << setfill('0') << setw(3) << parameterNumber;
-    string outputFileName = "marginal";
-    string fullPath = pathPrefix + outputFileName + numberString.str() + ".txt";
+    string fileName = "marginal";
+    string fullPath = nestedSampler.getOutputPathPrefix() + fileName + numberString.str() + ".txt";
     
     
     // Write the two-columns array in an ASCII file
@@ -338,8 +337,6 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const int Nbi
 //      Shortest Bayesian credible intervals (CI) are also computed.
 //
 // INPUT:
-//      pathPrefix:                 a string specifying the path of the output ASCII files 
-//                                  containing the marginal distributions.
 //      credibleLevel:              a double number providing the desired credible 
 //                                  level to be computed. Default value corresponds to
 //                                  credible level of 68.27 %.
@@ -357,7 +354,7 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const int Nbi
 //      (6) Upper CL
 // 
 
-ArrayXXd Results::parameterEstimation(string pathPrefix, double credibleLevel, bool writeMarginalDistribution)
+ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDistribution)
 {
     int Ndimensions = nestedSampler.getPosteriorSample().rows();
     ArrayXd posteriorDistribution = posteriorProbability();
@@ -505,7 +502,7 @@ ArrayXXd Results::parameterEstimation(string pathPrefix, double credibleLevel, b
 
         if (writeMarginalDistribution)
         {
-            writeMarginalDistributionToFile(pathPrefix, i);
+            writeMarginalDistributionToFile(i);
         }
 
         
@@ -531,12 +528,16 @@ ArrayXXd Results::parameterEstimation(string pathPrefix, double credibleLevel, b
 //      writes the parameters values from the nested sampling
 //      in separate ASCII files having one column format each.
 //      
+// INPUT:
+//      fileName:   a string variable containing the file name of the output file to be saved.
+//
 // OUTPUT:
 //      void
 // 
 
-void Results::writeParametersToFile(string pathPrefix, string outputFileExtension)
+void Results::writeParametersToFile(string fileName, string outputFileExtension)
 {
+    string pathPrefix = nestedSampler.getOutputPathPrefix() + fileName;
     ArrayXXd posteriorSample = nestedSampler.getPosteriorSample();
     File::arrayXXdRowsToFiles(posteriorSample, pathPrefix, outputFileExtension);
 }
@@ -560,14 +561,16 @@ void Results::writeParametersToFile(string pathPrefix, string outputFileExtensio
 //      sorted in increasing order.
 //
 // INPUT:
-//      fullPath:   a string variable containing the desired full path to save the output file.
+//      fileName:   a string variable containing the file name of the output file to be saved.
 //
 // OUTPUT:
 //      void
 // 
 
-void Results::writeLogLikelihoodToFile(string fullPath)
+void Results::writeLogLikelihoodToFile(string fileName)
 {
+    string fullPath = nestedSampler.getOutputPathPrefix() + fileName;
+
     ofstream outputFile;
     File::openOutputFile(outputFile, fullPath);
             
@@ -600,14 +603,16 @@ void Results::writeLogLikelihoodToFile(string fullPath)
 //      ascending order in likelihood.
 //
 // INPUT:
-//      fullPath:   a string variable containing the desired full path to save the output file.
+//      fileName:   a string variable containing the file name of the output file to be saved.
 //
 // OUTPUT:
 //      void
 // 
 
-void Results::writeLogWeightsToFile(string fullPath)
+void Results::writeLogWeightsToFile(string fileName)
 {
+    string fullPath = nestedSampler.getOutputPathPrefix() + fileName;
+
     ofstream outputFile;
     File::openOutputFile(outputFile, fullPath);
             
@@ -640,14 +645,16 @@ void Results::writeLogWeightsToFile(string fullPath)
 //      Skilling's evidence, evidence error and information gain are also included.
 //
 // INPUT:
-//      fullPath:   a string variable containing the desired full path to save the output file.
+//      fileName:   a string variable containing the file name of the output file to be saved.
 //
 // OUTPUT:
 //      void
 //
 
-void Results::writeEvidenceInformationToFile(string fullPath)
+void Results::writeEvidenceInformationToFile(string fileName)
 {
+    string fullPath = nestedSampler.getOutputPathPrefix() + fileName;
+
     ofstream outputFile;
     File::openOutputFile(outputFile, fullPath);
             
@@ -678,7 +685,7 @@ void Results::writeEvidenceInformationToFile(string fullPath)
 //      nested sampling into an ASCII file of one column format.
 //
 // INPUT:
-//      fullPath:   a string variable containing the desired full path to save the output file.
+//      fileName:   a string variable containing the file name of the output file to be saved.
 //
 // OUTPUT:
 //      void
@@ -687,10 +694,11 @@ void Results::writeEvidenceInformationToFile(string fullPath)
 //      Note that these values are probabilities and not probability densities.
 // 
 
-void Results::writePosteriorProbabilityToFile(string fullPath)
+void Results::writePosteriorProbabilityToFile(string fileName)
 {
     ArrayXd posteriorDistribution = posteriorProbability();
-
+    string fullPath = nestedSampler.getOutputPathPrefix() + fileName;
+    
     ofstream outputFile;
     File::openOutputFile(outputFile, fullPath);
             
@@ -716,8 +724,7 @@ void Results::writePosteriorProbabilityToFile(string fullPath)
 //      Shortest Bayesian credible intervals (CI) are also included.
 //
 // INPUT:
-//      pathPrefix:                 a string variable containing the desired path for saving the output file.
-//      outputFileName:             a string variable containing the filename of the output file.
+//      fileName:                   a string variable containing the filename of the output file.
 //      credibleLevel:              a double number providing the desired credible 
 //                                  level to be computed. Default value corresponds 
 //                                  to a credible level of 68.27 %.
@@ -728,16 +735,16 @@ void Results::writePosteriorProbabilityToFile(string fullPath)
 //      void.
 // 
 
-void Results::writeParametersSummaryToFile(string pathPrefix, string outputFileName, const double credibleLevel, const bool writeMarginalDistribution)
+void Results::writeParametersSummaryToFile(string fileName, const double credibleLevel, const bool writeMarginalDistribution)
 {
     // Compute estimators for all the free parameters
 
-    ArrayXXd parameterEstimates = parameterEstimation(pathPrefix, credibleLevel, writeMarginalDistribution);
+    ArrayXXd parameterEstimates = parameterEstimation(credibleLevel, writeMarginalDistribution);
 
 
     // Write output ASCII file
 
-    string fullPath = pathPrefix + outputFileName;
+    string fullPath = nestedSampler.getOutputPathPrefix() + fileName;
     ofstream outputFile;
     File::openOutputFile(outputFile, fullPath);
             

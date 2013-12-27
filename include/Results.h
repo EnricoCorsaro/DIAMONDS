@@ -37,13 +37,12 @@ class Results
         Results(NestedSampler &nestedSampler);
         ~Results();
         
-        void writeParametersToFile(string pathPrefix, string outputFileExtension = ".txt");
-        void writeLogLikelihoodToFile(string fullPath);
-        void writeLogWeightsToFile(string fullPath);
-        void writeEvidenceInformationToFile(string fullPath);
-        void writePosteriorProbabilityToFile(string fullPath);
-        void writeParametersSummaryToFile(string pathPrefix, string outputFileName, 
-                                          const double credibleLevel = 68.27, const bool writeMarginalDistribution = true);
+        void writeParametersToFile(string fileName, string outputFileExtension = ".txt");
+        void writeLogLikelihoodToFile(string fileName);
+        void writeLogWeightsToFile(string fileName);
+        void writeEvidenceInformationToFile(string fileName);
+        void writePosteriorProbabilityToFile(string fileName);
+        void writeParametersSummaryToFile(string fileName, const double credibleLevel = 68.27, const bool writeMarginalDistribution = true);
         void writeObjectsIdentificationToFile(){};          // TO DO
 
 
@@ -63,9 +62,9 @@ class Results
         NestedSampler &nestedSampler;
        
         ArrayXd posteriorProbability();
-        void writeMarginalDistributionToFile(string pathPrefix, const int parameterNumber);
+        void writeMarginalDistributionToFile(const int parameterNumber);
         ArrayXd computeCredibleLimits(const double credibleLevel, const int Nbins, const int NinterpolationsPerBin = 10);
-        ArrayXXd parameterEstimation(string pathPrefix, const double credibleLevel, const bool writeMarginalDistribution);
+        ArrayXXd parameterEstimation(const double credibleLevel, const bool writeMarginalDistribution);
 
 };
 #endif
