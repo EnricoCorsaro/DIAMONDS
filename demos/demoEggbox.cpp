@@ -19,7 +19,7 @@
 #include "ZeroModel.h"
 #include "FerozReducer.h"
 #include "ExponentialReducer.h"
-#include "demoEggBox.h"
+#include "demoEggbox.h"
 
 
 int main(int argc, char *argv[])
@@ -114,14 +114,14 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------
    
     Results results(nestedSampler);
-    results.writeParametersToFile("demoEggBox_Parameter");
-    results.writeLogLikelihoodToFile("demoEggBox_LikelihoodDistribution.txt");
-    results.writeEvidenceInformationToFile("demoEggBox_EvidenceInformation.txt");
-    results.writePosteriorProbabilityToFile("demoEggBox_PosteriorDistribution.txt");
+    results.writeParametersToFile("demoEggbox_Parameter");
+    results.writeLogLikelihoodToFile("demoEggbox_LikelihoodDistribution.txt");
+    results.writeEvidenceInformationToFile("demoEggbox_EvidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("demoEggbox_PosteriorDistribution.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
-    results.writeParametersSummaryToFile("demoEggBox_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+    results.writeParametersSummaryToFile("demoEggbox_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
 
     // That's it!
