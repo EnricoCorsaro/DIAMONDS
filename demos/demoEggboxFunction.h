@@ -1,6 +1,6 @@
 
-#ifndef DEMOEGGBOX_H
-#define DEMOEGGBOX_H
+#ifndef EGGBOXLIKELIHOOD_H
+#define EGGBOXLIKELIHOOD_H
 
 #include <cmath>
 #include <iostream>

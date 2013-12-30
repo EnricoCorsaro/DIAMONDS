@@ -1,5 +1,5 @@
 //
-// Compile with: clang++ -o demoEggbox demoEggbox.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
+// Compile with: clang++ -o demoEggboxFunction demoEggboxFunction.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
 // 
 
 #include <cstdlib>
@@ -19,7 +19,7 @@
 #include "ZeroModel.h"
 #include "FerozReducer.h"
 #include "ExponentialReducer.h"
-#include "demoEggbox.h"
+#include "demoEggboxFunction.h"
 
 
 int main(int argc, char *argv[])
@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------------------------------
 
     EuclideanMetric myMetric;
-    int minNclusters = 4;
-    int maxNclusters = 20;
+    int minNclusters = 1;
+    int maxNclusters = 12;
     int Ntrials = 10;
     double relTolerance = 0.01;
 
@@ -85,20 +85,18 @@ int main(int argc, char *argv[])
     // ---------------------------------------------------------------------
        
     bool printOnTheScreen = true;                    // Print results on the screen
-    int initialNobjects = 2000;                      // Initial number of active points evolving within the nested sampling process.
-    int minNobjects = 2000;                          // Minimum number of active points allowed in the nesting process.
-    int maxNdrawAttempts = 10000;                    // Maximum number of attempts when trying to draw a new sampling point.
-    int NinitialIterationsWithoutClustering = 1000;  // The first N iterations, we assume that there is only 1 cluster.
-    int NiterationsWithSameClustering = 100;         // Clustering is only happening every X iterations.
-    double initialEnlargementFraction = 1.5;         // Fraction by which each axis in an ellipsoid has to be enlarged.
+    int initialNobjects = 1000;                      // Initial number of active points evolving within the nested sampling process.
+    int minNobjects = 1000;                          // Minimum number of active points allowed in the nesting process.
+    int maxNdrawAttempts = 50000;                    // Maximum number of attempts when trying to draw a new sampling point.
+    int NinitialIterationsWithoutClustering = 400;   // The first N iterations, we assume that there is only 1 cluster.
+    int NiterationsWithSameClustering = 40;          // Clustering is only happening every X iterations.
+    double initialEnlargementFraction = 2.5;         // Fraction by which each axis in an ellipsoid has to be enlarged.
                                                      // It can be a number >= 0, where 0 means no enlargement.
     double shrinkingRate = 0.2;                      // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                      // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                      // of the ellipsoids.
-    double terminationFactor = 0.05;                 // Termination factor for nesting loop.
+    double terminationFactor = 0.8;                  // Termination factor for nesting loop.
 
-
-    // Start the computation
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
@@ -106,7 +104,9 @@ int main(int argc, char *argv[])
     double toleranceOnEvidence = 0.01;
     FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
 
-    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts, terminationFactor);
+    string outputPathPrefix = "demoEggboxFunction_";
+    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
+                      maxNdrawAttempts, terminationFactor, outputPathPrefix);
 
 
     // -------------------------------------------------------
@@ -114,14 +114,14 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------
    
     Results results(nestedSampler);
-    results.writeParametersToFile("demoEggbox_Parameter");
-    results.writeLogLikelihoodToFile("demoEggbox_LikelihoodDistribution.txt");
-    results.writeEvidenceInformationToFile("demoEggbox_EvidenceInformation.txt");
-    results.writePosteriorProbabilityToFile("demoEggbox_PosteriorDistribution.txt");
+    results.writeParametersToFile("Parameter");
+    results.writeLogLikelihoodToFile("LikelihoodDistribution.txt");
+    results.writeEvidenceInformationToFile("EvidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("PosteriorDistribution.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
-    results.writeParametersSummaryToFile("demoEggbox_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+    results.writeParametersSummaryToFile("ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
 
     // That's it!
