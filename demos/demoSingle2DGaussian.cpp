@@ -98,15 +98,15 @@ int main(int argc, char *argv[])
     double terminationFactor = 0.01;                // Termination factor for nesting loop.
 
 
-    // Start the computation
-
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
     
     double toleranceOnEvidence = 0.01;
     FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
-    
-    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts, terminationFactor);
+   
+    string outputPathPrefix = "demoSingle2DGaussian_";
+    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
+                      maxNdrawAttempts, terminationFactor, outputPathPrefix);
 
 
     // -------------------------------------------------------
@@ -114,14 +114,14 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------
 
     Results results(nestedSampler);
-    results.writeParametersToFile("demoSingle2DGaussian_Parameter");
-    results.writeLogLikelihoodToFile("demoSingle2DGaussian_LikelihoodDistribution.txt");
-    results.writeEvidenceInformationToFile("demoSingle2DGaussian_EvidenceInformation.txt");
-    results.writePosteriorProbabilityToFile("demoSingle2DGaussian_PosteriorDistribution.txt");
+    results.writeParametersToFile("Parameter");
+    results.writeLogLikelihoodToFile("LikelihoodDistribution.txt");
+    results.writeEvidenceInformationToFile("EvidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("PosteriorDistribution.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
-    results.writeParametersSummaryToFile("demoSingle2DGaussian_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+    results.writeParametersSummaryToFile("ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
  
     // That's it!

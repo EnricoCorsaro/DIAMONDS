@@ -99,15 +99,15 @@ int main(int argc, char *argv[])
     double terminationFactor = 0.05;                // Termination factor for nesting loop.
 
 
-    // Start the computation
-
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
 
     double toleranceOnEvidence = 0.01;
     FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
 
-    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts, terminationFactor);
+    string outputPathPrefix = "demoFive2DGaussians_";
+    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
+                      maxNdrawAttempts, terminationFactor, outputPathPrefix);
 
 
     // -------------------------------------------------------
@@ -115,14 +115,14 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------
    
     Results results(nestedSampler);
-    results.writeParametersToFile("demoFive2DGaussian_Parameter");
-    results.writeLogLikelihoodToFile("demoFive2DGaussian_LikelihoodDistribution.txt");
-    results.writeEvidenceInformationToFile("demoFive2DGaussian_EvidenceInformation.txt");
-    results.writePosteriorProbabilityToFile("demoFive2DGaussian_PosteriorDistribution.txt");
+    results.writeParametersToFile("Parameter");
+    results.writeLogLikelihoodToFile("LikelihoodDistribution.txt");
+    results.writeEvidenceInformationToFile("EvidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("PosteriorDistribution.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
-    results.writeParametersSummaryToFile("demoFive2DGaussian_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+    results.writeParametersSummaryToFile("ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
 
     // That's it!

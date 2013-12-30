@@ -106,8 +106,10 @@ int main(int argc, char *argv[])
         
     double toleranceOnEvidence = 0.01;
     FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
-    
-    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts, terminationFactor);
+   
+    string outputPathPrefix = "demoTwo2DCircles_";
+    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
+                      maxNdrawAttempts, terminationFactor, outputPathPrefix);
 
 
     // -------------------------------------------------------
@@ -115,14 +117,14 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------
    
     Results results(nestedSampler);
-    results.writeParametersToFile("demoTwo2DCircles_Parameter");
-    results.writeLogLikelihoodToFile("demoTwo2DCircles_LikelihoodDistribution.txt");
-    results.writeEvidenceInformationToFile("demoTwo2DCircles_EvidenceInformation.txt");
-    results.writePosteriorProbabilityToFile("demoTwo2DCircles_PosteriorDistribution.txt");
+    results.writeParametersToFile("Parameter");
+    results.writeLogLikelihoodToFile("LikelihoodDistribution.txt");
+    results.writeEvidenceInformationToFile("EvidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("PosteriorDistribution.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
-    results.writeParametersSummaryToFile("demoTwo2DCircles_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+    results.writeParametersSummaryToFile("ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
 
     // That's it!

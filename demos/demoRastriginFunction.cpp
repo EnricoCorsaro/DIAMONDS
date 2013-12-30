@@ -98,15 +98,15 @@ int main(int argc, char *argv[])
     double terminationFactor = 0.05;                // Termination factor for nesting loop.
 
 
-    // Start the computation
-
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
     
     double toleranceOnEvidence = 0.01;
     FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
-    
-    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts, terminationFactor);
+   
+    string outputPathPrefix = "demoRastriginFunction_";
+    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
+                      maxNdrawAttempts, terminationFactor, outputPathPrefix);
 
 
     // -------------------------------------------------------
@@ -114,14 +114,14 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------
 
     Results results(nestedSampler);
-    results.writeParametersToFile("demoRastriginFunction_Parameter");
-    results.writeLogLikelihoodToFile("demoRastriginFunction_LikelihoodDistribution.txt");
-    results.writeEvidenceInformationToFile("demoRastriginFunction_EvidenceInformation.txt");
-    results.writePosteriorProbabilityToFile("demoRastriginFunction_PosteriorDistribution.txt");
+    results.writeParametersToFile("Parameter");
+    results.writeLogLikelihoodToFile("LikelihoodDistribution.txt");
+    results.writeEvidenceInformationToFile("EvidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("PosteriorDistribution.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
-    results.writeParametersSummaryToFile("demoRastriginFunction_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+    results.writeParametersSummaryToFile("ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
  
     // That's it!
