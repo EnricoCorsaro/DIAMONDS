@@ -81,8 +81,9 @@ int FerozReducer::updateNobjects()
     NobjectsAtCurrentIteration = nestedSampler.getNobjects();
     double numerator = exp(Functions::logExpDifference(logMaxEvidenceContribution,logMaxEvidenceContributionNew));
     double denominator = exp(logMaxEvidenceContributionNew);
-    updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * numerator / (denominator * toleranceOnEvidence));
-  
+    int NobjectsToRemove = nestedSampler.getMinNobjects() * numerator / (denominator * toleranceOnEvidence);
+    updatedNobjects = NobjectsAtCurrentIteration - NobjectsToRemove;
+    
 
     // If new number of live points is lower than minNobjects, do not accept the new number and stick to the
     // previous one.
