@@ -833,7 +833,7 @@ unsigned int NestedSampler::getNdimensions()
 //      live points.
 //
 
-unsigned int NestedSampler::getNobjects()
+int NestedSampler::getNobjects()
 {
     return Nobjects;
 }
@@ -859,7 +859,7 @@ unsigned int NestedSampler::getNobjects()
 //      live points.
 //
 
-unsigned int NestedSampler::getInitialNobjects()
+int NestedSampler::getInitialNobjects()
 {
     return initialNobjects;
 }
@@ -884,7 +884,7 @@ unsigned int NestedSampler::getInitialNobjects()
 //      live points allowed.
 //
 
-unsigned int NestedSampler::getMinNobjects()
+int NestedSampler::getMinNobjects()
 {
     return minNobjects;
 }

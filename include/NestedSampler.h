@@ -55,9 +55,9 @@ class NestedSampler
 
         unsigned int getNiterations();
         unsigned int getNdimensions();
-        unsigned int getNobjects();
-        unsigned int getInitialNobjects();
-        unsigned int getMinNobjects();
+        int getNobjects();
+        int getInitialNobjects();
+        int getMinNobjects();
         double getLogCumulatedPriorMass();
         double getLogRemainingPriorMass();
         double getLogEvidence();
@@ -83,8 +83,8 @@ class NestedSampler
         ofstream outputFile;                     // An output file stream to save configuring parameters also from derived classes 
         bool printOnTheScreen;                   // A boolean specifying whether we want current results to be printed on the screen
         unsigned int Ndimensions;                // Total number of dimensions of the inference
-        unsigned int Nobjects;                   // Total number of live points at a given iteration
-        unsigned int minNobjects;                // Minimum number of live points allowed
+        int Nobjects;                            // Total number of live points at a given iteration
+        int minNobjects;                         // Minimum number of live points allowed
         double worstLiveLogLikelihood;           // The worst likelihood value of the current live sample
         double logCumulatedPriorMass;            // The total (cumulated) prior mass at a given nested iteration
         double logRemainingPriorMass;            // The remaining width in prior mass at a given nested iteration (log X)
@@ -97,8 +97,8 @@ class NestedSampler
 
         string outputPathPrefix;                 // The path of the directory where all the results have to be saved
         unsigned int Niterations;                // Counter saving the number of nested loops used
-        unsigned int updatedNobjects;            // The updated number of live points to be used in the next iteration
-        unsigned int initialNobjects;            // The initial number of live points
+        int updatedNobjects;                     // The updated number of live points to be used in the next iteration
+        int initialNobjects;                     // The initial number of live points
         double informationGain;                  // Skilling's Information gain in moving from prior to posterior PDF
         double logEvidence;                      // Skilling's Evidence
         double logEvidenceError;                 // Skilling's error on Evidence (based on IG)
