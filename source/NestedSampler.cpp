@@ -406,36 +406,24 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
                 
             livePointsShouldBeReduced = (updatedNobjects > minNobjects);
 
-            if (updatedNobjects >= minNobjects)
+            if (updatedNobjects != Nobjects)
             {
-                // In this case it is still plausible to apply the reduction of the live points
-
-                if (updatedNobjects != Nobjects)
-                {
-                    // Resize all eigen arrays and vectors of dimensions Nobjects according to 
-                    // new number of live points evaluated. In case previos and new number 
-                    // of live points coincide, no resizing is done.
+                // Resize all eigen arrays and vectors of dimensions Nobjects according to 
+                // new number of live points evaluated. In case previos and new number 
+                // of live points coincide, no resizing is done.
                     
-                    vector<int> indicesOfLivePointsToRemove = livePointsReducer.findIndicesOfLivePointsToRemove(engine);
+                vector<int> indicesOfLivePointsToRemove = livePointsReducer.findIndicesOfLivePointsToRemove(engine);
 
                     
-                    // At least one live point has to be removed, hence update the sample
+                // At least one live point has to be removed, hence update the sample
 
-                    removeLivePointsFromSample(indicesOfLivePointsToRemove, clusterIndices, clusterSizes);
+                removeLivePointsFromSample(indicesOfLivePointsToRemove, clusterIndices, clusterSizes);
                         
                         
-                    // Since everything is fine update discreteUniform with the corresponding new upper bound
+                // Since everything is fine update discreteUniform with the corresponding new upper bound
 
-                    uniform_int_distribution<int> discreteUniform2(0, updatedNobjects-1);
-                    discreteUniform = discreteUniform2;
-                }
-            }
-            else
-            {
-                // The new number of live points is below the minimum allowed. 
-                // Keep the minimum allowed, the reduction process is automatically stopped.
-
-                updatedNobjects = minNobjects;
+                uniform_int_distribution<int> discreteUniform2(0, updatedNobjects-1);
+                discreteUniform = discreteUniform2;
             }
         }
 
@@ -491,6 +479,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
             logWidthInPriorMassLeft = log(2) + logRemainingPriorMass;       // X_(m+1) = - X_m, hence X_m - X_(m+1) = 2*X_m
         }
+
+        
+        // ---- Use the line below for trapezoidal rule ----
 
         double logWeight = log(0.5) + Functions::logExpSum(logWidthInPriorMassLeft, logWidthInPriorMassRight);
         double logEvidenceContributionNew = logWeight + worstLiveLogLikelihood;
@@ -555,6 +546,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     // Append information to existing output file and close stream afterwards
     
     outputFile << "Niterations: " << Niterations << endl;
+    outputFile << "Final Nclusters: " << Nclusters << endl;
     outputFile.close();
 
 
@@ -562,7 +554,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     // (i.e parameter coordinates, likelihood values and weights)
 
     unsigned int oldNpointsInPosterior = posteriorSample.cols();
-    
+
     posteriorSample.conservativeResize(Ndimensions, oldNpointsInPosterior + Nobjects);          // First make enough room
     posteriorSample.block(0, oldNpointsInPosterior, Ndimensions, Nobjects) = nestedSample;      // Then copy the live sample to the posterior array
     logWeightOfPosteriorSample.conservativeResize(oldNpointsInPosterior + Nobjects);
