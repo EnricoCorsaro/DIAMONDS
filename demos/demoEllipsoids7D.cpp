@@ -52,7 +52,7 @@ int main()
     vector<int> clusterIndices(Nrows);
     vector<int> clusterSizes;
 
-    optimalNclusters = kmeans.cluster(sample, clusterIndices, clusterSizes, true);
+    optimalNclusters = kmeans.cluster(sample, clusterIndices, clusterSizes);
     int Nclusters = optimalNclusters; 
    
 

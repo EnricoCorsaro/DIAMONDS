@@ -22,7 +22,7 @@ using namespace Eigen;
 int main()
 {
     // ------ IDENTIFY CLUSTERS FROM INPUT SAMPLE ------
-    // Open the input file and read the data (synthetic sampling of a 5D parameter space)
+    // Open the input file and read the data (synthetic sampling of a 2D parameter space)
     
     ifstream inputFile;
     File::openInputFile(inputFile, "kmeans_testsample2D.txt");
@@ -52,7 +52,7 @@ int main()
     vector<int> clusterIndices(Nrows);
     vector<int> clusterSizes;
 
-    optimalNclusters = kmeans.cluster(sample, clusterIndices, clusterSizes, true);
+    optimalNclusters = kmeans.cluster(sample, clusterIndices, clusterSizes);
     int Nclusters = optimalNclusters; 
    
 
