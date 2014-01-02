@@ -58,6 +58,9 @@ FerozReducer::~FerozReducer()
 // OUTPUT:
 //      An integer specifying the final number of live points to be adopted.
 //
+// REMARK:
+//      The returned value of live points is ensured to be not below the minimum allowed. 
+//
 
 int FerozReducer::updateNobjects()
 {
