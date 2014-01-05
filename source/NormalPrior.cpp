@@ -14,7 +14,7 @@
 //                         multi-dimensional normal prior.
 //
 
-NormalPrior::NormalPrior(const RefArrayXd mean, const RefArrayXd standardDeviation)
+NormalPrior::NormalPrior(RefArrayXd const mean, RefArrayXd const standardDeviation)
 : Prior(mean.size()),
   mean(mean),
   standardDeviation(standardDeviation)
@@ -125,13 +125,15 @@ ArrayXd NormalPrior::getStandardDeviation()
 //      Natural logarithm of the probability density evaluation in x.
 //
 
-double NormalPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
+double NormalPrior::logDensity(RefArrayXd const x, const bool includeConstantTerm)
 {
+    assert(x.size() == Ndimensions);
+
     double logDens = -0.5 * ((x - mean)/standardDeviation).square().sum();
 
     if (includeConstantTerm)
     {
-        logDens += -Ndimensions/2.0 * log(2.*Functions::PI) - 0.5 * standardDeviation.log().sum();
+        logDens += -Ndimensions/2.0 * log(2.*Functions::PI) - standardDeviation.log().sum();
     }
 
     return logDens;
@@ -139,6 +141,58 @@ double NormalPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
 
 
 
+
+
+
+
+
+
+
+
+
+
+// NormalPrior::drawnPointIsAccepted()
+//
+// PURPOSE:
+//      Checks wheter a new drawn point to be verified is accepted 
+//      according to the prior distribution.
+//
+// INPUT: 
+//      drawnPoint:     an Eigen array containing the coordinates 
+//                      of the new drawn point to be verified
+//
+// OUTPUT:
+//      Returns true if the new point is accepted, false if not.
+//
+
+bool NormalPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
+{
+    ArrayXd referencePoint(Ndimensions);
+
+    
+    // Draw a reference point according to normal distribution in each coordinate
+    
+    for (int i = 0; i < Ndimensions; i++)
+    {
+        referencePoint(i) = normalDistributionVector[i](engine);
+    }
+    
+    ArrayXd scatter1 = (drawnPoint - mean).abs();
+    ArrayXd scatter2 = (referencePoint - mean).abs();
+
+
+    // Compare the scatter from the mean for each coordinate.
+    // Accept the point only if the new point boundary is smaller than the reference one
+
+    if ( (scatter1 < scatter2).prod() )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
 
 

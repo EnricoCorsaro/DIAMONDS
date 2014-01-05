@@ -23,13 +23,14 @@ class NormalPrior : public Prior
 {
     public:
 
-        NormalPrior(const RefArrayXd mean, const RefArrayXd standardDeviation);
+        NormalPrior(RefArrayXd const mean, RefArrayXd const standardDeviation);
         ~NormalPrior();
 
         ArrayXd getMean();
         ArrayXd getStandardDeviation();
      
-        virtual double logDensity(RefArrayXd x, const bool includeConstantTerm=false);
+        virtual double logDensity(RefArrayXd const x, const bool includeConstantTerm = false);
+        virtual bool drawnPointIsAccepted(RefArrayXd const drawnPoint);
         virtual void draw(RefArrayXXd drawnSample);
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood);
 
