@@ -208,16 +208,8 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
         // from the prior. Therefore, accept the point only with the probability given by the
         // prior, so that the regions inside the ellipsoid with a higher prior density will 
         // be sampled more than the regions with a lower prior density. 
-
-        // First draw another 'reference' point inside the selected ellipsoid
-
-        ArrayXd referencePoint(Ndimensions);
-        ellipsoids[indexOfSelectedEllipsoid].drawPoint(referencePoint);
-
-
-        // To draw according to the prior, we accept our new point only if the logDensity of the
-        // prior is larger than the one of the reference point. Since different coordinates of our new 
-        // point may have different priors, we need to check this for all the priors.
+        // Since different coordinates of our new point may have different priors, 
+        // we need to check this for all the priors.
         
         int beginIndex = 0;
 
@@ -234,34 +226,13 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
             ArrayXd subsetOfNewPoint = drawnPoint.segment(beginIndex, NdimensionsOfPrior);
 
 
-            // Do the same with the reference point
+            // Check if the new point is accepted according to the corresponding prior distribution.
+            // If not, exit the loop and draw a new point from the beginning.
 
-            ArrayXd subsetOfReferencePoint = referencePoint.segment(beginIndex, NdimensionsOfPrior);
-
-
-            // First check the special case when the logDensity of the prior of our newPoint is -infinity 
-            // (probability density = 0) This can happen e.g. for the uniform distribution, when the point 
-            // falls out of its boundaries. This is a reason to immediately discard the point, without 
-            // checking out the priors of the orther coordinates.
-
-            double logPriorDensityOfSubsetOfNewPoint = ptrPriors[priorIndex]->logDensity(subsetOfNewPoint);
-            
-            if (logPriorDensityOfSubsetOfNewPoint == ptrPriors[priorIndex]->minusInfinity)
-            {
-                newPointIsFound = false;
-                break;
-            }
-
-
-            // Check if the logPrior density of the new point is >= than the one of the reference point
-            // If it failed this criterion for one prior, we can immediately discared the new point, 
-            // without needing to check the priors for the other coordinates.
-             
-            if (ptrPriors[priorIndex]->logDensity(subsetOfNewPoint) < ptrPriors[priorIndex]->logDensity(subsetOfReferencePoint))
-            {
-                newPointIsFound = false;
-                break;
-            }
+            newPointIsFound = ptrPriors[priorIndex]->drawnPointIsAccepted(subsetOfNewPoint);
+                
+            if (!newPointIsFound)
+            break;
 
 
             // Move the beginIndex on to the next set of coordinates covered by the prior
@@ -295,6 +266,7 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
         }
 
     } // end while-loop (newPointIsFound == false)
+
 
     // Depending on whether we found a new point or not, return true or false.
 
