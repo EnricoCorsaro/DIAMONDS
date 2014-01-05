@@ -30,7 +30,8 @@ class Prior
         ~Prior();
         int getNdimensions();
         
-        virtual double logDensity(RefArrayXd x, const bool includeConstantTerm=false) = 0;
+        virtual double logDensity(RefArrayXd const x, const bool includeConstantTerm = false) = 0;
+        virtual bool drawnPointIsAccepted(RefArrayXd const drawnPoint) = 0;
         virtual void draw(RefArrayXXd drawnSample) = 0;
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood) = 0;
 
