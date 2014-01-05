@@ -31,7 +31,8 @@ class UniformPrior : public Prior
         ArrayXd getMinima();
         ArrayXd getMaxima();
 
-        virtual double logDensity(RefArrayXd x, const bool includeConstantTerm=false);
+        virtual double logDensity(RefArrayXd const x, const bool includeConstantTerm = false);
+        virtual bool drawnPointIsAccepted(RefArrayXd const drawnPoint);
         virtual void draw(RefArrayXXd drawnSample);
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood);
 

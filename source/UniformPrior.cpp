@@ -112,7 +112,7 @@ ArrayXd UniformPrior::getMaxima()
 //      Natural logarithm of the probability density evaluation in x.
 //
 
-double UniformPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
+double UniformPrior::logDensity(RefArrayXd const x, const bool includeConstantTerm)
 {
     double logDens;
 
@@ -127,7 +127,7 @@ double UniformPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
     }
     else
     {
-        // The points falls inside the distribution's boundaries.
+        // The point falls inside the distribution's boundaries.
 
         logDens = 0.0;
     }
@@ -142,6 +142,41 @@ double UniformPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
 
 
 
+
+
+
+
+
+
+
+
+
+
+// UniformPrior::drawnPointIsAccepted()
+//
+// PURPOSE:
+//      Checks whether a new drawn point to be verified is accepted 
+//      according to the prior distribution.
+//
+// INPUT: 
+//      drawnPoint:     an Eigen array containing the coordinates 
+//                      of the new drawn point to be verified
+//
+// OUTPUT:
+//      Returns true if the new point is accepted, false if not.
+//
+
+bool UniformPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
+{
+    if (logDensity(drawnPoint) != minusInfinity)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
 
 
