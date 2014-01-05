@@ -1,5 +1,5 @@
 // Compile with:
-// clang++ -o demoPriorDrawing2D demoPriorDrawing2D.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
+// clang++ -o demoPriorDrawing3D demoPriorDrawing3D.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
 //
 
 #include <ctime>
@@ -28,7 +28,7 @@ int main()
     // Open the input file and read the data (synthetic sampling of a 2D parameter space)
     
     ifstream inputFile;
-    File::openInputFile(inputFile, "twoclusters2D.txt");
+    File::openInputFile(inputFile, "onecluster3D.txt");
     unsigned long Nrows;
     int Ncols;
 
@@ -201,7 +201,18 @@ int main()
         covarianceMatrix = ellipsoids[n].getCovarianceMatrix();
         cerr << "Ellipsoid #" << n << "   " << normalizedHyperVolumes[n] << endl;
         cerr << "Center Coordinates: " << centerCoordinate.transpose() << endl;
-        cerr << "Covariance Matrix: " << covarianceMatrix << endl;
+        cerr << "Covariance Matrix: " << endl;
+        cerr << covarianceMatrix << endl;
+   
+        MatrixXd T1 = MatrixXd::Identity(Ndimensions+1,Ndimensions+1);
+        T1.bottomLeftCorner(1,Ndimensions) = (-1.0) * centerCoordinate.transpose();
+        MatrixXd A = MatrixXd::Zero(Ndimensions+1,Ndimensions+1);
+        A(Ndimensions,Ndimensions) = -1;
+        A.topLeftCorner(Ndimensions,Ndimensions) = covarianceMatrix.matrix().inverse();
+        MatrixXd AT = T1*A*T1.transpose();        // Translating to ellipsoid center
+     
+        cerr << "Ellipsoidal Matrix: " << endl;
+        cerr << AT << endl;
         cerr << endl;
     }
 
@@ -235,41 +246,60 @@ int main()
 
     // ------ Set up prior distributions on each coordinate ------
     
-    int Npoints = 10000;    
+    int Npoints = 1000;    
     ArrayXXd sampleOfDrawnPoints(Npoints,Ndimensions);
     ArrayXd drawnPoint(Ndimensions);
+    
+    vector<Prior*> ptrPriors(3);
+    ArrayXd parametersMinima(1);
+    ArrayXd parametersMaxima(1);
+    parametersMinima <<  0.0;
+    parametersMaxima << 4.0;
+    UniformPrior uniformPrior(parametersMinima, parametersMaxima);
+    ptrPriors[1] = &uniformPrior;  
+
+    ArrayXd parametersMean(1);
+    ArrayXd parametersSDV(1);
+    parametersMean <<  2.0;
+    parametersSDV << 0.4;
+    NormalPrior normalPrior1(parametersMean, parametersSDV);
+    ptrPriors[0] = &normalPrior1;  
+    
+    parametersMean <<  2.0;
+    parametersSDV << 0.4;
+    NormalPrior normalPrior2(parametersMean, parametersSDV);
+    ptrPriors[2] = &normalPrior2;  
     
     /*
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
-    parametersMinima <<  -7.0, -7.0;
-    parametersMaxima << -2.5, -3.5;
+    parametersMinima <<  0.0, 0.0, 0.0;
+    parametersMaxima << 4.0, 4.0, 4.0;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriors[0] = &uniformPrior;  
-    */
 
-    /*
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMean(Ndimensions);
     ArrayXd parametersSDV(Ndimensions);
-    parametersMean <<  -4.0, -4.0;
-    parametersSDV << 1.0, 1.0;
+    parametersMean <<  2.0, 0.0, 2.0;
+    parametersSDV << 0.3, 1.2, 0.3;
     NormalPrior normalPrior(parametersMean, parametersSDV);
     ptrPriors[0] = &normalPrior;  
     */
     
-   
+    
+    /*
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMean(Ndimensions);
     ArrayXd parametersSDV(Ndimensions);
     ArrayXd parametersWOP(Ndimensions);
-    parametersMean <<  -4.0, -4.0;
-    parametersSDV << 0.5, 0.5;
-    parametersWOP << 2.0, 1.0;
+    parametersMean <<  2.0, 2.0, 2.0;
+    parametersSDV << 0.5, 1.0, 0.5;
+    parametersWOP << 1.0, 1.0, 1.0;
     SuperGaussianPrior superGaussianPrior(parametersMean, parametersSDV, parametersWOP);
     ptrPriors[0] = &superGaussianPrior;  
-    
+    */
     
     // ------ Draw points from the Ellipsoid ------
 
@@ -366,7 +396,7 @@ int main()
     }
 
     ofstream outputFile;
-    File::openOutputFile(outputFile,"priorDrawing2D.txt");
+    File::openOutputFile(outputFile,"priorDrawing3D.txt");
     File::arrayXXdToFile(outputFile, sampleOfDrawnPoints);
 
     return EXIT_SUCCESS;
