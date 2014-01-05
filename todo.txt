@@ -7,8 +7,6 @@ TODO
 
 - Header file inclusion should be kept to a minimum, so that the whole world is not recompiled when one of them changes.
 
-- Avoid accessing the individual elements of Eigen arrays too often in UniformPrior::draw()
-
 - Replace X-means clusterer algorithm with something better
 
 - The XXX.conrvativeResize(Ndimensions, Niterations + 1) statements at the beginning of the nested sampling loop in Multinest.run() are highly inefficient. Fix.
@@ -22,14 +20,7 @@ TODO
 
 - Update method docstrings in MultiEllipsoidSampler and NestedSampler (no longer up to date after refactoring)
 
-- Fix the credible interval computation as it sometimes (not always...) generates the error message: 
-  Assertion failed: (index >= 0 && index < size()), function operator()
-  when executing demoTwo2DGaussians.
-
-- In NestedSampler, the Arrays 'posteriorSample', 'logLikelihoodOfPosteriorSample', 'logWeightOfPosteriorSample' are public which means that they can be altered from outside. Check whether there is a better design possible.
-
 - Consider changing Nobjects to Npoints, since "object" has already a meaning in C++ as an instantiated class.
 
 - Change the output of KmeansClusterer so that it returns sortedIndices, rather than clusterIndices
 
-- Come up with a concise way avoiding the drawing of a reference point in case of uniform priors. Uniform prior will be one of the most used ones, and the drawing of the reference point is in our inner loop, so it matters.
