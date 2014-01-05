@@ -169,7 +169,7 @@ ArrayXd SuperGaussianPrior::getWidthOfPlateau()
 //      Natural logarithm of the probability density evaluation in x.
 //
 
-double SuperGaussianPrior::logDensity(RefArrayXd x, const bool includeConstantTerm)
+double SuperGaussianPrior::logDensity(RefArrayXd const x, const bool includeConstantTerm)
 {
 
     // Determine in which region of the prior the point is falling
@@ -206,6 +206,72 @@ double SuperGaussianPrior::logDensity(RefArrayXd x, const bool includeConstantTe
 
 
 
+
+
+
+
+
+
+
+
+
+
+// SuperGaussianPrior::drawnPointIsAccepted()
+//
+// PURPOSE:
+//      Checks wheter a new drawn point to be verified is accepted 
+//      according to the prior distribution.
+//
+// INPUT: 
+//      drawnPoint:     an Eigen array containing the coordinates 
+//                      of the new drawn point to be verified
+//
+// OUTPUT:
+//      Returns true if the new point is accepted, false if not.
+//
+
+bool SuperGaussianPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
+{
+    ArrayXd scatter1 = (drawnPoint - center).abs();
+    ArrayXd scatter2(Ndimensions);
+    vector<bool> coordinateIsAccepted(Ndimensions); 
+
+
+    // Loop over all the coordinates of the input point
+
+    for (int i = 0; i < Ndimensions; i++)
+    {
+        // Check if the coordinate belongs to either the plateau region or the tails of the Super-Gaussian.
+    
+        if (scatter1(i) > widthOfPlateau(i)/2. + center(i))
+        {
+            // The coordinate is falling in the tails
+
+            double referenceCoordinate = normalDistributionVector[i](engine);
+            scatter2(i) = fabs(referenceCoordinate-center(i)) + widthOfPlateau(i)/2.;
+            coordinateIsAccepted[i] = scatter1(i) < scatter2(i);
+        }
+        else
+        {
+            // The coordinate is falling in the plateau
+            
+            coordinateIsAccepted[i] = true;
+        }
+    }
+
+
+    // Compare the scatter for each coordinate.
+    // Accept the point only if the new point boundary is smaller than the reference one
+
+    if ( (scatter1 < scatter2).prod() )
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
 
 
 

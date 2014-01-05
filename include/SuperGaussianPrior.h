@@ -30,7 +30,8 @@ class SuperGaussianPrior : public Prior
         ArrayXd getSigma();
         ArrayXd getWidthOfPlateau();
      
-        virtual double logDensity(RefArrayXd x, const bool includeConstantTerm=false);
+        virtual double logDensity(RefArrayXd const x, const bool includeConstantTerm = false);
+        virtual bool drawnPointIsAccepted(RefArrayXd const drawnPoint);
         virtual void draw(RefArrayXXd drawnSample);
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood);
 
