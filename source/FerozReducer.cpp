@@ -9,11 +9,13 @@
 // INPUT:
 //      nestedSampler:  a NestedSampler class object used as the container of
 //                      information to use when reducing the number of live points.
+//      tolerance:      a double containing the tolerance on the evidence. The lower the factor
+//                      the more live points are removed at each iteration.
 //
 
-FerozReducer::FerozReducer(NestedSampler &nestedSampler, const double toleranceOnEvidence)
+FerozReducer::FerozReducer(NestedSampler &nestedSampler, const double tolerance)
 : LivePointsReducer(nestedSampler),
-  toleranceOnEvidence(toleranceOnEvidence)
+  tolerance(tolerance)
 {
 }
 
@@ -84,7 +86,7 @@ int FerozReducer::updateNobjects()
     NobjectsAtCurrentIteration = nestedSampler.getNobjects();
     double numerator = exp(Functions::logExpDifference(logMaxEvidenceContribution,logMaxEvidenceContributionNew));
     double denominator = exp(logMaxEvidenceContributionNew);
-    int NobjectsToRemove = nestedSampler.getMinNobjects() * numerator / (denominator * toleranceOnEvidence);
+    int NobjectsToRemove = nestedSampler.getMinNobjects() * numerator / (denominator * tolerance);
     updatedNobjects = NobjectsAtCurrentIteration - NobjectsToRemove;
     
 

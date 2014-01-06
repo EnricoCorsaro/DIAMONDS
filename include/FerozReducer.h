@@ -18,7 +18,7 @@ class FerozReducer : public LivePointsReducer
 
     public:
 
-        FerozReducer(NestedSampler &nestedSampler, const double toleranceOnEvidence);
+        FerozReducer(NestedSampler &nestedSampler, const double tolerance);
         ~FerozReducer();
         
         virtual int updateNobjects();
@@ -27,7 +27,7 @@ class FerozReducer : public LivePointsReducer
     protected:
 
         double logMaxEvidenceContribution;          // The logarithm of the maximum evidence contribution at the previous iteration of the nesting process
-        double toleranceOnEvidence;
+        double tolerance;
 
     private:
 
