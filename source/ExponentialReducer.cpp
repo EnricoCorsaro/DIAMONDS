@@ -11,16 +11,20 @@
 //                          information to use when reducing the number of live points.
 //      enhancingFactor:    a double specifying the rate of the reduction process. For this 
 //                          specific case, this number either enhances or smoothes the effect
-//                          of the exponential reduction. It is a number > 0. If set = 1
-//                          a standard exponential reduction occurs. For removing
-//                          even less points at the beginning and start removing more
-//                          at later steps, adopt a reduction rate greater than 1.
+//                          of the exponential reduction. It is a number > 0.
+//                          Default is 1 meaning that a standard exponential reduction occurs.
+//      
 //
 
-ExponentialReducer::ExponentialReducer(NestedSampler &nestedSampler, const double enhancingFactor)
+ExponentialReducer::ExponentialReducer(NestedSampler &nestedSampler, const double tolerance, 
+                                       const double enhancingFactor, const double terminationFactor)
 : LivePointsReducer(nestedSampler),
-  enhancingFactor(enhancingFactor)
+  tolerance(tolerance),
+  enhancingFactor(enhancingFactor),
+  terminationFactor(terminationFactor)
 {
+    assert(enhancingFactor >= 0.0);
+    assert(tolerance >= 1.0);
 }
 
 
@@ -56,40 +60,40 @@ ExponentialReducer::~ExponentialReducer()
 // ExponentialReducer::updateNobjects()
 //
 // PURPOSE:
-//      Updates the number of live points for the next iteration of the nesting process.
-//      For this case, the exponential expression adopted allows to reduce less points at the beginning
-//      and speeds up while the number of live points approaches the minimum allowed. 
+//      Updates the number of live points for the upcoming iteration of the nesting process.
+//      For this case, the exponential expression adopted allows to start reducing live points
+//      after the tolerance on the ratio of the live to the cumulated evidence has been reached. 
 //
 // OUTPUT:
 //      An integer specifying the final number of live points to be adopted.
 //
+// REMARK:
+//      The returned value of live points is ensured to be not below the minimum allowed. 
+//
 
 int ExponentialReducer::updateNobjects()
 {
-    if (nestedSampler.getNiterations() == 0)
-    {
-        // For the particular case of the first iteration initialize informationGain at the beginning.
-   
-        informationGain = 0.0;
-    }
+    // Retrive the ratio of live to cumulated evidence for the current iteration 
 
-
-    // Evaluate new informationGain for the current iteration 
-
-    double informationGainNew = nestedSampler.getInformationGain();
+    double ratioOfRemainderToCurrentEvidence = nestedSampler.getRatioOfRemainderToCurrentEvidence();        // Initial prior mass = 1
 
 
     // Evaluate the new number of live points to be used in the next iteration of the nesting process
    
     NobjectsAtCurrentIteration = nestedSampler.getNobjects();
-    double exponent1 = -1.0*(NobjectsAtCurrentIteration - nestedSampler.getMinNobjects());
-    double exponent2 = informationGain - informationGainNew;
-    updatedNobjects = NobjectsAtCurrentIteration - static_cast<int>(nestedSampler.getMinNobjects() * exp((enhancingFactor * exponent1) + exponent2));
+    double ratio = ratioOfRemainderToCurrentEvidence/terminationFactor;
+    double exponent = -1.0*enhancingFactor*(ratio - tolerance);
+    int NobjectsToRemove = exp(exponent);
+    updatedNobjects = NobjectsAtCurrentIteration - NobjectsToRemove;
 
 
-    // Finally update information gain with newest value
-    
-    informationGain = informationGainNew;
+    // If new number of live points is lower than minNobjects, do not accept the new number and stick to the
+    // previous one.
+
+    if (updatedNobjects < nestedSampler.getMinNobjects())
+    {
+        updatedNobjects = NobjectsAtCurrentIteration;
+    }
 
     return updatedNobjects;
 }
