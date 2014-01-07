@@ -126,7 +126,7 @@ void Results::writeMarginalDistributionToFile(const int parameterNumber)
         
     ostringstream numberString;
     numberString << setfill('0') << setw(3) << parameterNumber;
-    string fileName = "marginal";
+    string fileName = "marginalDistribution";
     string fullPath = nestedSampler.getOutputPathPrefix() + fileName + numberString.str() + ".txt";
     
     
