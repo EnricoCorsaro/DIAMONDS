@@ -85,8 +85,8 @@ int main(int argc, char *argv[])
     // ---------------------------------------------------------------------
     
     bool printOnTheScreen = true;                   // Print results on the screen
-    int initialNobjects = 10000;                      // Initial number of active points evolving within the nested sampling process.
-    int minNobjects = 300;                          // Minimum number of active points allowed in the nesting process.
+    int initialNobjects = 1000;                      // Initial number of active points evolving within the nested sampling process.
+    int minNobjects = 500;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 100;                     // Maximum number of attempts when trying to draw a new sampling point.
     int NinitialIterationsWithoutClustering = 100;  // The first N iterations, we assume that there is only 1 cluster.
     int NiterationsWithSameClustering = 10;         // Clustering is only happening every X iterations.
@@ -95,20 +95,22 @@ int main(int argc, char *argv[])
     double shrinkingRate = 0.2;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                     // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                     // of the ellipsoids.
-    double terminationFactor = 0.01;                // Termination factor for nesting loop.
+    double terminationFactor = 0.05;                // Termination factor for nesting loop.
 
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
     
-    double toleranceOnEvidence = 0.01;
-    FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
+    double tolerance = 50.0;
+    //FerozReducer livePointsReducer(nestedSampler, tolerance);
+    double enhancingFactor = 0.1;
+    ExponentialReducer livePointsReducer(nestedSampler, tolerance, enhancingFactor, terminationFactor);
    
     string outputPathPrefix = "demoSingle2DGaussian_";
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
                       maxNdrawAttempts, terminationFactor, outputPathPrefix);
 
-
+    
     // -------------------------------------------------------
     // ----- Last step. Save the results in output files -----
     // -------------------------------------------------------
