@@ -60,11 +60,13 @@ class NestedSampler
         int getMinNobjects();
         double getLogCumulatedPriorMass();
         double getLogRemainingPriorMass();
+        double getRatioOfRemainderToCurrentEvidence();
         double getLogEvidence();
         double getLogEvidenceError();
         double getInformationGain();
         double getLogMaxLikelihoodOfLivePoints();
         double getComputationalTime();
+        double getTerminationFactor();
         vector<int> getNobjectsPerIteration();
         ArrayXXd getNestedSample();
         ArrayXd getLogLikelihood();
@@ -80,15 +82,16 @@ class NestedSampler
         Likelihood &likelihood;
         Metric &metric;
         Clusterer &clusterer;
-        ofstream outputFile;                     // An output file stream to save configuring parameters also from derived classes 
-        bool printOnTheScreen;                   // A boolean specifying whether we want current results to be printed on the screen
-        unsigned int Ndimensions;                // Total number of dimensions of the inference
-        int Nobjects;                            // Total number of live points at a given iteration
-        int minNobjects;                         // Minimum number of live points allowed
-        double worstLiveLogLikelihood;           // The worst likelihood value of the current live sample
-        double logCumulatedPriorMass;            // The total (cumulated) prior mass at a given nested iteration
-        double logRemainingPriorMass;            // The remaining width in prior mass at a given nested iteration (log X)
-        vector<int> NobjectsPerIteration;        // A vector that stores the number of live points used at each iteration of the nesting process
+        ofstream outputFile;                        // An output file stream to save configuring parameters also from derived classes 
+        bool printOnTheScreen;                      // A boolean specifying whether we want current results to be printed on the screen
+        unsigned int Ndimensions;                   // Total number of dimensions of the inference
+        int Nobjects;                               // Total number of live points at a given iteration
+        int minNobjects;                            // Minimum number of live points allowed
+        double worstLiveLogLikelihood;              // The worst likelihood value of the current live sample
+        double logCumulatedPriorMass;               // The total (cumulated) prior mass at a given nested iteration
+        double logRemainingPriorMass;               // The remaining width in prior mass at a given nested iteration (log X)
+        double ratioOfRemainderToCurrentEvidence;   // The current ratio of live to cumulated evidence 
+        vector<int> NobjectsPerIteration;           // A vector that stores the number of live points used at each iteration of the nesting process
         
         mt19937 engine;
         
@@ -105,7 +108,8 @@ class NestedSampler
         double logMaxLikelihoodOfLivePoints;     // The maximum log(Likelihood) of the set of live points
         double logMeanLikelihoodOfLivePoints;    // The logarithm of the mean likelihood value of the current set of live points
         double computationalTime;                // Computational time of the process
-        ArrayXXd nestedSample;                   // Parameters values (for all the free parameters of the problem) of the current set of live points
+        double terminationFactor;                // The final value of the stopping condition for the nested process
+        ArrayXXd nestedSample;                   // Parameter values (for all the free parameters of the problem) of the current set of live points
         ArrayXd logLikelihood;                   // log-likelihood values of the current set of live points
                                                  // is removed from the sample.
         ArrayXXd posteriorSample;                // Parameter values (for all the free parameters of the problem) in the final posterior sampling
@@ -113,7 +117,7 @@ class NestedSampler
         ArrayXd logWeightOfPosteriorSample;      // log(Weights) = log(Likelihood) + log(dX) corresponding to the posterior sample
 
         void writeConfiguringParametersToFile(const int NinitialIterationsWithoutClustering, const int NiterationsWithSameClustering, 
-                                              const int maxNdrawAttempts, const double terminationFactor, string fileName = "configuringParameters.txt");
+                                              const int maxNdrawAttempts, string fileName = "configuringParameters.txt");
         void removeLivePointsFromSample(const vector<int> &indicesOfLivePointsToRemove, 
                                         vector<int> &clusterIndices, vector<int> &clusterSizes);
         void printComputationalTime(const double startTime);

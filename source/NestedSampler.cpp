@@ -35,6 +35,7 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobje
   minNobjects(minNobjects),
   logCumulatedPriorMass(numeric_limits<double>::lowest()),
   logRemainingPriorMass(0.0),
+  ratioOfRemainderToCurrentEvidence(numeric_limits<double>::max()),
   Niterations(0),
   updatedNobjects(initialNobjects),
   initialNobjects(initialNobjects),
@@ -134,7 +135,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 {
     int startTime = time(0);
     double logMeanLiveEvidence;
-    double ratioOfRemainderToCurrentEvidence;
+    terminationFactor = maxRatioOfRemainderToCurrentEvidence;
     outputPathPrefix = pathPrefix;
 
     if (printOnTheScreen)
@@ -148,8 +149,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
     // Save configuring parameters to an output ASCII file
 
-    writeConfiguringParametersToFile(NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
-                                     maxNdrawAttempts, maxRatioOfRemainderToCurrentEvidence);
+    writeConfiguringParametersToFile(NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
 
 
     // Set up the random number generator. It generates integers random numbers
@@ -543,13 +543,6 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     while (nestedSamplingShouldContinue);
 
 
-    // Append information to existing output file and close stream afterwards
-    
-    outputFile << "Niterations: " << Niterations << endl;
-    outputFile << "Final Nclusters: " << Nclusters << endl;
-    outputFile.close();
-
-
     // Add the remaining live sample of points to our collection of posterior points 
     // (i.e parameter coordinates, likelihood values and weights)
 
@@ -582,6 +575,14 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     // Print total computational time
 
     printComputationalTime(startTime);
+    
+    
+    // Append information to existing output file and close stream afterwards
+    
+    outputFile << "Niterations: " << Niterations << endl;
+    outputFile << "Final Nclusters: " << Nclusters << endl;
+    outputFile << "Computational Time (seconds): " << computationalTime << endl;
+    outputFile.close();
 }
 
 
@@ -601,10 +602,11 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 //      Saves all configuring parameters of nested sampling to an output ASCII file.
 //
 // INPUT:
-//      NinitialIterationsWithoutClustering;    The first N iterations, we assume that there is only 1 cluster.
-//      NiterationsWithSameClustering;          Clustering is only happening every X iterations.
-//      maxNdrawAttempts;                       Maximum number of attempts when trying to draw a new sampling point.
-//      terminationFactor;                      Termination factor for nesting loop.
+//      NinitialIterationsWithoutClustering:    The first N iterations, we assume that there is only 1 cluster.
+//      NiterationsWithSameClustering:          Clustering is only happening every X iterations.
+//      maxNdrawAttempts:                       Maximum number of attempts when trying to draw a new sampling point.
+//      fileName:                               A string specifying the file name of the output file.
+//                                              Default name is "configuringParameters.txt".
 //
 // OUTPUT:
 //      void
@@ -614,7 +616,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 //
 
 void NestedSampler::writeConfiguringParametersToFile(const int NinitialIterationsWithoutClustering, const int NiterationsWithSameClustering, 
-                                      const int maxNdrawAttempts, const double terminationFactor, string fileName)
+                                      const int maxNdrawAttempts, string fileName)
 {
     string fullPath = outputPathPrefix + fileName;
     File::openOutputFile(outputFile, fullPath);
@@ -941,6 +943,30 @@ double NestedSampler::getLogRemainingPriorMass()
 
 
 
+// NestedSampler::getRatioOfRemainderToCurrentEvidence()
+//
+// PURPOSE:
+//      Get protected data member ratioOfRemainderToCurrentEvidence.
+//
+// OUTPUT:
+//      A double containing the ratio of the live evidence 
+//      to the cumulated evidence.
+//
+
+double NestedSampler::getRatioOfRemainderToCurrentEvidence()
+{
+    return ratioOfRemainderToCurrentEvidence;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 // NestedSampler::getLogEvidence()
@@ -1058,6 +1084,28 @@ double NestedSampler::getComputationalTime()
 }
 
 
+
+
+
+
+
+
+
+
+
+// NestedSampler::getTerminationFactor()
+//
+// PURPOSE:
+//      Get private data member terminationFactor.
+//
+// OUTPUT:
+//      A double containing the final value of the stopping condition for the nested process.
+//
+
+double NestedSampler::getTerminationFactor()
+{
+    return terminationFactor;
+}
 
 
 
