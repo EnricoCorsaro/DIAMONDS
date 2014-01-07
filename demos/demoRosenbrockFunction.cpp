@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
     EuclideanMetric myMetric;
     int minNclusters = 3;
-    int maxNclusters = 10;
+    int maxNclusters = 6;
     int Ntrials = 10;
     double relTolerance = 0.01;
 
@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
     int NiterationsWithSameClustering = 20;         // Clustering is only happening every X iterations.
     double initialEnlargementFraction = 2.0;        // Fraction by which each axis in an ellipsoid has to be enlarged.
                                                     // It can be a number >= 0, where 0 means no enlargement.
-    double shrinkingRate = 0.3;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
+    double shrinkingRate = 0.4;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                     // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                     // of the ellipsoids.
     double terminationFactor = 0.05;                // Termination factor for nesting loop.

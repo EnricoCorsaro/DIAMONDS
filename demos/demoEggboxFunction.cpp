@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
 
     EuclideanMetric myMetric;
     int minNclusters = 1;
-    int maxNclusters = 12;
+    int maxNclusters = 10;
     int Ntrials = 10;
     double relTolerance = 0.01;
 
@@ -90,7 +90,7 @@ int main(int argc, char *argv[])
     int maxNdrawAttempts = 50000;                    // Maximum number of attempts when trying to draw a new sampling point.
     int NinitialIterationsWithoutClustering = 400;   // The first N iterations, we assume that there is only 1 cluster.
     int NiterationsWithSameClustering = 40;          // Clustering is only happening every X iterations.
-    double initialEnlargementFraction = 2.5;         // Fraction by which each axis in an ellipsoid has to be enlarged.
+    double initialEnlargementFraction = 2.0;         // Fraction by which each axis in an ellipsoid has to be enlarged.
                                                      // It can be a number >= 0, where 0 means no enlargement.
     double shrinkingRate = 0.2;                      // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                      // It is a number between 0 and 1. The smaller the slower the shrinkage
