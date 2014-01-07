@@ -468,8 +468,7 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids(vector<unordered_set<int>>
 double MultiEllipsoidSampler::updateEnlargementFraction(const int clusterSize)
 {
     double updatedEnlargementFraction = pow(initialEnlargementFraction,1.0/Ndimensions) * exp( (shrinkingRate/Ndimensions) * logRemainingPriorMass 
-                                            + 0.5 * log(static_cast<double>(Nobjects) / clusterSize) 
-                                            - 1.0/(2*Ndimensions) * log(Ndimensions));
+                                            + 0.5 * log(static_cast<double>(Nobjects) / clusterSize) );
     
     return updatedEnlargementFraction;
 }
