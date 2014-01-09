@@ -83,7 +83,7 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      A boolean value that is true if a new point in the sampling process is found and false otherwise.
 //
 
-bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
+bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, const unsigned int Nclusters, const vector<int> &clusterIndices,
                                                const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
                                                double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts)
 {    
@@ -309,7 +309,7 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
 //      void
 //
 
-void MultiEllipsoidSampler::computeEllipsoids(RefArrayXXd const totalSample, const int Nclusters, 
+void MultiEllipsoidSampler::computeEllipsoids(RefArrayXXd const totalSample, const unsigned int Nclusters, 
                                               const vector<int> &clusterIndices, const vector<int> &clusterSizes)
 {
     assert(totalSample.cols() == clusterIndices.size());

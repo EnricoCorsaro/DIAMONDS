@@ -31,7 +31,7 @@ class MultiEllipsoidSampler : public NestedSampler
                               const double initialEnlargementFraction, const double shrinkingRate);
         ~MultiEllipsoidSampler();
 
-        virtual bool drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
+        virtual bool drawWithConstraint(const RefArrayXXd totalSample, const unsigned int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) override; 
         
@@ -42,7 +42,7 @@ class MultiEllipsoidSampler : public NestedSampler
 
     protected:
       
-        void computeEllipsoids(RefArrayXXd const totalSample, const int Nclusters, 
+        void computeEllipsoids(RefArrayXXd const totalSample, const unsigned int Nclusters, 
                                const vector<int> &clusterIndices, const vector<int> &clusterSizes);
         void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
         double updateEnlargementFraction(const int clusterSize);
