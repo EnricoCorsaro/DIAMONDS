@@ -18,7 +18,7 @@
 #include "Ellipsoid.h"
 #include "ZeroModel.h"
 #include "FerozReducer.h"
-#include "ExponentialReducer.h"
+#include "PowerlawReducer.h"
 #include "demoHimmelblauFunction.h"
 
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     
     bool printOnTheScreen = true;                   // Print results on the screen
     int initialNobjects = 1000;                     // Initial number of active points evolving within the nested sampling process.
-    int minNobjects = 1000;                         // Minimum number of active points allowed in the nesting process.
+    int minNobjects = 400;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 50000;                   // Maximum number of attempts when trying to draw a new sampling point.
     int NinitialIterationsWithoutClustering = 100;  // The first N iterations, we assume that there is only 1 cluster.
     int NiterationsWithSameClustering = 10;         // Clustering is only happening every X iterations.
@@ -101,9 +101,11 @@ int main(int argc, char *argv[])
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
     
-    double toleranceOnEvidence = 0.01;
-    FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
-   
+    double tolerance = 1.e2;
+    double exponent = 0.4;
+    PowerlawReducer livePointsReducer(nestedSampler, tolerance, exponent, terminationFactor);
+    //FerozReducer livePointsReducer(nestedSampler, tolerance); 
+
     string outputPathPrefix = "demoHimmelblauFunction_";
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
                       maxNdrawAttempts, terminationFactor, outputPathPrefix);

@@ -18,7 +18,7 @@
 #include "Ellipsoid.h"
 #include "ZeroModel.h"
 #include "FerozReducer.h"
-#include "ExponentialReducer.h"
+#include "PowerlawReducer.h"
 #include "demoEggboxFunction.h"
 
 
@@ -101,8 +101,11 @@ int main(int argc, char *argv[])
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
 
-    double toleranceOnEvidence = 0.01;
-    FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
+    double tolerance = 1.e2;
+    double exponent = 0.4;
+    PowerlawReducer livePointsReducer(nestedSampler, tolerance, exponent, terminationFactor);
+    //FerozReducer livePointsReducer(nestedSampler, tolerance);
+
 
     string outputPathPrefix = "demoEggboxFunction_";
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
@@ -120,7 +123,7 @@ int main(int argc, char *argv[])
     results.writePosteriorProbabilityToFile("PosteriorDistribution.txt");
 
     double credibleLevel = 68.3;
-    bool writeMarginalDistributionToFile = true;
+    bool writeMarginalDistributionToFile = false;
     results.writeParametersSummaryToFile("ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
 
