@@ -1,7 +1,7 @@
-#include "ExponentialReducer.h"
+#include "PowerlawReducer.h"
 
 
-// ExponentialReducer::ExponentialReducer()
+// PowerlawReducer::PowerlawReducer()
 //
 // PURPOSE:
 //      Derived class constructor. 
@@ -9,21 +9,25 @@
 // INPUT:
 //      nestedSampler:      a NestedSampler class object used as the container of
 //                          information to use when reducing the number of live points.
-//      enhancingFactor:    a double specifying the rate of the reduction process. For this 
+//      exponent:           a double specifying the rate of the reduction process. For this 
 //                          specific case, this number either enhances or smoothes the effect
-//                          of the exponential reduction. It is a number > 0.
-//                          Default is 1 meaning that a standard exponential reduction occurs.
-//      
+//                          of the power law reduction. It is a number >= 0.
+//                          Default is 1 meaning that a standard linear reduction occurs.
+//                          If > 1 the reduction is suoer-linear, hence faster, and if
+//                          < 1 the reduction is sub-linear, hence slower.
+//      terminationFactor:  the fraction of remainder evidence to gained evidence used to terminate 
+//                          the nested iteration loop. This value is also used as a tolerance on the final
+//                          evidence to update the number of live points in the nesting process.
 //
 
-ExponentialReducer::ExponentialReducer(NestedSampler &nestedSampler, const double tolerance, 
-                                       const double enhancingFactor, const double terminationFactor)
+PowerlawReducer::PowerlawReducer(NestedSampler &nestedSampler, const double tolerance, 
+                                       const double exponent, const double terminationFactor)
 : LivePointsReducer(nestedSampler),
   tolerance(tolerance),
-  enhancingFactor(enhancingFactor),
+  exponent(exponent),
   terminationFactor(terminationFactor)
 {
-    assert(enhancingFactor >= 0.0);
+    assert(exponent >= 0.0);
     assert(tolerance >= 1.0);
 }
 
@@ -37,13 +41,13 @@ ExponentialReducer::ExponentialReducer(NestedSampler &nestedSampler, const doubl
 
 
 
-// ExponentialReducer::~ExponentialReducer()
+// PowerlawReducer::~PowerlawReducer()
 //
 // PURPOSE:
 //      Abstract base class destructor. 
 //
 
-ExponentialReducer::~ExponentialReducer()
+PowerlawReducer::~PowerlawReducer()
 {
 }
 
@@ -57,7 +61,7 @@ ExponentialReducer::~ExponentialReducer()
 
 
 
-// ExponentialReducer::updateNobjects()
+// PowerlawReducer::updateNobjects()
 //
 // PURPOSE:
 //      Updates the number of live points for the upcoming iteration of the nesting process.
@@ -71,7 +75,7 @@ ExponentialReducer::~ExponentialReducer()
 //      The returned value of live points is ensured to be not below the minimum allowed. 
 //
 
-int ExponentialReducer::updateNobjects()
+int PowerlawReducer::updateNobjects()
 {
     // Retrive the ratio of live to cumulated evidence for the current iteration 
 
@@ -82,8 +86,8 @@ int ExponentialReducer::updateNobjects()
    
     NobjectsAtCurrentIteration = nestedSampler.getNobjects();
     double ratio = ratioOfRemainderToCurrentEvidence/terminationFactor;
-    double exponent = -1.0*enhancingFactor*(ratio - tolerance);
-    int NobjectsToRemove = exp(exponent);
+    int NobjectsToRemove = pow((tolerance/ratio), exponent);
+
     updatedNobjects = NobjectsAtCurrentIteration - NobjectsToRemove;
 
 
