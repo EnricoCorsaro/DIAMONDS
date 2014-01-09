@@ -581,6 +581,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     
     outputFile << "Niterations: " << Niterations << endl;
     outputFile << "Final Nclusters: " << Nclusters << endl;
+    outputFile << "Final Nobjects: " << Nobjects << endl;
     outputFile << "Computational Time (seconds): " << computationalTime << endl;
     outputFile.close();
 }
@@ -729,31 +730,30 @@ void NestedSampler::printComputationalTime(const double startTime)
 {
     double endTime = time(0);
     computationalTime = endTime - startTime; 
-    
-    cerr << endl;
+   
+    cerr << " Total Computational Time: ";
 
     if (computationalTime < 60)
     {
-        cerr << " Total Computational Time: " << computationalTime << " seconds" << endl;
+        cerr << computationalTime << " seconds" << endl;
     }
     else 
         if ((computationalTime >= 60) && (computationalTime < 60*60))
         {
-            computationalTime = computationalTime/60.;
-            cerr << " Total Computational Time: " << setprecision(3) << computationalTime << " minutes" << endl;
+            cerr << setprecision(3) << computationalTime/60. << " minutes" << endl;
         }
     else 
         if (computationalTime >= 60*60)
         {
-            computationalTime = computationalTime/(60.*60.);
-            cerr << " Total Computational Time: " << setprecision(3) << computationalTime << " hours" << endl;
+            cerr << setprecision(3) << computationalTime/(60.*60.) << " hours" << endl;
         }
     else 
         if (computationalTime >= 60*60*24)
         {
-            computationalTime = computationalTime/(60.*60.*24.);
-            cerr << " Total Computational Time: " << setprecision(3) << computationalTime << " days" << endl;
+            cerr << setprecision(3) << computationalTime/(60.*60.*24.) << " days" << endl;
         }
+    
+    cerr << "------------------------------------------------" << endl;
 }
 
 

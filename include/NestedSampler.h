@@ -46,7 +46,7 @@ class NestedSampler
                  const int NiterationsWithSameClustering = 50, const int maxNdrawAttempts = 5000, 
                  const double maxRatioOfRemainderToCurrentEvidence = 0.05, string pathPrefix = "");
         
-        virtual bool drawWithConstraint(const RefArrayXXd totalSample, const int Nclusters, const vector<int> &clusterIndices,
+        virtual bool drawWithConstraint(const RefArrayXXd totalSample, const unsigned int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) = 0;
        
