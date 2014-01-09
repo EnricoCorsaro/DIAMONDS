@@ -18,7 +18,7 @@
 #include "Ellipsoid.h"
 #include "ZeroModel.h"
 #include "FerozReducer.h"
-#include "ExponentialReducer.h"
+#include "PowerlawReducer.h"
 #include "demoFive2DGaussians.h"
 
 
@@ -102,8 +102,10 @@ int main(int argc, char *argv[])
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
 
-    double toleranceOnEvidence = 0.01;
-    FerozReducer livePointsReducer(nestedSampler, toleranceOnEvidence);
+    double tolerance = 1.e2;
+    double exponent = 0.4;
+    PowerlawReducer livePointsReducer(nestedSampler, tolerance, exponent, terminationFactor);
+    //FerozReducer livePointsReducer(nestedSampler, tolerance);
 
     string outputPathPrefix = "demoFive2DGaussians_";
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
