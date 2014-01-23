@@ -199,7 +199,6 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     }
 
 
-
     // Compute the log(Likelihood) for each of our points in the live sample
 
     logLikelihood.resize(Nobjects);
@@ -519,7 +518,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
                      << "   Ratio: " << ratioOfRemainderToCurrentEvidence
                      << "   log(E): " << logEvidence 
                      << "   IG: " << informationGain
-                     << endl;
+                     << endl; 
             }
         }
 
@@ -580,6 +579,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     // Append information to existing output file and close stream afterwards
     
     outputFile << "Niterations: " << Niterations << endl;
+    outputFile << "Optimal Niterations: " << (Nobjects*informationGain) + (Nobjects*sqrt(Ndimensions*1.0)) << endl;
     outputFile << "Final Nclusters: " << Nclusters << endl;
     outputFile << "Final Nobjects: " << Nobjects << endl;
     outputFile << "Computational Time (seconds): " << computationalTime << endl;
