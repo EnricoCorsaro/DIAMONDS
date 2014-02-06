@@ -63,7 +63,7 @@ class Results
        
         ArrayXd posteriorProbability();
         void writeMarginalDistributionToFile(const int parameterNumber);
-        ArrayXd computeCredibleLimits(const double credibleLevel, const int Nbins, const int NinterpolationsPerBin = 10);
+        ArrayXd computeCredibleLimits(const double credibleLevel, const double skewness, const int NinterpolationsPerBin = 10);
         ArrayXXd parameterEstimation(const double credibleLevel, const bool writeMarginalDistribution);
 
 };

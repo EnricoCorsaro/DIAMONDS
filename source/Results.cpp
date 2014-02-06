@@ -161,7 +161,7 @@ void Results::writeMarginalDistributionToFile(const int parameterNumber)
 // INPUT:
 //      credibleLevel:              a double number providing the desired credible 
 //                                  level to be computed.
-//      Nbins:                      an integer specifying the number of points of the distribution to interpolate
+//      skewness:                   the skewness of the sample distribution
 //      NinterpolationsPerBin:      an integer containing the number of desired points to interpolate between.
 //                                  two consecutive input data points.
 //      
@@ -175,7 +175,7 @@ void Results::writeMarginalDistributionToFile(const int parameterNumber)
 //      not required to be regular.
 //
 
-ArrayXd Results::computeCredibleLimits(const double credibleLevel, const int Nbins, const int NinterpolationsPerBin)
+ArrayXd Results::computeCredibleLimits(const double credibleLevel, const double skewness, const int NinterpolationsPerBin)
 {
     // Interpolate rebinned marginal distribution by using a NinterpolationsPerBin times finer grid. 
     // This allows for a better computation of the credible intervals. Note that while the rebinned 
@@ -184,6 +184,7 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const int Nbi
     // Such a rescaling has no effect on the computation of the credible intervals,
     // which instead depend upon the relative variation from point to point in the distribution.
 
+    int Nbins = parameterValuesRebinned.size();
     int Ninterpolations = Nbins*NinterpolationsPerBin;
 
 
@@ -239,77 +240,128 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const int Nbi
 
     int max = 0;
     marginalDistributionMode = marginalDistributionInterpolated.maxCoeff(&max);
-    ArrayXd marginalDistributionLeft(max + 1);       // Marginal distribution up to mode value (included)
-    ArrayXd parameterValuesLeft(max + 1);            // Parameter range up to mode value (included)
+    int NbinsLeft = max + 1;
+    int NbinsRight = Ninterpolations - NbinsLeft;
+    ArrayXd marginalDistributionLeft(NbinsLeft);        // Marginal distribution up to modal value (included)
+    ArrayXd parameterValuesLeft(NbinsLeft);             // Parameter range up to modal value (included)
+    ArrayXd marginalDistributionRight(NbinsRight);      // Marginal distribution beyond modal value 
+    ArrayXd parameterValuesRight(NbinsRight);           // Parameter range beyond modal value
     double limitProbabilityRight = marginalDistributionInterpolated(max);
     double limitParameterRight = parameterValuesInterpolated(max);
     double limitProbabilityLeft = limitProbabilityRight;
     double limitParameterLeft = limitParameterRight;
 
 
-    // Difference distribution to find point belonging to the distribution to the left
+    // Difference distribution to find point belonging to the distribution to the left (right)
     // of the mode having closest probability to that identified in the part of the
-    // distribution to the right of the mode.
+    // distribution to the right (left) of the mode.
 
-    ArrayXd marginalDifferenceLeft = ArrayXd::Zero(max + 1);          
+    ArrayXd marginalDifferenceLeft = ArrayXd::Zero(NbinsLeft);          
+    ArrayXd marginalDifferenceRight = ArrayXd::Zero(NbinsRight);          
                                                 
 
-    // Copy left-hand part of total marginal distributon into separate array.
-    // Also copy the corresponding parameter values inro a separate array.
+    // Copy left- and right-hand part of total marginal distributon into separate arrays.
+    // Also copy the corresponding parameter values inro separate arrays.
     // Since parameterValues is already sorted in ascending order this can be done quickly.
 
-    marginalDistributionLeft = marginalDistributionInterpolated.segment(0, max + 1);
-    parameterValuesLeft = parameterValuesInterpolated.segment(0, max + 1);
+    marginalDistributionLeft = marginalDistributionInterpolated.segment(0, NbinsLeft);
+    marginalDistributionRight = marginalDistributionInterpolated.segment(NbinsLeft, NbinsRight);
+    parameterValuesLeft = parameterValuesInterpolated.segment(0, NbinsLeft);
+    parameterValuesRight = parameterValuesInterpolated.segment(NbinsLeft, NbinsRight);
 
 
-    // Count number of steps (bins) in the distribution to the right side of its modal value.
-    // Define the limit probability on the right-hand distribution 
-    // and the corresponding value of the parameter.
-    // Then compute the difference of the left-hand distribution with the right limit probability.
-    // Finally find the point in the left part having closest probability to the right limit,
-    // save its probability and the corresponding value of the parameter.
-    // Cumulate the probability within the range and repeat the process until 
-    // probability >= probability(credibleLevel).
+    // Count number of steps (bins) in the distribution to the right (left) side of its modal value.
+    // Define the limit probability on the right-(left-)hand distribution and the corresponding 
+    // value of the parameter. Then compute the difference of the left-(right-)hand distribution 
+    // with the right (left) limit probability. Finally find the point in the left (right) part 
+    // having closest probability to the right (left) limit, save its probability and the corresponding 
+    // value of the parameter. Cumulate the probability within the range and repeat the process until 
+    // probability >= probability(credibleLevel). The skenwess is adopted to select the direction 
+    // of the iterative process for a more optimal computation of the shortest CI. 
+    // For skewness < 0, the distribution is asymetric to the left, hence the step is towards the left side.
+    // For skewness > 0, the distribution is asymetric to the right, hence the step is towards the right side.
 
-    int stepRight = 0;          
     int min = 0;
     double credibleLevelFraction = credibleLevel/100.;
     double totalProbability = 0.0;
 
-    while (totalProbability < (credibleLevelFraction) && (max + stepRight < Ninterpolations))             
+    if (skewness >= 0.0)
     {
-        totalProbability = 0.0;
+        int stepRight = 0;          
+        
+        while (totalProbability < (credibleLevelFraction) && (NbinsLeft + stepRight < Ninterpolations))             
+        {
+            totalProbability = 0.0;
 
 
-        // Find the probability and the corresponding value of the parameter at the right edge of the interval
+            // Find the probability and the corresponding value of the parameter at the right edge of the interval
 
-        limitProbabilityRight = marginalDistributionInterpolated(max + stepRight);  
-        limitParameterRight = parameterValuesInterpolated(max + stepRight);         
+            limitProbabilityRight = marginalDistributionInterpolated(NbinsLeft + stepRight);  
+            limitParameterRight = parameterValuesInterpolated(NbinsLeft + stepRight);         
 
             
-        // Find which point in the left part is the closest in probability to that of the right edge.
+            // Find which point in the left part is the closest in probability to that of the right edge.
 
-        marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();                                      
-        limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);       
-
-
-        // Save the point and its probability as the left edge of the search interval
-
-        limitProbabilityLeft = marginalDistributionLeft(min);           
-        limitParameterLeft = parameterValuesLeft(min);                 
+            marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();                                      
+            limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);       
 
 
-        // Cumulate the probability within the identified interval
+            // Save the point and its probability as the left edge of the searching interval
 
-        int intervalSize = max + stepRight + 1 - min;
-        totalProbability = marginalDistributionInterpolated.segment(min, intervalSize).sum();
+            limitProbabilityLeft = marginalDistributionLeft(min);
+            limitParameterLeft = parameterValuesLeft(min);
 
 
-        // Move one step further to the right
+            // Cumulate the probability within the identified interval
 
-        ++stepRight;
+            int intervalSize = NbinsLeft + stepRight - min;
+            totalProbability = marginalDistributionInterpolated.segment(min, intervalSize).sum();
+
+
+            // Move one step further to the right
+
+            ++stepRight;
+        }
     }
+    else
+    {
+        int stepLeft = 0;          
+        
+        while (totalProbability < (credibleLevelFraction) && (stepLeft < NbinsLeft))             
+        {
+            totalProbability = 0.0;
 
+
+            // Find the probability and the corresponding value of the parameter at the left edge of the interval
+
+            limitProbabilityLeft = marginalDistributionInterpolated(NbinsLeft - stepLeft - 1);  
+            limitParameterLeft = parameterValuesInterpolated(NbinsLeft - stepLeft - 1);         
+
+            
+            // Find which point in the right part is the closest in probability to that of the left edge.
+
+            marginalDifferenceRight = (marginalDistributionRight - limitProbabilityLeft).abs();                                      
+            limitProbabilityRight = marginalDifferenceRight.minCoeff(&min);       
+
+
+            // Save the point and its probability as the right edge of the searching interval
+
+            limitProbabilityRight = marginalDistributionRight(min);
+            limitParameterRight = parameterValuesRight(min);
+
+
+            // Cumulate the probability within the identified interval
+
+            int intervalSize = min + stepLeft;
+            totalProbability = marginalDistributionInterpolated.segment(NbinsLeft - stepLeft, intervalSize).sum();
+
+
+            // Move one step further to the left
+
+            ++stepLeft;
+        }
+    }
+    
     ArrayXd credibleLimits(2);
     credibleLimits << limitParameterLeft, limitParameterRight; 
     
@@ -361,7 +413,7 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
     
     int sampleSize = posteriorDistribution.size();
     assert(nestedSampler.getPosteriorSample().cols() == sampleSize);
-    ArrayXXd parameterEstimates(Ndimensions, 6);
+    ArrayXXd parameterEstimates(Ndimensions, 7);
 
     parameterValues.resize(sampleSize);
     marginalDistribution.resize(sampleSize);
@@ -394,6 +446,12 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
 
         double secondMoment = ((parameterValues - parameterMean).pow(2) * marginalDistribution).sum();
 
+
+        // Compute third moment and skewness of the sample distribution
+        
+        double thirdMoment = ((parameterValues - parameterMean).pow(3) * marginalDistribution).sum();
+        double skewness = thirdMoment/pow(secondMoment,3.0/2.0);
+
         
         // Compute the median value (value containing the 50% of total probability)
 
@@ -423,16 +481,16 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
        
         parameterEstimates(i,3) = secondMoment;
 
+
         // Compute optimal bin size for rebinning marginal distribution according to its symmetry properties
         // Scott's normal reference rule is adopted (most efficient for Gaussian-shaped distributions)
 
-        int Nbins = 0;
         double binWidth = 0;
         double parameterMaximum = parameterValues.maxCoeff();
         double parameterMinimum = parameterValues.minCoeff();
         
         binWidth = 3.5*sqrt(secondMoment)/pow(sampleSize,1.0/3.0);
-        Nbins = floor((parameterMaximum - parameterMinimum)/binWidth);
+        int Nbins = floor((parameterMaximum - parameterMinimum)/binWidth);
 
         if (Nbins > 1000)
         {
@@ -492,11 +550,17 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         // Compute shortest credible intervals (CI) and save their corresponding limiting values (credible limits)
 
         ArrayXd credibleLimits(2);
-        credibleLimits = computeCredibleLimits(credibleLevel, Nbins);
+        credibleLimits = computeCredibleLimits(credibleLevel, skewness);
         
         parameterEstimates(i,4) = credibleLimits(0);
         parameterEstimates(i,5) = credibleLimits(1);
-      
+     
+
+        // Save the skewness of the distribution
+
+        parameterEstimates(i,6) = skewness;
+
+
         
         // If required, save the interpolated marginal distribution in an output file
 
@@ -752,12 +816,13 @@ void Results::writeParametersSummaryToFile(string fileName, const double credibl
     outputFile << "# Credible intervals are the shortest credible intervals" << endl; 
     outputFile << "# according to the usual definition" << endl;
     outputFile << "# Credible level: " << fixed << setprecision(2) << credibleLevel << " %" << endl;
-    outputFile << "# Column #1: Expectation (I Moment)" << endl;
+    outputFile << "# Column #1: I Moment (Mean)" << endl;
     outputFile << "# Column #2: Median" << endl;
     outputFile << "# Column #3: Mode" << endl;
-    outputFile << "# Column #4: II Moment (Variance if Normal Distribution)" << endl;
+    outputFile << "# Column #4: II Moment (Variance if Normal distribution)" << endl;
     outputFile << "# Column #5: Lower Credible Limit" << endl;
     outputFile << "# Column #6: Upper Credible Limit" << endl;
+    outputFile << "# Column #7: Skewness (Asymmetry of the distribution, -1 to the left, +1 to the right, 0 if symmetric)" << endl;
     outputFile << scientific << setprecision(9);
     File::arrayXXdToFile(outputFile, parameterEstimates);
     outputFile.close();
