@@ -45,9 +45,9 @@ void Functions::lorentzProfile(RefArrayXd predictions, const RefArrayXd covariat
 // INPUT:
 //      predictions : vector containing the result
 //      covariates : vector containing independent variable values
-//      centroid : centroid of the Lorentzian profile (default = 0)
-//      height : maximum height of the Lorentzian profile (default = 1)
-//      linewidth : width of the Lorentzian profile (mode linewidth) (default = 1)
+//      centroid : centroid of the Lorentzian profile (default = 0), expressed in muHz
+//      height : height of the Lorentzian profile (default = 1), expressed in ppm^2 / muHz
+//      linewidth : width of the Lorentzian profile (mode linewidth) (default = 1), expressed in muHz
 //
 // OUTPUT:
 //      void
@@ -60,6 +60,42 @@ void Functions::modeProfile(RefArrayXd predictions, const RefArrayXd covariates,
                                const double centroid, const double height, const double linewidth)
 {
     predictions = height/(1.0 + (4.0*(covariates-centroid).square()/(linewidth*linewidth)));
+}
+
+
+
+
+
+
+
+
+
+
+
+// Functions::modeProfileWithAmplitude()
+//
+// PURPOSE: 
+//      Computes a single Lorentzian profile that models an oscillation mode in a power spectrum.
+//      The profile is computed given the centroid, the height and the linewidth.
+//
+// INPUT:
+//      predictions : vector containing the result
+//      covariates : vector containing independent variable values
+//      centroid : centroid of the Lorentzian profile (default = 0), expressed in muHz
+//      amplitude : amplitude of the Lorentzian profile (default = 1), expressed in ppm
+//      linewidth : width of the Lorentzian profile (mode linewidth) (default = 1), expressed in muHz
+//
+// OUTPUT:
+//      void
+//
+// REMARKS:
+//      Saves the predictions into the input vector predictions.
+//
+
+void Functions::modeProfileWithAmplitude(RefArrayXd predictions, const RefArrayXd covariates, 
+                               const double centroid, const double amplitude, const double linewidth)
+{
+    predictions = amplitude*amplitude/(Functions::PI * linewidth)/(1.0 + (4.0*(covariates-centroid).square()/(linewidth*linewidth)));
 }
 
 

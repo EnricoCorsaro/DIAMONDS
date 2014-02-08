@@ -43,7 +43,9 @@ namespace Functions
     void lorentzProfile(RefArrayXd predictions, const RefArrayXd covariates, 
                         const double centroid = 0.0, const double amplitude = 1.0, const double gamma = 1.0);
     void modeProfile(RefArrayXd predictions, const RefArrayXd covariates, 
-                        const double centroid = 0.0, const double height = 1.0, const double linewidth = 1.0);
+                     const double centroid = 0.0, const double height = 1.0, const double linewidth = 1.0);
+    void modeProfileWithAmplitude(RefArrayXd predictions, const RefArrayXd covariates, 
+                                  const double centroid = 0.0, const double amplitude = 1.0, const double linewidth = 1.0);
     double logGaussProfile(const double covariate, const double mu = 0.0, 
                            const double sigma = 1.0, const double amplitude = 1.0);
     void logGaussProfile(RefArrayXd predictions, const RefArrayXd covariates, const double mu = 0.0, 
