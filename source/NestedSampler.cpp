@@ -149,10 +149,34 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
     // Save configuring parameters to an output ASCII file
 
-    writeConfiguringParametersToFile(NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts);
+    string fileName = "configuringParameters.txt";
+    string fullPath = outputPathPrefix + fileName;
+    File::openOutputFile(outputFile, fullPath);
+   
+   
+    outputFile << "# List of configuring parameters used for the NSMC." << endl;
+    outputFile << "# Row #1: Ndimensions" << endl;
+    outputFile << "# Row #2: Initial(Maximum) Nobjects" << endl;
+    outputFile << "# Row #3: Minimum Nobjects" << endl;
+    outputFile << "# Row #4: NinitialIterationsWithoutClustering" << endl;
+    outputFile << "# Row #5: NiterationsWithSameClustering" << endl;
+    outputFile << "# Row #6: maxNdrawAttempts" << endl;
+    outputFile << "# Row #7: terminationFactor" << endl;
+    outputFile << "# Row #8: Niterations" << endl;
+    outputFile << "# Row #9: Optimal Niterations" << endl;
+    outputFile << "# Row #10: Final Nclusters" << endl;
+    outputFile << "# Row #11: Final Nobjects" << endl;
+    outputFile << "# Row #12: Computational Time (seconds)" << endl;
+    outputFile << Ndimensions << endl;
+    outputFile << initialNobjects << endl;
+    outputFile << minNobjects << endl;
+    outputFile << NinitialIterationsWithoutClustering << endl;
+    outputFile << NiterationsWithSameClustering << endl;
+    outputFile << maxNdrawAttempts << endl;
+    outputFile << terminationFactor << endl;
 
 
-    // Set up the random number generator. It generates integers random numbers
+    // Set up the random number generator. It generates integer random numbers
     // between 0 and Nobjects-1, inclusive.
 
     uniform_int_distribution<int> discreteUniform(0, Nobjects-1);
@@ -570,58 +594,11 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     
     // Append information to existing output file and close stream afterwards
     
-    outputFile << "Niterations: " << Niterations << endl;
-    outputFile << "Optimal Niterations: " << (Nobjects*informationGain) + (Nobjects*sqrt(Ndimensions*1.0)) << endl;
-    outputFile << "Final Nclusters: " << Nclusters << endl;
-    outputFile << "Final Nobjects: " << Nobjects << endl;
-    outputFile << "Computational Time (seconds): " << computationalTime << endl;
-    outputFile.close();
-}
-
-
-
-
-
-
-
-
-
-
-
-
-// NestedSampler::writeConfiguringParametersToFile()
-//
-// PURPOSE: 
-//      Saves all configuring parameters of nested sampling to an output ASCII file.
-//
-// INPUT:
-//      NinitialIterationsWithoutClustering:    The first N iterations, we assume that there is only 1 cluster.
-//      NiterationsWithSameClustering:          Clustering is only happening every X iterations.
-//      maxNdrawAttempts:                       Maximum number of attempts when trying to draw a new sampling point.
-//      fileName:                               A string specifying the file name of the output file.
-//                                              Default name is "configuringParameters.txt".
-//
-// OUTPUT:
-//      void
-//
-// REMARKS:
-//      - the stream is not closed afterwards
-//
-
-void NestedSampler::writeConfiguringParametersToFile(const int NinitialIterationsWithoutClustering, const int NiterationsWithSameClustering, 
-                                      const int maxNdrawAttempts, string fileName)
-{
-    string fullPath = outputPathPrefix + fileName;
-    File::openOutputFile(outputFile, fullPath);
-    
-    outputFile << "Ndimensions: " << Ndimensions << endl;
-    outputFile << "Initial(Maximum) Nobjects: " << initialNobjects << endl;
-    outputFile << "Minimum Nobjects: " << minNobjects << endl;
-    outputFile << "NinitialIterationsWithoutClustering: " << NinitialIterationsWithoutClustering << endl;
-    outputFile << "NiterationsWithSameClustering: " << NiterationsWithSameClustering << endl;
-    outputFile << "maxNdrawAttempts: " << maxNdrawAttempts << endl;
-    outputFile << "terminationFactor: " << terminationFactor << endl;
-    
+    outputFile << Niterations << endl;
+    outputFile << static_cast<int>((Nobjects*informationGain) + (Nobjects*sqrt(Ndimensions*1.0))) << endl;
+    outputFile << Nclusters << endl;
+    outputFile << Nobjects << endl;
+    outputFile << computationalTime << endl;
 }
 
 

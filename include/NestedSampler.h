@@ -116,8 +116,6 @@ class NestedSampler
         ArrayXd logLikelihoodOfPosteriorSample;  // log(Likelihood) values corresponding to the posterior sample 
         ArrayXd logWeightOfPosteriorSample;      // log(Weights) = log(Likelihood) + log(dX) corresponding to the posterior sample
 
-        void writeConfiguringParametersToFile(const int NinitialIterationsWithoutClustering, const int NiterationsWithSameClustering, 
-                                              const int maxNdrawAttempts, string fileName = "configuringParameters.txt");
         void removeLivePointsFromSample(const vector<int> &indicesOfLivePointsToRemove, 
                                         vector<int> &clusterIndices, vector<int> &clusterSizes);
         void printComputationalTime(const double startTime);
