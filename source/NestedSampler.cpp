@@ -470,14 +470,6 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         // of the nested iteration because we need to know the new remaining prior mass of the next iteration.
             
         double logWidthInPriorMassLeft = logWidthInPriorMass; 
-        
-        if (!nestedSamplingShouldContinue)
-        {
-            // The current iteration is the last iteration, hence adopt left-boundary reflecting condition 
-            // for computing trapezoidal rule (see Skilling 2004)
-
-            logWidthInPriorMassLeft = log(2) + logRemainingPriorMass;       // X_(m+1) = - X_m, hence X_m - X_(m+1) = 2*X_m
-        }
 
         
         // ---- Use the line below for trapezoidal rule ----
