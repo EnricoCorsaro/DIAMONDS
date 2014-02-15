@@ -490,7 +490,7 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         double parameterMinimum = parameterValues.minCoeff();
         
         binWidth = 3.5*sqrt(secondMoment)/pow(sampleSize,1.0/3.0);
-        int Nbins = floor((parameterMaximum - parameterMinimum)/binWidth);
+        int Nbins = floor((parameterMaximum - parameterMinimum)/binWidth) - 1;
 
         if (Nbins > 1000)
         {
@@ -507,45 +507,79 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         // For this purpose simply cumulate initial marginal distribution values within each bin.
         // This can be done this way because marginal distribution values are probabilities.
 
-        int cumulatedBinSize = 0;
         double parameterStart = 0.0;
         double parameterEnd = 0.0;
         parameterValuesRebinned.resize(Nbins);
+        parameterValuesRebinned.setZero();
         marginalDistributionRebinned.resize(Nbins);
+        marginalDistributionRebinned.setZero();
 
-        
+        int Nshifts = 40;                           // Total number of shifts for the starting point of the rebinning
+        double shiftWidth = binWidth/Nshifts;       // Width of the shift bin
+        ArrayXd parameterValuesRebinnedPerShift(Nbins);
+        parameterValuesRebinnedPerShift.setZero();
+        ArrayXd marginalDistributionRebinnedPerShift(Nbins);
+        marginalDistributionRebinnedPerShift.setZero();
+
+
         // Do the merging
+        // First loop over the offset (shift) for the starting point of the rebinning.
+        // The larger the number of shifts, the better the averaged result.
 
-        for (int j = 0; j < Nbins; ++j)
+        for (int k = 0; k < Nshifts; ++k)
         {
-            parameterStart = parameterMinimum + j*binWidth;
-
-            if (j < (Nbins - 1)) 
-                parameterEnd = parameterMinimum + (j+1)*binWidth;
-            else
-                parameterEnd = parameterMaximum;
-
-            int binSize = Functions::countArrayIndicesWithinBoundaries(parameterValues, parameterStart, parameterEnd);
+            int cumulatedBinSize = 0;
             
-            if (binSize > 0)
+            // Now loop over the different bins for collecting marginal probability in each of them.
+
+            for (int j = 0; j < Nbins; ++j)
             {
-                // At least one point is found in this bin, hence cumulate the marginal distribution values falling inside and 
-                // take the mean parameter as the rebinned value
+                // Set the left edge of the selected bin
 
-                parameterValuesRebinned(j) = parameterValues.segment(cumulatedBinSize, binSize).sum() / (binSize*1.0);
-                marginalDistributionRebinned(j) = marginalDistribution.segment(cumulatedBinSize, binSize).sum();
-                cumulatedBinSize += binSize;
+                parameterStart = parameterMinimum + j*binWidth + k*shiftWidth;
+
+                // Ensure the right edge is not exceeding the right array boundary
+                
+                if (j < (Nbins - 1)) 
+                    parameterEnd = parameterMinimum + (j+1)*binWidth + k*shiftWidth;
+                else
+                    parameterEnd = parameterMaximum;
+
+                
+                // Find the number of array elements belonging to the selected bin and take as parameter value the mid point
+
+                int binSize = Functions::countArrayIndicesWithinBoundaries(parameterValues, parameterStart, parameterEnd);
+                parameterValuesRebinnedPerShift(j) = (parameterStart + parameterEnd)/2.0;
+
+                if (binSize > 0)
+                {
+                    // At least one point is found in this bin, hence cumulate the marginal distribution values 
+                    // falling inside the selected bin
+                    
+                    marginalDistributionRebinnedPerShift(j) = marginalDistribution.segment(cumulatedBinSize, binSize).sum();
+                    cumulatedBinSize += binSize;
+                }
+                else
+                {
+                    // No points are found in this bin, hence set marginal probability to zero
+
+                    marginalDistributionRebinnedPerShift(j) = 0.0;
+                }
+                
             }
-            else
-            {
-                // No points are found in this bin, hence take 0 as marginal probability
+        
+            
+            // Cumulate the values of the rebinning into a total array
 
-                parameterValuesRebinned(j) = (parameterStart + parameterEnd)/2.0;
-                marginalDistributionRebinned(j) = 0.0;
-            }
-
+            parameterValuesRebinned += parameterValuesRebinnedPerShift;
+            marginalDistributionRebinned += marginalDistributionRebinnedPerShift;
         }
 
+
+        // Average all the rebinnings done by the total number of shifts adopted
+        
+        parameterValuesRebinned /= Nshifts;
+        marginalDistributionRebinned /= Nshifts;
         
         // Compute shortest credible intervals (CI) and save their corresponding limiting values (credible limits)
 
