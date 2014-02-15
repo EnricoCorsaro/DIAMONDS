@@ -542,7 +542,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     posteriorSample.conservativeResize(Ndimensions, oldNpointsInPosterior + Nobjects);          // First make enough room
     posteriorSample.block(0, oldNpointsInPosterior, Ndimensions, Nobjects) = nestedSample;      // Then copy the live sample to the posterior array
     logWeightOfPosteriorSample.conservativeResize(oldNpointsInPosterior + Nobjects);
-    logWeightOfPosteriorSample.segment(oldNpointsInPosterior, Nobjects).fill(logWidthInPriorMass - log(Nobjects));  // Check if the best condition to impose 
+    logWeightOfPosteriorSample.segment(oldNpointsInPosterior, Nobjects).fill(logRemainingPriorMass - log(Nobjects));  // Check if the best condition to impose 
     logLikelihoodOfPosteriorSample.conservativeResize(oldNpointsInPosterior + Nobjects);
     logLikelihoodOfPosteriorSample.segment(oldNpointsInPosterior, Nobjects) = logLikelihood; 
 
