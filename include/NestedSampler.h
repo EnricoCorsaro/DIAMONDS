@@ -51,7 +51,7 @@ class NestedSampler
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) = 0;
        
 
-        // Define the set of get functions
+        // Define the get functions
 
         unsigned int getNiterations();
         unsigned int getNdimensions();
@@ -78,11 +78,15 @@ class NestedSampler
 
     protected:
 
-        vector<Prior*> ptrPriors;
-        Likelihood &likelihood;
-        Metric &metric;
-        Clusterer &clusterer;
         ofstream outputFile;                        // An output file stream to save configuring parameters also from derived classes 
+
+
+    protected:
+
+        vector<Prior*> ptrPriors;                   // A vector of pointers to objects of class Prior, containing the priors for each parameter
+        Likelihood &likelihood;                     // An object of class Likelihood to contain the likelihood used in the Bayesian inference
+        Metric &metric;                             // An object of class Metric for the proper metric to adopt in the computation
+        Clusterer &clusterer;                       // An object of class Clusterer to contain the cluster algorithm used in the process
         bool printOnTheScreen;                      // A boolean specifying whether we want current results to be printed on the screen
         unsigned int Ndimensions;                   // Total number of dimensions of the inference
         int Nobjects;                               // Total number of live points at a given iteration
