@@ -134,7 +134,7 @@ void Results::writeMarginalDistributionToFile(const int parameterNumber)
 
     ofstream outputFile;
     File::openOutputFile(outputFile, fullPath);
-    outputFile << "# Marginal distribution of Akima-interpolated points from nested sampling." << endl;
+    outputFile << "# Marginal distribution of cubic-spline interpolated points from nested sampling." << endl;
     outputFile << "# Column #1: Parameter values" << endl;
     outputFile << "# Column #2: Marginal distribution values (probability only)" << endl;
     outputFile << scientific << setprecision(9);
@@ -191,8 +191,8 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const double 
     // Take the average bin width of the rebinned data for computing the bin width of the interpolated data. This information is more
     // realistic as it better resembles the original sampling from the nesting process.
 
-    double binWidth = (parameterValuesRebinned.segment(1, Nbins-1) - parameterValuesRebinned.segment(0, Nbins-1)).sum() / (Nbins*1.0);
-    double interpolatedBinWidth = binWidth/(NinterpolationsPerBin*1.0);
+    double binWidth = parameterValuesRebinned(1) - parameterValuesRebinned(0);
+    double interpolatedBinWidth = binWidth/NinterpolationsPerBin;
     double parameterMinimumRebinned = parameterValuesRebinned.minCoeff();
 
     
