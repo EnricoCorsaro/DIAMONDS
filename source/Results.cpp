@@ -447,12 +447,6 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         double secondMoment = ((parameterValues - parameterMean).pow(2) * marginalDistribution).sum();
 
 
-        // Compute third moment and skewness of the sample distribution
-        
-        double thirdMoment = ((parameterValues - parameterMean).pow(3) * marginalDistribution).sum();
-        double skewness = thirdMoment/pow(secondMoment,3.0/2.0);
-
-        
         // Compute the median value (value containing the 50% of total probability)
 
         int k = 0;
@@ -468,20 +462,7 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         
         parameterEstimates(i,1) = parameterMedian;
 
-
-        // Find the mode value (parameter corresponding to maximum probability value)
-
-        int max = 0;                                    // Subscript corresponding to mode value
-        marginalDistributionMode = marginalDistribution.maxCoeff(&max);
-        double parameterMode = parameterValues(max);
-        parameterEstimates(i,2) = parameterMode;
-
        
-        // Save the second moment of the distribution
-       
-        parameterEstimates(i,3) = secondMoment;
-
-
         // Compute optimal bin size for rebinning marginal distribution according to its symmetry properties
         // Scott's normal reference rule is adopted (most efficient for Gaussian-shaped distributions)
 
@@ -580,6 +561,26 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         
         parameterValuesRebinned /= Nshifts;
         marginalDistributionRebinned /= Nshifts;
+
+
+        // Find the mode value (parameter corresponding to maximum probability value of the rebinned distribution)
+
+        int max = 0;                                    // Subscript corresponding to mode value
+        marginalDistributionMode = marginalDistributionRebinned.maxCoeff(&max);
+        double parameterMode = parameterValuesRebinned(max);
+        parameterEstimates(i,2) = parameterMode;
+
+        
+        // Save the second moment of the distribution
+       
+        parameterEstimates(i,3) = secondMoment;
+
+
+        // Compute third moment and skewness of the sample distribution
+        
+        double thirdMoment = ((parameterValues - parameterMean).pow(3) * marginalDistribution).sum();
+        double skewness = thirdMoment/pow(secondMoment,3.0/2.0);
+
         
         // Compute shortest credible intervals (CI) and save their corresponding limiting values (credible limits)
 
@@ -588,12 +589,11 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         
         parameterEstimates(i,4) = credibleLimits(0);
         parameterEstimates(i,5) = credibleLimits(1);
-     
+
 
         // Save the skewness of the distribution
 
         parameterEstimates(i,6) = skewness;
-
 
         
         // If required, save the interpolated marginal distribution in an output file
