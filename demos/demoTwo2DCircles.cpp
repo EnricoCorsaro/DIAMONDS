@@ -113,20 +113,31 @@ int main(int argc, char *argv[])
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
                       maxNdrawAttempts, terminationFactor, outputPathPrefix);
 
+    nestedSampler.outputFile << "# List of configuring parameters used for the ellipsoidal sampler and X-means" << endl;
+    nestedSampler.outputFile << "# Row #1: Minimum Nclusters" << endl;
+    nestedSampler.outputFile << "# Row #2: Maximum Nclusters" << endl;
+    nestedSampler.outputFile << "# Row #3: Initial Enlargement Fraction" << endl;
+    nestedSampler.outputFile << "# Row #4: Shrinking Rate" << endl;
+    nestedSampler.outputFile << minNclusters << endl;
+    nestedSampler.outputFile << maxNclusters << endl;
+    nestedSampler.outputFile << initialEnlargementFraction << endl;
+    nestedSampler.outputFile << shrinkingRate << endl;
+    nestedSampler.outputFile.close();
+
 
     // -------------------------------------------------------
     // ----- Last step. Save the results in output files -----
     // -------------------------------------------------------
    
     Results results(nestedSampler);
-    results.writeParametersToFile("Parameter");
-    results.writeLogLikelihoodToFile("LikelihoodDistribution.txt");
-    results.writeEvidenceInformationToFile("EvidenceInformation.txt");
-    results.writePosteriorProbabilityToFile("PosteriorDistribution.txt");
+    results.writeParametersToFile("parameter");
+    results.writeLogLikelihoodToFile("logLikelihood.txt");
+    results.writeEvidenceInformationToFile("evidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("posteriorDistribution.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
-    results.writeParametersSummaryToFile("ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+    results.writeParametersSummaryToFile("parameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
 
     // That's it!

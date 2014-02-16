@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------------------------------
 
     EuclideanMetric myMetric;
-    int minNclusters = 3;
+    int minNclusters = 1;
     int maxNclusters = 6;
     int Ntrials = 10;
     double relTolerance = 0.01;
@@ -85,14 +85,14 @@ int main(int argc, char *argv[])
     // ---------------------------------------------------------------------
     
     bool printOnTheScreen = true;                   // Print results on the screen
-    int initialNobjects = 1000;                      // Initial number of active points evolving within the nested sampling process.
-    int minNobjects = 400;                          // Minimum number of active points allowed in the nesting process.
-    int maxNdrawAttempts = 50000;                    // Maximum number of attempts when trying to draw a new sampling point.
-    int NinitialIterationsWithoutClustering = 200;  // The first N iterations, we assume that there is only 1 cluster.
+    int initialNobjects = 1000;                     // Initial number of active points evolving within the nested sampling process.
+    int minNobjects = 400;                         // Minimum number of active points allowed in the nesting process.
+    int maxNdrawAttempts = 50000;                   // Maximum number of attempts when trying to draw a new sampling point.
+    int NinitialIterationsWithoutClustering = 500;  // The first N iterations, we assume that there is only 1 cluster.
     int NiterationsWithSameClustering = 20;         // Clustering is only happening every X iterations.
-    double initialEnlargementFraction = 2.0;        // Fraction by which each axis in an ellipsoid has to be enlarged.
+    double initialEnlargementFraction = 3.0;        // Fraction by which each axis in an ellipsoid has to be enlarged.
                                                     // It can be a number >= 0, where 0 means no enlargement.
-    double shrinkingRate = 0.4;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
+    double shrinkingRate = 0.03;                    // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                     // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                     // of the ellipsoids.
     double terminationFactor = 0.05;                // Termination factor for nesting loop.
@@ -112,20 +112,31 @@ int main(int argc, char *argv[])
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
     maxNdrawAttempts, terminationFactor, outputPathPrefix);
 
+    nestedSampler.outputFile << "# List of configuring parameters used for the ellipsoidal sampler and X-means" << endl;
+    nestedSampler.outputFile << "# Row #1: Minimum Nclusters" << endl;
+    nestedSampler.outputFile << "# Row #2: Maximum Nclusters" << endl;
+    nestedSampler.outputFile << "# Row #3: Initial Enlargement Fraction" << endl;
+    nestedSampler.outputFile << "# Row #4: Shrinking Rate" << endl;
+    nestedSampler.outputFile << minNclusters << endl;
+    nestedSampler.outputFile << maxNclusters << endl;
+    nestedSampler.outputFile << initialEnlargementFraction << endl;
+    nestedSampler.outputFile << shrinkingRate << endl;
+    nestedSampler.outputFile.close();
+
 
     // -------------------------------------------------------
     // ----- Last step. Save the results in output files -----
     // -------------------------------------------------------
 
     Results results(nestedSampler);
-    results.writeParametersToFile("Parameter");
-    results.writeLogLikelihoodToFile("LikelihoodDistribution.txt");
-    results.writeEvidenceInformationToFile("EvidenceInformation.txt");
-    results.writePosteriorProbabilityToFile("PosteriorDistribution.txt");
+    results.writeParametersToFile("parameter");
+    results.writeLogLikelihoodToFile("logLikelihood.txt");
+    results.writeEvidenceInformationToFile("evidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("posteriorDistribution.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
-    results.writeParametersSummaryToFile("ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+    results.writeParametersSummaryToFile("parameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
  
     // That's it!

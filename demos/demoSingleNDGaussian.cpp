@@ -109,7 +109,22 @@ int main(int argc, char *argv[])
     PowerlawReducer livePointsReducer(nestedSampler, tolerance, exponent, terminationFactor);
     //FerozReducer livePointsReducer(nestedSampler, tolerance);
 
-    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, maxNdrawAttempts, terminationFactor);
+    ostreamstring numberString;
+    numberString << Ndimensions;
+    string outputPathPrefix = "demoSingle" + numberString.str() + "DGaussian_";
+    nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
+                      maxNdrawAttempts, terminationFactor, outputPathPrefix);
+
+    nestedSampler.outputFile << "# List of configuring parameters used for the ellipsoidal sampler and X-means" << endl;
+    nestedSampler.outputFile << "# Row #1: Minimum Nclusters" << endl;
+    nestedSampler.outputFile << "# Row #2: Maximum Nclusters" << endl;
+    nestedSampler.outputFile << "# Row #3: Initial Enlargement Fraction" << endl;
+    nestedSampler.outputFile << "# Row #4: Shrinking Rate" << endl;
+    nestedSampler.outputFile << minNclusters << endl;
+    nestedSampler.outputFile << maxNclusters << endl;
+    nestedSampler.outputFile << initialEnlargementFraction << endl;
+    nestedSampler.outputFile << shrinkingRate << endl;
+    nestedSampler.outputFile.close();
 
 
     // -------------------------------------------------------
@@ -117,14 +132,14 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------
    
     Results results(nestedSampler);
-    results.writeParametersToFile("demoSingleNDGaussian_Parameter");
-    results.writeLogLikelihoodToFile("demoSingleNDGaussian_LikelihoodDistribution.txt");
-    results.writeEvidenceInformationToFile("demoSingleNDGaussian_EvidenceInformation.txt");
-    results.writePosteriorProbabilityToFile("demoSingleNDGaussian_PosteriorDistribution.txt");
+    results.writeParametersToFile("parameter");
+    results.writeLogLikelihoodToFile("logLikelihood.txt");
+    results.writeEvidenceInformationToFile("evidenceInformation.txt");
+    results.writePosteriorProbabilityToFile("posteriorDistribution.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
-    results.writeParametersSummaryToFile("demoSingleNDGaussian_ParameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
+    results.writeParametersSummaryToFile("parameterSummary.txt", credibleLevel, writeMarginalDistributionToFile);
 
 
     // That's it!
