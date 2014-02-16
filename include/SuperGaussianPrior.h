@@ -34,6 +34,7 @@ class SuperGaussianPrior : public Prior
         virtual bool drawnPointIsAccepted(RefArrayXd const drawnPoint);
         virtual void draw(RefArrayXXd drawnSample);
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood);
+        virtual void writeHyperParametersToFile(string fullPath);
 
 
     private:

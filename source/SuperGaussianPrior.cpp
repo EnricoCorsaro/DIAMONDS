@@ -481,3 +481,34 @@ void SuperGaussianPrior::drawWithConstraint(RefArrayXd drawnPoint, Likelihood &l
 
 
 
+
+
+// SuperGaussianPrior::writeHyperParametersToFile()
+//
+// PURPOSE: 
+//      Store prior hyper parameters in an output ASCII file.
+//
+// INPUT:
+//      fullPath:     a string containing the full filename for the output ASCII file
+//
+// OUTPUT:
+//      void
+//
+
+void SuperGaussianPrior::writeHyperParametersToFile(string fullPath)
+{
+    ArrayXXd hyperParameters(center.size(),3);
+    hyperParameters.col(0) = center;
+    hyperParameters.col(1) = sigma;
+    hyperParameters.col(2) = widthOfPlateau;
+
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+    outputFile << "# Hyper parameters used for setting up super Gaussian priors." << endl;
+    outputFile << "# Each line corresponds to a different free parameter (coordinate)." << endl;
+    outputFile << "# Column #1: Center (center of the plateau region)" << endl;
+    outputFile << "# Column #2: Sigma (SDV of the symmetric Gaussian tails)" << endl;
+    outputFile << "# Column #3: Width of the plateau (total width, centered in \"center\")" << endl;
+    File::arrayXXdToFile(outputFile, hyperParameters);
+    outputFile.close();
+}

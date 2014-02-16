@@ -15,6 +15,7 @@
 #include <Eigen/Core>
 #include "Likelihood.h"
 #include "Functions.h"
+#include "File.h"
 
 using namespace std;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
@@ -34,6 +35,7 @@ class Prior
         virtual bool drawnPointIsAccepted(RefArrayXd const drawnPoint) = 0;
         virtual void draw(RefArrayXXd drawnSample) = 0;
         virtual void drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelihood) = 0;
+        virtual void writeHyperParametersToFile(string fullPath) = 0;
 
         const double minusInfinity;
 

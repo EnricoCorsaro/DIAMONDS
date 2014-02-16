@@ -285,3 +285,27 @@ void NormalPrior::drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likeliho
 
 
 
+
+// NormalPrior::writeHyperParametersToFile()
+//
+// PURPOSE: 
+//      Store prior hyper parameters in an output ASCII file.
+//
+// INPUT:
+//      fullPath:     a string containing the full filename for the output ASCII file
+//
+// OUTPUT:
+//      void
+//
+
+void NormalPrior::writeHyperParametersToFile(string fullPath)
+{
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+    outputFile << "# Hyper parameters used for setting up normal priors." << endl;
+    outputFile << "# Each line corresponds to a different free parameter (coordinate)." << endl;
+    outputFile << "# Column #1: Mean" << endl;
+    outputFile << "# Column #2: Standard Deviation" << endl;
+    File::twoArrayXdToFile(outputFile, mean, standardDeviation);
+    outputFile.close();
+}

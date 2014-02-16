@@ -270,3 +270,35 @@ void UniformPrior::drawWithConstraint(RefArrayXd drawnPoint, Likelihood &likelih
 
 
 
+
+
+
+
+
+
+
+
+
+// UniformPrior::writeHyperParametersToFile()
+//
+// PURPOSE: 
+//      Store prior hyper parameters in an output ASCII file.
+//
+// INPUT:
+//      fullPath:     a string containing the full filename for the output ASCII file
+//
+// OUTPUT:
+//      void
+//
+
+void UniformPrior::writeHyperParametersToFile(string fullPath)
+{
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+    outputFile << "# Hyper parameters used for setting up uniform priors." << endl;
+    outputFile << "# Each line corresponds to a different free parameter (coordinate)." << endl;
+    outputFile << "# Column #1: Minima (lower boundaries)" << endl;
+    outputFile << "# Column #2: Maxima (upper boundaries)" << endl;
+    File::twoArrayXdToFile(outputFile, minima, maxima);
+    outputFile.close();
+}
