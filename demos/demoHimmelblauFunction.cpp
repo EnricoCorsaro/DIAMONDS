@@ -27,6 +27,7 @@ int main(int argc, char *argv[])
     unsigned long Nrows;
     int Ncols;
     ArrayXXd data;
+    string outputPathPrefix = "demoHimmelblauFunction_";
   
     // Creating dummy arrays for the covariates and the observations.
     // They're not used because we compute our Likelihood directly. 
@@ -58,6 +59,9 @@ int main(int argc, char *argv[])
     parametersMaxima << 5.0, 5.0;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriors[0] = &uniformPrior;   
+
+    string fullPath = outputPathPrefix + "hyperParametersUniform.txt";
+    uniformPrior.writeHyperParametersToFile(fullPath);
 
 
     // -----------------------------------------------------------------
@@ -106,7 +110,6 @@ int main(int argc, char *argv[])
     PowerlawReducer livePointsReducer(nestedSampler, tolerance, exponent, terminationFactor);
     //FerozReducer livePointsReducer(nestedSampler, tolerance); 
 
-    string outputPathPrefix = "demoHimmelblauFunction_";
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
                       maxNdrawAttempts, terminationFactor, outputPathPrefix);
 
