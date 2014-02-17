@@ -243,12 +243,14 @@ bool SuperGaussianPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
     {
         // Check if the coordinate belongs to either the plateau region or the tails of the Super-Gaussian.
     
-        if (scatter1(i) > widthOfPlateau(i)/2. + center(i))
+        if (scatter1(i) > widthOfPlateau(i)/2.)
         {
             // The coordinate is falling in the tails
 
             double referenceCoordinate = normalDistributionVector[i](engine);
             scatter2(i) = fabs(referenceCoordinate-center(i)) + widthOfPlateau(i)/2.;
+            coordinateIsAccepted[i] = scatter1(i) < scatter2(i);
+            
             coordinateIsAccepted[i] = scatter1(i) < scatter2(i);
         }
         else
@@ -263,14 +265,9 @@ bool SuperGaussianPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
     // Compare the scatter for each coordinate.
     // Accept the point only if the new point boundary is smaller than the reference one
 
-    if ( (scatter1 < scatter2).prod() )
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    bool pointIsAccepted = accumulate(coordinateIsAccepted.begin(), coordinateIsAccepted.end(), 1.0, multiplies<bool>());
+
+    return pointIsAccepted;
 }
 
 
