@@ -42,7 +42,7 @@ int main()
 
     EuclideanMetric myMetric;
     int minNclusters = 1;
-    int maxNclusters = 6;
+    int maxNclusters = 2;
     int Ntrials = 10;
     double relTolerance = 0.01;
 
@@ -61,7 +61,7 @@ int main()
 
     // Output the results 
     
-    cerr << "Input number of clusters: 5" << endl; 
+    cerr << "Input number of clusters: 2" << endl; 
     cerr << "Optimal number of clusters: " << optimalNclusters << endl;
     
 
@@ -266,7 +266,7 @@ int main()
     ArrayXd parametersWOP(Ndimensions);
     parametersMean <<  -4.0, -4.0;
     parametersSDV << 0.5, 0.5;
-    parametersWOP << 2.0, 1.0;
+    parametersWOP << 1.0, 1.0;
     SuperGaussianPrior superGaussianPrior(parametersMean, parametersSDV, parametersWOP);
     ptrPriors[0] = &superGaussianPrior;  
     
