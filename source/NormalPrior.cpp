@@ -184,14 +184,9 @@ bool NormalPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
     // Compare the scatter from the mean for each coordinate.
     // Accept the point only if the new point boundary is smaller than the reference one
 
-    if ( (scatter1 < scatter2).prod() )
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    bool pointIsAccepted = (scatter1 < scatter2).prod();
+    
+    return pointIsAccepted;
 }
 
 
