@@ -8,10 +8,10 @@
 //      Derived class constructor.
 //
 // INPUT:
-//      mean: array containing mean values for setting 
-//            centroids of the multi-dimensional normal prior. 
-//      standardDeviation: array containing SDV values of the
-//                         multi-dimensional normal prior.
+//      mean:               array containing mean values for setting 
+//                          centroids of the multi-dimensional normal prior. 
+//      standardDeviation:  array containing SDV values of the
+//                          multi-dimensional normal prior.
 //
 
 NormalPrior::NormalPrior(RefArrayXd const mean, RefArrayXd const standardDeviation)
@@ -20,7 +20,13 @@ NormalPrior::NormalPrior(RefArrayXd const mean, RefArrayXd const standardDeviati
   standardDeviation(standardDeviation)
 {
     assert(mean.size() == standardDeviation.size());
-    assert(standardDeviation.any() >= 0);
+
+    if ( (standardDeviation <= 0.0).any() )
+    {
+        cerr << "Normal Prior hyper parameters are not correctly typeset." << endl;
+        exit(EXIT_FAILURE);
+    }
+
     normalDistributionVector.resize(mean.size());
 
     for (int i = 0; i < mean.size(); i++)

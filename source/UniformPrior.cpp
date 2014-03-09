@@ -21,7 +21,12 @@ UniformPrior::UniformPrior(const RefArrayXd minima, const RefArrayXd maxima)
   maxima(maxima)
 {
     assert (minima.size() == maxima.size());
-    assert (minima.any() <= maxima.any());
+    
+    if ( (minima >= maxima).any() )
+    {
+        cerr << "Uniform Prior hyper parameters are not correctly typeset." << endl;
+        exit(EXIT_FAILURE);
+    }
 }
 
 

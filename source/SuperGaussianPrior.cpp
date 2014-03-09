@@ -27,6 +27,12 @@ SuperGaussianPrior::SuperGaussianPrior(const RefArrayXd center, const RefArrayXd
     assert(center.size() == widthOfPlateau.size());
     normalDistributionVector.resize(Ndimensions);
 
+    if ( (sigma <= 0.0).any() || (widthOfPlateau <= 0.0).any() )
+    {
+        cerr << "Super Gaussian Prior hyper parameters are not correctly typeset." << endl;
+        exit(EXIT_FAILURE);
+    }
+
     for (int i = 0; i < Ndimensions; i++)
     {
         normal_distribution<double> normal(center(i),sigma(i));
