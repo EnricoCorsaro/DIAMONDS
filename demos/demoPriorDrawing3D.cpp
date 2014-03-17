@@ -17,6 +17,7 @@
 #include "UniformPrior.h"
 #include "NormalPrior.h"
 #include "SuperGaussianPrior.h"
+#include "GridPrior.h"
 
 using namespace std;
 using namespace Eigen;
@@ -74,7 +75,7 @@ int main()
 
     // The enlargement fraction (it is the fraction by which each axis of an ellipsoid is enlarged)
 
-    double enlargementFraction = 3.00;  
+    double enlargementFraction = 1.50;  
     
     
     // Compute "sorted indices" such that clusterIndices[sortedindices[k]] <= clusterIndices[sortedIndices[k+1]]
@@ -246,10 +247,33 @@ int main()
 
     // ------ Set up prior distributions on each coordinate ------
     
-    int Npoints = 10000;    
+    int Npoints = 1000;    
     ArrayXXd sampleOfDrawnPoints(Npoints,Ndimensions);
     ArrayXd drawnPoint(Ndimensions);
    
+    vector<Prior*> ptrPriors(3);
+    ArrayXd parametersMinima(1);
+    ArrayXd parametersMaxima(1);
+    parametersMinima <<  0.0;
+    parametersMaxima << 4.0;
+    UniformPrior uniformPrior1(parametersMinima, parametersMaxima);
+    ptrPriors[0] = &uniformPrior1;  
+
+    ArrayXd parametersWidth(1);
+    ArrayXd parametersSeparation(1);
+    ArrayXd parametersStartingCoordinate(1);
+    ArrayXd parametersNsteps(1);
+    parametersWidth << 0.2;
+    parametersSeparation << 1.0;
+    parametersStartingCoordinate << 0.0;
+    parametersNsteps << 6;
+    GridPrior gridPrior(parametersWidth, parametersSeparation, parametersStartingCoordinate, parametersNsteps);
+    ptrPriors[1] = &gridPrior;  
+    
+    parametersMinima <<  0.0;
+    parametersMaxima << 4.0;
+    UniformPrior uniformPrior2(parametersMinima, parametersMaxima);
+    ptrPriors[2] = &uniformPrior2;  
     /*
     vector<Prior*> ptrPriors(3);
     ArrayXd parametersMinima(1);
@@ -258,14 +282,14 @@ int main()
     parametersMaxima << 4.0;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriors[1] = &uniformPrior;  
-
+    
     ArrayXd parametersMean(1);
     ArrayXd parametersSDV(1);
     parametersMean <<  2.0;
     parametersSDV << 0.4;
     NormalPrior normalPrior1(parametersMean, parametersSDV);
     ptrPriors[0] = &normalPrior1;  
-    
+
     parametersMean <<  2.0;
     parametersSDV << 0.4;
     NormalPrior normalPrior2(parametersMean, parametersSDV);
@@ -291,18 +315,19 @@ int main()
     NormalPrior normalPrior(parametersMean, parametersSDV);
     ptrPriors[0] = &normalPrior;
 */  
-//    /*
+    /*
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMean(Ndimensions);
     ArrayXd parametersSDV(Ndimensions);
     ArrayXd parametersWOP(Ndimensions);
     parametersMean <<  2.0, 2.0, 2.0;
-    parametersSDV << 0.2, 0.4, 0.2;
-    parametersWOP << 0.6, 0.6, 0.6;
+    parametersSDV << 0.2, 0.2, 0.1;
+    parametersWOP << 0.5, 1.0, 0.5;
     SuperGaussianPrior superGaussianPrior(parametersMean, parametersSDV, parametersWOP);
     ptrPriors[0] = &superGaussianPrior;  
-//    */
-    
+    */
+
+
     // ------ Draw points from the Ellipsoid ------
 
     for (int i=0; i < Npoints; ++i)

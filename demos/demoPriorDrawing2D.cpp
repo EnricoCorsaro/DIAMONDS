@@ -17,6 +17,7 @@
 #include "UniformPrior.h"
 #include "NormalPrior.h"
 #include "SuperGaussianPrior.h"
+#include "GridPrior.h"
 
 using namespace std;
 using namespace Eigen;
@@ -28,7 +29,7 @@ int main()
     // Open the input file and read the data (synthetic sampling of a 2D parameter space)
     
     ifstream inputFile;
-    File::openInputFile(inputFile, "twoclusters2D.txt");
+    File::openInputFile(inputFile, "onecluster2D.txt");
     unsigned long Nrows;
     int Ncols;
 
@@ -42,7 +43,7 @@ int main()
 
     EuclideanMetric myMetric;
     int minNclusters = 1;
-    int maxNclusters = 2;
+    int maxNclusters = 1;
     int Ntrials = 10;
     double relTolerance = 0.01;
 
@@ -239,6 +240,18 @@ int main()
     ArrayXXd sampleOfDrawnPoints(Npoints,Ndimensions);
     ArrayXd drawnPoint(Ndimensions);
     
+    vector<Prior*> ptrPriors(1);
+    ArrayXd parametersWidth(Ndimensions);
+    ArrayXd parametersSeparation(Ndimensions);
+    ArrayXd parametersStartingCoordinate(Ndimensions);
+    ArrayXd parametersNsteps(Ndimensions);
+    parametersWidth << 0.2,0.2;
+    parametersSeparation << 0.5,0.5;
+    parametersStartingCoordinate << -2.0,-2.0;
+    parametersNsteps << 5,5;
+    GridPrior gridPrior(parametersWidth, parametersSeparation, parametersStartingCoordinate, parametersNsteps);
+    ptrPriors[0] = &gridPrior;  
+
     /*
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
@@ -247,7 +260,7 @@ int main()
     parametersMaxima << -2.5, -3.5;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriors[0] = &uniformPrior;  
-    */
+    */ 
 
     /*
     vector<Prior*> ptrPriors(1);
@@ -259,7 +272,7 @@ int main()
     ptrPriors[0] = &normalPrior;  
     */
     
-   
+    /*
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMean(Ndimensions);
     ArrayXd parametersSDV(Ndimensions);
@@ -269,8 +282,24 @@ int main()
     parametersWOP << 1.0, 1.0;
     SuperGaussianPrior superGaussianPrior(parametersMean, parametersSDV, parametersWOP);
     ptrPriors[0] = &superGaussianPrior;  
+    */
+
+/*
+    vector<Prior*> ptrPriors(2);
     
-    
+    ArrayXd parametersMinima(1);
+    ArrayXd parametersMaxima(1);
+    parametersMinima <<  -5.0;
+    parametersMaxima << 5.0;
+    UniformPrior uniformPrior(parametersMinima, parametersMaxima);
+    ptrPriors[0] = &uniformPrior;
+
+    ArrayXd parameterConstant(1);
+    parameterConstant << 2.0;
+    DeltaPrior deltaPrior(parameterConstant);
+    ptrPriors[1] = &deltaPrior;
+*/
+
     // ------ Draw points from the Ellipsoid ------
 
     for (int i=0; i < Npoints; ++i)
