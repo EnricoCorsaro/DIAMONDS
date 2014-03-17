@@ -495,7 +495,7 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         marginalDistributionRebinned.resize(Nbins);
         marginalDistributionRebinned.setZero();
 
-        int Nshifts = 40;                           // Total number of shifts for the starting point of the rebinning
+        int Nshifts = 20;                           // Total number of shifts for the starting point of the rebinning
         double shiftWidth = binWidth/Nshifts;       // Width of the shift bin
         ArrayXd parameterValuesRebinnedPerShift(Nbins);
         parameterValuesRebinnedPerShift.setZero();
