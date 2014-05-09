@@ -1,3 +1,9 @@
+// Abstract base class for clustering algorithms.
+// Created by Joris De Ridder & Enrico Corsaro @ IvS - February 2013
+// e-mail: enrico.corsaro@ster.kuleuven.be
+// Header file "Clusterer.h"
+// Implementations contained in "Clusterer.cpp"
+
 
 #ifndef CLUSTERER_H
 #define CLUSTERER_H
@@ -30,8 +36,6 @@ class Clusterer
     private:
 
 };
-
-
 
 
 #endif
