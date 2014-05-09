@@ -938,80 +938,6 @@ double NestedSampler::getRatioOfRemainderToCurrentEvidence()
 
 
 
-// NestedSampler::getLogEvidence()
-//
-// PURPOSE:
-//      Get private data member logEvidence.
-//
-// OUTPUT:
-//      A double containing the natural logarithm of the Skilling's evidence.
-//
-
-double NestedSampler::getLogEvidence()
-{
-    return logEvidence;
-}
-
-
-
-
-
-
-
-
-
-
-
-// NestedSampler::getLogEvidenceError()
-//
-// PURPOSE:
-//      Get private data member logEvidenceError.
-//
-// OUTPUT:
-//      A double containing the Skilling's error on the logEvidence.
-//
-
-double NestedSampler::getLogEvidenceError()
-{
-    return logEvidenceError;
-}
-
-
-
-
-
-
-
-
-
-
-
-// NestedSampler::getInformationGain()
-//
-// PURPOSE:
-//      Get private data member informationGain.
-//
-// OUTPUT:
-//      A double containing the final amount of
-//      information gain in moving from prior to posterior.
-//
-
-double NestedSampler::getInformationGain()
-{
-    return informationGain;
-}
-
-
-
-
-
-
-
-
-
-
-
-
 // NestedSampler::getLogMaxLikelihoodOfLivePoints()
 //
 // PURPOSE:
@@ -1163,6 +1089,176 @@ ArrayXd NestedSampler::getLogLikelihood()
 
 
 
+// NestedSampler::setLogEvidence()
+//
+// PURPOSE:
+//      Set private data member logEvidence from the outside. 
+//      Used when merging of the results is needed.
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::setLogEvidence(double newLogEvidence)
+{
+    logEvidence = newLogEvidence;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogEvidence()
+//
+// PURPOSE:
+//      Get private data member logEvidence.
+//
+// OUTPUT:
+//      A double containing the natural logarithm of the Skilling's evidence.
+//
+
+double NestedSampler::getLogEvidence()
+{
+    return logEvidence;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::setLogEvidenceError()
+//
+// PURPOSE:
+//      Set private data member logEvidenceError from the outside. 
+//      Used when merging of the results is needed.
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::setLogEvidenceError(double newLogEvidenceError)
+{
+    logEvidenceError = newLogEvidenceError;
+}
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogEvidenceError()
+//
+// PURPOSE:
+//      Get private data member logEvidenceError.
+//
+// OUTPUT:
+//      A double containing the Skilling's error on the logEvidence.
+//
+
+double NestedSampler::getLogEvidenceError()
+{
+    return logEvidenceError;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::setInformationGain()
+//
+// PURPOSE:
+//      Set private data member informationGain from the outside. 
+//      Used when merging of the results is needed.
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::setInformationGain(double newInformationGain)
+{
+    informationGain = newInformationGain;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getInformationGain()
+//
+// PURPOSE:
+//      Get private data member informationGain.
+//
+// OUTPUT:
+//      A double containing the final amount of
+//      information gain in moving from prior to posterior.
+//
+
+double NestedSampler::getInformationGain()
+{
+    return informationGain;
+}
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::setPosteriorSample()
+//
+// PURPOSE:
+//      Set private data member posteriorSample from the outside. 
+//      Used when merging of the results is needed.
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::setPosteriorSample(ArrayXXd newPosteriorSample)
+{
+    Ndimensions = newPosteriorSample.rows();
+    int Nsamples = newPosteriorSample.cols();
+    posteriorSample.resize(Ndimensions, Nsamples);
+    posteriorSample = newPosteriorSample;
+}
+
+
+
+
+
+
+
+
+
+
 
 
 // NestedSampler::getPosteriorSample()
@@ -1180,6 +1276,32 @@ ArrayXXd NestedSampler::getPosteriorSample()
     return posteriorSample;
 }
 
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::setLogLikelihoodOfPosteriorSample()
+//
+// PURPOSE:
+//      Set private data member logLikelihoodOfPosteriorSample from the outside. 
+//      Used when merging of the results is needed.
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::setLogLikelihoodOfPosteriorSample(ArrayXd newLogLikelihoodOfPosteriorSample)
+{
+    int Nsamples = newLogLikelihoodOfPosteriorSample.size();
+    logLikelihoodOfPosteriorSample.resize(Nsamples);
+    logLikelihoodOfPosteriorSample = newLogLikelihoodOfPosteriorSample;
+}
 
 
 
@@ -1218,6 +1340,34 @@ ArrayXd NestedSampler::getLogLikelihoodOfPosteriorSample()
 
 
 
+// NestedSampler::setLogWeightOfPosteriorSample()
+//
+// PURPOSE:
+//      Set private data member logWeightOfPosteriorSample from the outside. 
+//      Used when merging of the results is needed.
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::setLogWeightOfPosteriorSample(ArrayXd newLogWeightOfPosteriorSample)
+{
+    int Nsamples = newLogWeightOfPosteriorSample.size();
+    logWeightOfPosteriorSample.resize(Nsamples);
+    logWeightOfPosteriorSample = newLogWeightOfPosteriorSample;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 
 // NestedSampler::getLogWeightOfPosteriorSample()
 //
@@ -1234,6 +1384,30 @@ ArrayXd NestedSampler::getLogWeightOfPosteriorSample()
     return logWeightOfPosteriorSample;
 }
 
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::setOutputPathPrefix()
+//
+// PURPOSE:
+//      Set private data member outputPathPrefix from the outside. 
+//      Used when merging of the results is needed.
+//
+// OUTPUT:
+//      void
+//
+
+void NestedSampler::setOutputPathPrefix(string newOutputPathPrefix)
+{
+    outputPathPrefix = newOutputPathPrefix;
+}
 
 
 

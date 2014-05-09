@@ -51,7 +51,7 @@ class NestedSampler
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) = 0;
        
 
-        // Define the get functions
+        // Define set and get functions
 
         unsigned int getNiterations();
         unsigned int getNdimensions();
@@ -61,23 +61,34 @@ class NestedSampler
         double getLogCumulatedPriorMass();
         double getLogRemainingPriorMass();
         double getRatioOfRemainderToCurrentEvidence();
-        double getLogEvidence();
-        double getLogEvidenceError();
-        double getInformationGain();
         double getLogMaxLikelihoodOfLivePoints();
         double getComputationalTime();
         double getTerminationFactor();
         vector<int> getNobjectsPerIteration();
         ArrayXXd getNestedSample();
         ArrayXd getLogLikelihood();
+        
+        void setLogEvidence(double newLogEvidence);
+        double getLogEvidence();
+        
+        void setLogEvidenceError(double newLogEvidenceError);
+        double getLogEvidenceError();
+        
+        void setInformationGain(double newInformationGain);
+        double getInformationGain();
+        
+        void setPosteriorSample(ArrayXXd newPosteriorSample);
         ArrayXXd getPosteriorSample();
+        
+        void setLogLikelihoodOfPosteriorSample(ArrayXd newLogLikelihoodOfPosteriorSample);
         ArrayXd getLogLikelihoodOfPosteriorSample();
+        
+        void setLogWeightOfPosteriorSample(ArrayXd newLogWeightOfPosteriorSample);
         ArrayXd getLogWeightOfPosteriorSample();
+        
+        void setOutputPathPrefix(string newOutputPathPrefix);
         string getOutputPathPrefix();
-
-
-    protected:
-
+       
         ofstream outputFile;                        // An output file stream to save configuring parameters also from derived classes 
 
 
