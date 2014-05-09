@@ -1,5 +1,9 @@
-// Derived class for building a zero model.
-// Such a model always returns zero for any value of the fitparameters.
+// Derived class for zero model objects. 
+// This model returns zero for any set of model parameters.
+// Created by Enrico Corsaro @ IvS - 9 May 2014
+// e-mail: enrico.corsaro@ster.kuleuven.be
+// Header file "ZeroModel.h"
+// Implementations contained in "ZeroModel.cpp"
 
 
 #ifndef ZEROMODEL_H
