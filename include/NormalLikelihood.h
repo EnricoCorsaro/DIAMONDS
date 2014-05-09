@@ -36,6 +36,6 @@ class NormalLikelihood : public Likelihood
 
         ArrayXd uncertainties;
 
-}; // END class NormalLikelihood
+}; 
 
 #endif
