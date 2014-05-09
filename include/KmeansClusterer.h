@@ -1,3 +1,9 @@
+// Derived class for K-means clustering algorithm.
+// Created by Joris De Ridder @ IvS - February 2013
+// e-mail: enrico.corsaro@ster.kuleuven.be
+// Header file "KmeansClusterer.h"
+// Implementations contained in "KmeansClusterer.cpp"
+
 
 #ifndef KMEANSCLUSTERER_H
 #define KMEANSCLUSTERER_H
@@ -43,7 +49,6 @@ class KmeansClusterer : public Clusterer
         mt19937 engine;
 
 };
-
 
 
 
