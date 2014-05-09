@@ -6,7 +6,6 @@
 // PURPOSE: 
 //      Constructor. Sets initial information, logEvidence and type 
 //      of prior and likelihood distributions to be used. 
-//      Increases the number of live nested processes.
 //
 // INPUT:
 //      printOnTheScreen:       Boolean value specifying whether the results are to 
