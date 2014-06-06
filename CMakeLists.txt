@@ -1,4 +1,4 @@
-# cmake file to build MultiNest
+# cmake file to build Diamonds
 # 
 # Usage: ($ mkdir build)
 #        $ cd build
@@ -16,7 +16,7 @@
 #     $ cmake -D CMAKE_CXX_COMPILER=/usr/bin/clang++ ..
 
 
-project(MultiNest)
+project(Diamonds)
 
 # cmake version shouldn't be too old
 
@@ -50,9 +50,9 @@ endif()
 
 # Create a shared library target
 
-add_library(multinest SHARED ${sourceFiles})
+add_library(diamonds SHARED ${sourceFiles})
 
 # Install the library in the lib/ folder
 
-install(TARGETS multinest LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}/lib)
+install(TARGETS diamonds LIBRARY DESTINATION ${CMAKE_SOURCE_DIR}/lib)
 
