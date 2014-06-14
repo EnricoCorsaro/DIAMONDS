@@ -76,7 +76,7 @@ void Functions::modeProfile(RefArrayXd predictions, const RefArrayXd covariates,
 //
 // PURPOSE: 
 //      Computes a single Lorentzian profile that models an oscillation mode in a power spectrum.
-//      The profile is computed given the centroid, the height and the linewidth.
+//      The profile is computed given the centroid, the amplitude and the linewidth.
 //
 // INPUT:
 //      predictions : vector containing the result
@@ -97,6 +97,56 @@ void Functions::modeProfileWithAmplitude(RefArrayXd predictions, const RefArrayX
 {
     predictions = amplitude*amplitude/(Functions::PI * linewidth)/(1.0 + (4.0*(covariates-centroid).square()/(linewidth*linewidth)));
 }
+
+
+
+
+
+
+
+
+
+
+
+
+// Functions::modeProfileSinc()
+//
+// PURPOSE: 
+//      Computes a normalized single sinc-square profile that models an unresolved oscillation mode in the power spectrum.
+//      The profile is computed given the centroid, the height and the resolution of the dataset.
+//
+// INPUT:
+//      predictions : vector containing the result
+//      covariates : vector containing independent variable values
+//      centroid : centroid of the Lorentzian profile (default = 0), expressed in muHz
+//      height : height of the sinc-square profile (default = 1), expressed in ppm^2 / muHz
+//      resolution : the distance from the centroid to the first zero of the sinc-square (default = 1), expressed in muHz
+//
+// OUTPUT:
+//      void
+//
+// REMARKS:
+//      Saves the predictions into the input vector predictions.
+//
+
+void Functions::modeProfileSinc(RefArrayXd predictions, const RefArrayXd covariates, 
+                               const double centroid, const double height, const double resolution)
+{
+    ArrayXd sincFunctionArgument = Functions::PI*(covariates - centroid)/resolution;
+    ArrayXd sincFunction = sincFunctionArgument.sin() / sincFunctionArgument;
+    
+    
+    // Divide by maximum value in order to normalize the function global maximum
+
+    double maxValue = sincFunction.maxCoeff();
+    sincFunction /= maxValue;
+
+
+    // Multiply the profile by the height in the PSD
+
+    predictions = height*sincFunction.square();
+}
+
 
 
 
