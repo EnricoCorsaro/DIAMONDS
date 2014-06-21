@@ -134,12 +134,6 @@ void Functions::modeProfileSinc(RefArrayXd predictions, const RefArrayXd covaria
 {
     ArrayXd sincFunctionArgument = Functions::PI*(covariates - centroid)/resolution;
     ArrayXd sincFunction = sincFunctionArgument.sin() / sincFunctionArgument;
-    
-    
-    // Divide by maximum value in order to normalize the function global maximum
-
-    double maxValue = sincFunction.maxCoeff();
-    sincFunction /= maxValue;
 
 
     // Multiply the profile by the height in the PSD
@@ -862,7 +856,8 @@ int Functions::countArrayIndicesWithinBoundaries(RefArrayXd const array, double 
 //      No extrapolation can be done.
 //
 
-ArrayXd Functions::cubicSplineInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, RefArrayXd const interpolatedAbscissaUntruncated)
+ArrayXd Functions::cubicSplineInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, 
+                                            RefArrayXd const interpolatedAbscissaUntruncated)
 {
     // Number of data points
     

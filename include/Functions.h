@@ -86,7 +86,8 @@ namespace Functions
 
     vector<int> findArrayIndicesWithinBoundaries(RefArrayXd const array, double lowerBound, double upperBound);
     int countArrayIndicesWithinBoundaries(RefArrayXd const array, double lowerBound, double upperBound);
-    ArrayXd cubicSplineInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, RefArrayXd const interpolatedAbscissaUntruncated);
+    ArrayXd cubicSplineInterpolation(RefArrayXd const observedAbscissa, RefArrayXd const observedOrdinate, 
+                                     RefArrayXd const interpolatedAbscissaUntruncated);
 
 
     // Utility functions
