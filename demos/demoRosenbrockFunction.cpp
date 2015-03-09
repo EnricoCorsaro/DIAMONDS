@@ -1,5 +1,5 @@
 //
-// Compile with: clang++ -o demoRosenbrockFunction demoRosenbrockFunction.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
+// Compile with: clang++ -o demoRosenbrockFunction demoRosenbrockFunction.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
 // 
 
 #include <cstdlib>

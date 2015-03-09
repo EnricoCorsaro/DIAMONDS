@@ -1,5 +1,5 @@
 // Compile with:
-// clang++ -o demoKmeansClusterer2D demoKmeansClusterer2D.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
+// clang++ -o demoKmeansClusterer2D demoKmeansClusterer2D.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
 //
 
 #include <cstdlib>

@@ -1,5 +1,5 @@
 // Compile with:
-// clang++ -o demoPriorDrawing3D demoPriorDrawing3D.cpp -L../build/ -I ../include/ -l multinest -stdlib=libc++ -std=c++11
+// clang++ -o demoPriorDrawing3D demoPriorDrawing3D.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
 //
 
 #include <ctime>
