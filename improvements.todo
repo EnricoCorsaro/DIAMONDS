@@ -1,0 +1,28 @@
+ToDone Syntax for action items:
+* Each action item is preceded by a dash followed by the importance value (1: lowest, 5: highest)
+* Precede dashes with '+' to show they are completed
+* Precede dashes with '.' to ignore them
+* Precede dashes with '!' to show urgency
+* Indent subtasks with 8 spaces
+===
+
+
+
+-4 Add a better clustering algorithm than X-means
+
+-3 Review the header file inclusions, and keep them to a minimum to improve the compilation speed
+
+-2 printToScreen should (everywhere) be replaced with a proper Logger functionality
+
+-2 Check if we can mitigate the conservativeResize() statements in NestedSampler.run()
+   This could speed up the code, they're quite inefficient,
+
+-2 Update the incomplete docstring of MultiEllipsoidSampler.drawWithConstraint()
+
+-2 It would be more logical to have the clustering part in MultiEllipsoid.drawWithConstraint() rather than in MultiNest.run()
+   Not so easy to refactor.
+
+-1 Check in NestedSampler.run() whether the name 'liveSample' is not a better alternative for 'nestedSample'
+
+-1 Check whether the name 'NlivePoints' is not a better alternative for 'Nobjects'
+
