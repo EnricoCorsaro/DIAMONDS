@@ -5,7 +5,7 @@
 #include <cstdlib>
 #include <iostream>
 #include <iomanip>
-#include <fstream>
+#include <sstream>
 #include "Functions.h"
 #include "File.h"
 #include "MultiEllipsoidSampler.h"
@@ -107,7 +107,7 @@ int main(int argc, char *argv[])
     PowerlawReducer livePointsReducer(nestedSampler, tolerance, exponent, terminationFactor);
     //FerozReducer livePointsReducer(nestedSampler, tolerance);
 
-    ostreamstring numberString;
+    ostringstream numberString;
     numberString << Ndimensions;
     string outputPathPrefix = "demoSingle" + numberString.str() + "DGaussian_";
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
