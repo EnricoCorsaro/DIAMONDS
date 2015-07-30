@@ -1,6 +1,6 @@
 // Abstract base class for building inference models
 // Created by Enrico Corsaro & Joris De Ridder @ IvS - 15 February 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "Model.h"
 // Implementations contained in "Model.cpp"
 

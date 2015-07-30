@@ -1,6 +1,6 @@
 // Derived class for uniform prior computations
 // Created by Enrico Corsaro @ IvS - 6 March 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "GridPrior.h"
 // Implementations contained in "GridPrior.cpp"
 

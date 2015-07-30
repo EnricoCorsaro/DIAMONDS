@@ -1,7 +1,7 @@
 // Class for implementing some extra functions useful 
 // computations of models and likelihoods.
 // Created by Enrico Corsaro @ IvS - 22 January 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "Functions.h"
 // Implementation contained in "Functions.cpp"
 

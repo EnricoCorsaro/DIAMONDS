@@ -1,6 +1,6 @@
 // Derived class for normal prior computations
 // Created by Enrico Corsaro @ IvS - 4 April 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "NormalPrior.h"
 // Implementations contained in "NormalPrior.cpp"
 

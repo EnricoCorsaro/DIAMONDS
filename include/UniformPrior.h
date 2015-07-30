@@ -1,6 +1,6 @@
 // Derived class for uniform prior computations
 // Created by Enrico Corsaro & Joris De Ridder @ IvS - 15 February 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "UniformPrior.h"
 // Implementations contained in "UniformPrior.cpp"
 

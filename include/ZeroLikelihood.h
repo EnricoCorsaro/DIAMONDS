@@ -1,7 +1,7 @@
 // Derived class for zero likelihood objects
 // This likelihood returns zero for any input set of observations and model parameters.
 // Created by Enrico Corsaro @ IvS - 9 May 2014
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "ZeroLikelihood.h"
 // Implementations contained in "ZeroLikelihood.cpp"
 

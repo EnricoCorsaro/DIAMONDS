@@ -1,6 +1,6 @@
 // Namespace for file processing.
 // Joris De Ridder & Enrico Corsaro @ IvS - 12 February 2013
-// e-mail: joris.deridder@ster.kuleuven.be
+// e-mail: joris.deridder@ster.kuleuven.be / emncorsaro@gmail.com
 // Header file "File.h"
 // Implementation contained in "File.cpp"
 

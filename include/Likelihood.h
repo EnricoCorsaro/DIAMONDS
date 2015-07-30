@@ -1,6 +1,6 @@
 // Abstract base class for likelihood computations.
 // Created by Enrico Corsaro & Joris De Ridder @ IvS - 15 February 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "Likelihood.h"
 // Implementations contained in "Likelihood.cpp"
 

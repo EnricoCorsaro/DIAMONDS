@@ -1,6 +1,6 @@
 // Class for computing final results to be saved in output files.
 // Created by Enrico Corsaro @ IvS - 22 February 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "Results.h"
 // Implementations contained in "Results.cpp"
 

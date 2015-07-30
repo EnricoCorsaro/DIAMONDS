@@ -1,6 +1,6 @@
 // Abstract class for nested sampling inference
 // Enrico Corsaro @ IvS - 28 October 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "PowerlawReducer.h"
 // Implementation contained in "PowerlawReducer.cpp"
 

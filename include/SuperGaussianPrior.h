@@ -1,6 +1,6 @@
 // Derived class for Super-Gaussian prior computations
 // Created by Enrico Corsaro @ IvS - 6 August 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "SuperGaussianPrior.h"
 // Implementations contained in "SuperGaussianPrior.cpp"
 

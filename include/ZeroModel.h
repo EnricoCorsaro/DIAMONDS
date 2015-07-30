@@ -1,7 +1,7 @@
 // Derived class for zero model objects. 
 // This model returns zero for any set of model parameters.
 // Created by Enrico Corsaro @ IvS - 9 May 2014
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "ZeroModel.h"
 // Implementations contained in "ZeroModel.cpp"
 

@@ -1,7 +1,7 @@
 // Derived class for zero prior objects (used only in the merger)
 // This class returns zero (or false) values for any input parameters
 // Created by Enrico Corsaro @ IvS - 6 June 2014
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "ZeroPrior.h"
 // Implementations contained in "ZeroPrior.cpp"
 

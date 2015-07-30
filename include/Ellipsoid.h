@@ -1,7 +1,7 @@
 // Class for creating an ellipsoid object to be
 // used within the sampler class.
 // Created by Enrico Corsaro & Joris De Ridder @ IvS - 11 April 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "Ellipsoid.h"
 // Implementation contained in "Ellipsoid.cpp"
 

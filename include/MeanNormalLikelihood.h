@@ -1,6 +1,6 @@
 // Derived class for mean likelihood computations
 // Created by Enrico Corsaro @ IvS - 19 February 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "MeanNormalLikelihood.h"
 // Implementations contained in "MeanNormalLikelihood.cpp"
 

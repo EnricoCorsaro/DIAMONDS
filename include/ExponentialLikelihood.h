@@ -1,6 +1,6 @@
 // Derived class for exponential likelihood computations
 // Created by Enrico Corsaro @ IvS - 5 June 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsro@gmail.com
 // Header file "ExponentialLikelihood.h"
 // Implementations contained in "ExponentialLikelihood.cpp"
 

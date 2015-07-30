@@ -1,6 +1,6 @@
 // Abstract class for nested sampling inference
 // Enrico Corsaro @ IvS - 18 October 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "FerozReducer.h"
 // Implementation contained in "FerozReducer.cpp"
 

@@ -1,6 +1,6 @@
 // Abstract base class for clustering algorithms.
 // Created by Joris De Ridder & Enrico Corsaro @ IvS - February 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "Clusterer.h"
 // Implementations contained in "Clusterer.cpp"
 

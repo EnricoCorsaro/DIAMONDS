@@ -2,7 +2,7 @@
 // This clusterer does not perform any clustering and 
 // is intented for constructing empty clusterer objects.
 // Created by Enrico Corsaro @ IvS - 9 May 2014
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "ZeroClusterer.h"
 // Implementations contained in "ZeroClusterer.cpp"
 

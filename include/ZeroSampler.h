@@ -1,6 +1,6 @@
 // Derived class for building empty nested sampler objects.
 // Created by Enrico Corsaro @ IvS - 9 May 2014
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "ZeroSampler.h"
 // Implementation contained in "ZeroSampler.cpp"
 

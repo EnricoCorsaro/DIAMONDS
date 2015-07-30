@@ -4,7 +4,7 @@
 // sampling technique of the MultiNest code presented 
 // by Feroz F. et al. (2008, 2009).
 // Created by Enrico Corsaro @ IvS - 28 March 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "MultiEllipsoidSampler.h"
 // Implementation contained in "MultiEllipsoidSampler.cpp"
 

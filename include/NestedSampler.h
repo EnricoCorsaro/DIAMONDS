@@ -1,6 +1,6 @@
 // Class for nested sampling inference
 // Enrico Corsaro @ IvS - 24 January 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "NestedSampler.h"
 // Implementation contained in "NestedSampler.cpp"
 

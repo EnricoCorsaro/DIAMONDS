@@ -1,6 +1,6 @@
 // Derived class for K-means clustering algorithm.
 // Created by Joris De Ridder @ IvS - February 2013
-// e-mail: enrico.corsaro@ster.kuleuven.be
+// e-mail: emncorsaro@gmail.com
 // Header file "KmeansClusterer.h"
 // Implementations contained in "KmeansClusterer.cpp"
 
