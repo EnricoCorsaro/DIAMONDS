@@ -72,8 +72,8 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------------------------------
 
     EuclideanMetric myMetric;
-    int minNclusters = 1;
-    int maxNclusters = 6;
+    int minNclusters = 6;
+    int maxNclusters = 10;
     int Ntrials = 10;
     double relTolerance = 0.01;
 
@@ -85,17 +85,17 @@ int main(int argc, char *argv[])
     // ---------------------------------------------------------------------
        
     bool printOnTheScreen = true;                    // Print results on the screen
-    int initialNobjects = 1000;                      // Initial number of active points evolving within the nested sampling process.
-    int minNobjects = 400;                          // Minimum number of active points allowed in the nesting process.
+    int initialNobjects = 2000;                      // Initial number of active points evolving within the nested sampling process.
+    int minNobjects = 2000;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 50000;                    // Maximum number of attempts when trying to draw a new sampling point.
-    int NinitialIterationsWithoutClustering = 500;   // The first N iterations, we assume that there is only 1 cluster.
+    int NinitialIterationsWithoutClustering = 2000;   // The first N iterations, we assume that there is only 1 cluster.
     int NiterationsWithSameClustering = 20;          // Clustering is only happening every X iterations.
-    double initialEnlargementFraction = 2.5;         // Fraction by which each axis in an ellipsoid has to be enlarged.
+    double initialEnlargementFraction = 0.2;         // Fraction by which each axis in an ellipsoid has to be enlarged.
                                                      // It can be a number >= 0, where 0 means no enlargement.
-    double shrinkingRate = 0.1;                      // Exponent for remaining prior mass in ellipsoid enlargement fraction.
+    double shrinkingRate = 0.15;                      // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                      // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                      // of the ellipsoids.
-    double terminationFactor = 0.5;                  // Termination factor for nesting loop.
+    double terminationFactor = 0.05;                  // Termination factor for nesting loop.
 
 
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
