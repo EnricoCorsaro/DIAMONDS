@@ -423,9 +423,8 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids(vector<unordered_set<int>>
     overlappingEllipsoidsIndices.resize(ellipsoids.size());
 
 
-    // If Ellipsoid i overlaps with ellipsoid j, than of course ellipsoid j also overlaps with i.
-    // The indices are kept in an unordered_set<> which automatically takes care
-    // that there are no duplicates.  
+    // If Ellipsoid i overlaps with ellipsoid j, then ellipsoid j also overlaps with i.
+    // The indices are kept in an unordered_set<> which automatically gets rid of duplicates.  
 
     for (int i = 0; i < Nellipsoids-1; ++i)
     {
