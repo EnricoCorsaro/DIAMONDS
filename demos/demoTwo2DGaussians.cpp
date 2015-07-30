@@ -25,8 +25,6 @@
 
 int main(int argc, char *argv[])
 {
-    unsigned long Nrows;
-    int Ncols;
     ArrayXXd data;
   
 
