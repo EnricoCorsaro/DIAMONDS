@@ -62,9 +62,12 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 // MultiEllipsoidSampler::drawWithConstraint()
 //
 // PURPOSE:
-//      Draws an arbitrary number of points from one of the ellipsoids selected in the sample
-//      for those overlapping, and starts a separate nesting iteration for each
-//      ellipsoid which is isolated, i.e. non-overlapping.
+//      Draws a new point from one of the ellipsoids built from the sample of identifed clusters.
+//      The drawing process follows the adopted prior distributions. If no new point satisfying the 
+//      hard likelihood constraint is found, then a false boolean value is returned. 
+//      The ellipsoid to draw from is randomly selected according to its volume (Feroz F., Hobson M. P., 2008, MNRAS, 384, 449). 
+//      In case ellipsoids are overlapping, if the drawn point falls in a region where ellipsoids overlap, 
+//      then the point is selected with a probability inverse to the number of ellipsoids overlapping in that region.
 //
 // INPUT:
 //      totalSample:                Eigen Array matrix of size (Ndimensions, Nobjects)
@@ -76,6 +79,8 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //                                  coordinates of the drawn point to be used for the next nesting loop. 
 //                                  When used for the first time, the array contains the coordinates of the 
 //                                  worst nested object to be updated.
+//      logLikelihoodOfDrawnPoint:  the log(likelihood) value of the new drawn point, to be stored in the global
+//                                  array containing the log(likelihood) values for each nested iteration.
 //      maxNdrawAttempts:           Maximum number of attempts allowed when drawing from a single ellipsoid.
 //      
 //
