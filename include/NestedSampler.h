@@ -98,7 +98,7 @@ class NestedSampler
         Likelihood &likelihood;                     // An object of class Likelihood to contain the likelihood used in the Bayesian inference
         Metric &metric;                             // An object of class Metric for the proper metric to adopt in the computation
         Clusterer &clusterer;                       // An object of class Clusterer to contain the cluster algorithm used in the process
-        bool printOnTheScreen;                      // A boolean specifying whether we want current results to be printed on the screen
+        bool printOnTheScreen;                      // A boolean specifying whether we want current results to be printed on the screen 
         unsigned int Ndimensions;                   // Total number of dimensions of the inference
         int Nobjects;                               // Total number of live points at a given iteration
         int minNobjects;                            // Minimum number of live points allowed
@@ -109,6 +109,8 @@ class NestedSampler
         vector<int> NobjectsPerIteration;           // A vector that stores the number of live points used at each iteration of the nesting process
         
         mt19937 engine;
+
+        virtual bool verifySamplerStatus() = 0; 
         
 
 	private:

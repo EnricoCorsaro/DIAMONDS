@@ -380,6 +380,13 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
                                                   drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
 
 
+        // If the adopted sampler produces an error (e.g. in the case of the ellipsoidal sampler a failure
+        // in the ellipsoid matrix decomposition), then we can stop right here.
+        
+        nestedSamplingShouldContinue = verifySamplerStatus();
+        if (!nestedSamplingShouldContinue) break;
+
+
         // If we didn't find a point with a better likelihood, then we can stop right here.
         
         if (!newPointIsFound)
