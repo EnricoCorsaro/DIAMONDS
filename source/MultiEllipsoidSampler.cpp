@@ -22,11 +22,11 @@ MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector
                                              const int initialNobjects, const int minNobjects, 
                                              const double initialEnlargementFraction, const double shrinkingRate)
 : NestedSampler(printOnTheScreen, initialNobjects, minNobjects, ptrPriors, likelihood, metric, clusterer),
+  ellipsoidMatrixDecompositionIsSuccessful(true),
   initialEnlargementFraction(initialEnlargementFraction),
   shrinkingRate(shrinkingRate),
   uniform(0.0, 1.0)
 {
-
 }
 
 
@@ -103,7 +103,15 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
     
     vector<unordered_set<int>> overlappingEllipsoidsIndices;
     findOverlappingEllipsoids(overlappingEllipsoidsIndices);
-    
+
+
+    // If the ellipsoid matrix decomposition fails, return to main nested sampling loop with no new point drawn
+
+    if (!ellipsoidMatrixDecompositionIsSuccessful)
+    {
+        return false;
+    }
+
 
     // Get the hyper-volume for each of the ellipsoids and normalize it 
     // to the sum of the hyper-volumes over all the ellipsoids
@@ -290,6 +298,41 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
 
 
 
+// MultiEllipsoidSampler::verifySamplerStatus()
+//
+// PURPOSE:
+//      Verifies whether the status of the sampler in use is successful.
+//      If not, it prints the related error message and returns a false boolean value.
+//      In this case, it concerns the error caused by a failure in the ellipsoid matrix 
+//      decomposition.
+//
+// OUTPUT:
+//      void
+//
+
+bool MultiEllipsoidSampler::verifySamplerStatus()
+{
+    if (!ellipsoidMatrixDecompositionIsSuccessful)
+    {
+        cout << "Ellipsoid Matrix decomposition failed." << endl;
+        cout << "Quitting program." << endl;
+        return false;
+    }
+    else
+    {
+        return true;
+    }
+}
+
+
+
+
+
+
+
+
+
+
 
 // MultiEllipsoidSampler::computeEllipsoids()
 //
@@ -424,13 +467,15 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids(vector<unordered_set<int>>
 
 
     // If Ellipsoid i overlaps with ellipsoid j, then ellipsoid j also overlaps with i.
-    // The indices are kept in an unordered_set<> which automatically gets rid of duplicates.  
+    // The indices are kept in an unordered_set<> which automatically gets rid of duplicates.
+    // If an eigenvalues decomposition error occurs, it is stored in the 
+    // boolean variable ellipsoidMatrixDecompositionIsSuccessful
 
     for (int i = 0; i < Nellipsoids-1; ++i)
     {
         for (int j = i+1; j < Nellipsoids; ++j)
         {
-            if (ellipsoids[i].overlapsWith(ellipsoids[j]))
+            if (ellipsoids[i].overlapsWith(ellipsoids[j], ellipsoidMatrixDecompositionIsSuccessful))
             {
                 overlappingEllipsoidsIndices[i].insert(j);
                 overlappingEllipsoidsIndices[j].insert(i);

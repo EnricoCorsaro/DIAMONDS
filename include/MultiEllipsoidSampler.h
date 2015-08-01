@@ -35,6 +35,8 @@ class MultiEllipsoidSampler : public NestedSampler
                                         const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
                                         double &logLikelihoodOfDrawnPoint, const int maxNdrawAttempts) override; 
         
+        virtual bool verifySamplerStatus() override;
+
         vector<Ellipsoid> getEllipsoids();
         double getInitialEnlargementFraction();
         double getShrinkingRate();
@@ -42,6 +44,9 @@ class MultiEllipsoidSampler : public NestedSampler
 
     protected:
       
+        bool ellipsoidMatrixDecompositionIsSuccessful;  // A boolean specifying whether an error occurred in the 
+                                                        // eigenvalues decomposition of the ellipsoid matrix
+        
         void computeEllipsoids(RefArrayXXd const totalSample, const unsigned int Nclusters, 
                                const vector<int> &clusterIndices, const vector<int> &clusterSizes);
         void findOverlappingEllipsoids(vector<unordered_set<int>> &overlappingEllipsoidsIndices);
