@@ -137,7 +137,9 @@ void Ellipsoid::resetEnlargementFraction(const double newEnlargementFraction)
 //      Journal of Guidance, Control and Dynamics, 26, 1).
 //
 // INPUT:
-//      ellipsoid: Ellipsoid object
+//      ellipsoid:                                  Ellipsoid object
+//      ellipsoidMatrixDecompositionIsSuccessful:   a boolean specifying if the decomposition of 
+//                                                  the ellipsoid matrix was successful
 //
 // OUTPUT:
 //      A boolean value specifying whether the two ellipsoids overlap (true) or not (false)
@@ -148,7 +150,7 @@ void Ellipsoid::resetEnlargementFraction(const double newEnlargementFraction)
 //      which column in the covariance matrices of the ellipsoids.
 //
 
-bool Ellipsoid::overlapsWith(Ellipsoid ellipsoid)
+bool Ellipsoid::overlapsWith(Ellipsoid ellipsoid, bool &ellipsoidMatrixDecompositionIsSuccessful)
 {
     // Construct translation matrix
 
@@ -185,11 +187,13 @@ bool Ellipsoid::overlapsWith(Ellipsoid ellipsoid)
     
     ComplexEigenSolver<MatrixXcd> eigenSolver(CC);
 
+
+    // If eigenvalue decomposition fails, set control flag to false 
+    // to stop the nested sampling and print the results 
+
     if (eigenSolver.info() != Success)
     {
-        cout << "Ellipsoid Matrix decomposition failed." << endl;
-        cout << "Quitting program." << endl;
-        abort();
+        ellipsoidMatrixDecompositionIsSuccessful = false;
     }
     
     MatrixXcd E = eigenSolver.eigenvalues();

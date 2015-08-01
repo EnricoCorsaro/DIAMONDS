@@ -34,7 +34,7 @@ class Ellipsoid
         ~Ellipsoid();
 
         void resetEnlargementFraction(const double newEnlargementFraction);
-        bool overlapsWith(Ellipsoid ellipsoid);
+        bool overlapsWith(Ellipsoid ellipsoid, bool &ellipsoidMatrixDecompositionIsSuccessful);
         bool containsPoint(const RefArrayXd pointCoordinates);
         void drawPoint(RefArrayXd drawnPoint);
         ArrayXd getCenterCoordinates();
