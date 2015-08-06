@@ -10,8 +10,8 @@
 // INPUT:
 //      printOnTheScreen:       Boolean value specifying whether the results are to 
 //                              be printed on the screen or not.
-//      initialNobjects:        Initial number of live points to start the nesting process
-//      minNobjects:            Minimum number of live points allowed in the nesting process
+//      initialNlivePoints:        Initial number of live points to start the nesting process
+//      minNlivePoints:            Minimum number of live points allowed in the nesting process
 //      ptrPriors:              Vector of pointers to Prior class objects
 //      likelihood:             Likelihood class object used for likelihood sampling.
 //      metric:                 Metric class object to contain the metric used in the problem.
@@ -23,21 +23,21 @@
 //      nested sampling process.
 //
 
-NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
+NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNlivePoints, const int minNlivePoints, vector<Prior*> ptrPriors, 
                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
 : ptrPriors(ptrPriors),
   likelihood(likelihood),
   metric(metric),
   clusterer(clusterer),
   printOnTheScreen(printOnTheScreen),
-  Nobjects(initialNobjects),
-  minNobjects(minNobjects),
+  NlivePoints(initialNlivePoints),
+  minNlivePoints(minNlivePoints),
   logCumulatedPriorMass(numeric_limits<double>::lowest()),
   logRemainingPriorMass(0.0),
   ratioOfRemainderToCurrentEvidence(numeric_limits<double>::max()),
   Niterations(0),
-  updatedNobjects(initialNobjects),
-  initialNobjects(initialNobjects),
+  updatedNlivePoints(initialNlivePoints),
+  initialNlivePoints(initialNlivePoints),
   informationGain(0.0), 
   logEvidence(numeric_limits<double>::lowest())
 {
@@ -155,8 +155,8 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
    
     outputFile << "# List of configuring parameters used for the NSMC." << endl;
     outputFile << "# Row #1: Ndimensions" << endl;
-    outputFile << "# Row #2: Initial(Maximum) Nobjects" << endl;
-    outputFile << "# Row #3: Minimum Nobjects" << endl;
+    outputFile << "# Row #2: Initial(Maximum) NlivePoints" << endl;
+    outputFile << "# Row #3: Minimum NlivePoints" << endl;
     outputFile << "# Row #4: NinitialIterationsWithoutClustering" << endl;
     outputFile << "# Row #5: NiterationsWithSameClustering" << endl;
     outputFile << "# Row #6: maxNdrawAttempts" << endl;
@@ -164,11 +164,11 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     outputFile << "# Row #8: Niterations" << endl;
     outputFile << "# Row #9: Optimal Niterations" << endl;
     outputFile << "# Row #10: Final Nclusters" << endl;
-    outputFile << "# Row #11: Final Nobjects" << endl;
+    outputFile << "# Row #11: Final NlivePoints" << endl;
     outputFile << "# Row #12: Computational Time (seconds)" << endl;
     outputFile << Ndimensions << endl;
-    outputFile << initialNobjects << endl;
-    outputFile << minNobjects << endl;
+    outputFile << initialNlivePoints << endl;
+    outputFile << minNlivePoints << endl;
     outputFile << NinitialIterationsWithoutClustering << endl;
     outputFile << NiterationsWithSameClustering << endl;
     outputFile << maxNdrawAttempts << endl;
@@ -176,9 +176,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
 
     // Set up the random number generator. It generates integer random numbers
-    // between 0 and Nobjects-1, inclusive.
+    // between 0 and NlivePoints-1, inclusive.
 
-    uniform_int_distribution<int> discreteUniform(0, Nobjects-1);
+    uniform_int_distribution<int> discreteUniform(0, NlivePoints-1);
 
 
     // Draw the initial sample from the prior PDF. Different coordinates of a point
@@ -192,7 +192,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         cerr << endl;
     }
         
-    nestedSample.resize(Ndimensions, Nobjects);
+    nestedSample.resize(Ndimensions, NlivePoints);
     int beginIndex = 0;
     int NdimensionsOfCurrentPrior;
     ArrayXXd priorSample;
@@ -207,13 +207,13 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
         // Draw the subset of coordinates randomly from the current prior
         
-        priorSample.resize(NdimensionsOfCurrentPrior, Nobjects);
+        priorSample.resize(NdimensionsOfCurrentPrior, NlivePoints);
         ptrPriors[i]->draw(priorSample);
 
 
         // Insert this random subset of coordinates into the total sample of coordinates of points
 
-        nestedSample.block(beginIndex, 0, NdimensionsOfCurrentPrior, Nobjects) = priorSample;      
+        nestedSample.block(beginIndex, 0, NdimensionsOfCurrentPrior, NlivePoints) = priorSample;      
 
 
         // Move index to the beginning of the coordinate set of the next prior
@@ -224,9 +224,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
     // Compute the log(Likelihood) for each of our points in the live sample
 
-    logLikelihood.resize(Nobjects);
+    logLikelihood.resize(NlivePoints);
     
-    for (int i = 0; i < Nobjects; ++i)
+    for (int i = 0; i < NlivePoints; ++i)
     {
         logLikelihood(i) = likelihood.logValue(nestedSample.col(i));
     }
@@ -234,7 +234,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
     // Initialize the prior mass interval and cumulate it
 
-    double logWidthInPriorMass = log(1.0 - exp(-1.0/Nobjects));                                             // X_0 - X_1    First width in prior mass
+    double logWidthInPriorMass = log(1.0 - exp(-1.0/NlivePoints));                                             // X_0 - X_1    First width in prior mass
     logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);               // 1 - X_1
     logRemainingPriorMass = Functions::logExpDifference(logRemainingPriorMass, logWidthInPriorMass);        // X_1
 
@@ -256,7 +256,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     // This will require the containers clusterIndices and clusterSizes.
 
     unsigned int Nclusters = 0;
-    vector<int> clusterIndices(Nobjects);           // clusterIndices must have the same number of elements as the number of live points
+    vector<int> clusterIndices(NlivePoints);           // clusterIndices must have the same number of elements as the number of live points
     vector<int> clusterSizes;                       // The number of live points counted in each cluster is updated everytime one live point
                                                     // is removed from the sample.
 
@@ -274,7 +274,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     }
         
     bool nestedSamplingShouldContinue = true;
-    bool livePointsShouldBeReduced = (initialNobjects > minNobjects);       // Update live points only if required
+    bool livePointsShouldBeReduced = (initialNlivePoints > minNlivePoints);       // Update live points only if required
     
     Niterations = 0;
 
@@ -311,12 +311,12 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         
         logMeanLikelihoodOfLivePoints = logLikelihood(0);
 
-        for (int m = 1; m < Nobjects; m++)
+        for (int m = 1; m < NlivePoints; m++)
         {
             logMeanLikelihoodOfLivePoints = Functions::logExpSum(logMeanLikelihoodOfLivePoints, logLikelihood(m));
         }
 
-        logMeanLikelihoodOfLivePoints -= log(Nobjects);
+        logMeanLikelihoodOfLivePoints -= log(NlivePoints);
                 
 
         // Find clusters in our live sample of points. Don't do this every iteration but only
@@ -338,7 +338,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
                        
                 Nclusters = 1;
                 clusterSizes.resize(1);
-                clusterSizes[0] = Nobjects;
+                clusterSizes[0] = NlivePoints;
                 fill(clusterIndices.begin(), clusterIndices.end(), 0);
             }
             else         
@@ -358,13 +358,13 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
         int indexOfRandomlyChosenLivePoint = 0;
         
-        if (Nobjects > 1)
+        if (NlivePoints > 1)
         {
             // Select randomly an index of a sample point, but not the one of the worst point
 
             do 
             {
-                // 0 <= indexOfRandomlyChosenLivePoint < Nobjects
+                // 0 <= indexOfRandomlyChosenLivePoint < NlivePoints
 
                 indexOfRandomlyChosenLivePoint = discreteUniform(engine);
             } 
@@ -415,9 +415,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
             // If the number of live points reaches the minimum allowed 
             // then do not update the number anymore.
 
-            updatedNobjects = livePointsReducer.updateNobjects();
+            updatedNlivePoints = livePointsReducer.updateNlivePoints();
             
-            if (updatedNobjects > Nobjects)
+            if (updatedNlivePoints > NlivePoints)
             {
                 // Terminate program if new number of live points is greater than previous one
                     
@@ -433,11 +433,11 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
             // Otherwise the minimun number allowed is reached right now. In this case
             // stop the reduction process starting from the next iteration.
                 
-            livePointsShouldBeReduced = (updatedNobjects > minNobjects);
+            livePointsShouldBeReduced = (updatedNlivePoints > minNlivePoints);
 
-            if (updatedNobjects != Nobjects)
+            if (updatedNlivePoints != NlivePoints)
             {
-                // Resize all eigen arrays and vectors of dimensions Nobjects according to 
+                // Resize all eigen arrays and vectors of dimensions NlivePoints according to 
                 // new number of live points evaluated. In case previos and new number 
                 // of live points coincide, no resizing is done.
                     
@@ -451,7 +451,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
                         
                 // Since everything is fine update discreteUniform with the corresponding new upper bound
 
-                uniform_int_distribution<int> discreteUniform2(0, updatedNobjects-1);
+                uniform_int_distribution<int> discreteUniform2(0, updatedNlivePoints-1);
                 discreteUniform = discreteUniform2;
             }
         }
@@ -460,12 +460,12 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         // Store the new number of live points in the vector containing this information.
         // This is done even if the new number is the same as the previous one.
 
-        NobjectsPerIteration.push_back(Nobjects);
+        NlivePointsPerIteration.push_back(NlivePoints);
 
             
         // Compute the mean live evidence given the previous set of live points (see Keeton 2011, MNRAS) 
 
-        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * (log(Nobjects) - log(Nobjects + 1));
+        logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * (log(NlivePoints) - log(NlivePoints + 1));
 
 
         // Compute the ratio of the evidence of the live sample to the current Skilling's evidence.
@@ -489,8 +489,8 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         // double logWeight = logWidthInPriorMass;
         // --------------------------------------------------------
         
-        double logStretchingFactor = Niterations*((1.0/Nobjects) - (1.0/updatedNobjects)); 
-        logWidthInPriorMass = logRemainingPriorMass + Functions::logExpDifference(0.0, logStretchingFactor - 1.0/updatedNobjects);  // X_i - X_(i+1)
+        double logStretchingFactor = Niterations*((1.0/NlivePoints) - (1.0/updatedNlivePoints)); 
+        logWidthInPriorMass = logRemainingPriorMass + Functions::logExpDifference(0.0, logStretchingFactor - 1.0/updatedNlivePoints);  // X_i - X_(i+1)
 
         
         // Compute the logWeight according to the trapezoidal rule 0.5*(X_(i-1) - X_(i+1)) 
@@ -535,7 +535,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
             {
                 cerr << "Nit: " << Niterations 
                      << "   Ncl: " << Nclusters 
-                     << "   Nlive: " << Nobjects
+                     << "   Nlive: " << NlivePoints
                      << "   CPM: " << exp(logCumulatedPriorMass)
                      << "   Ratio: " << ratioOfRemainderToCurrentEvidence
                      << "   log(E): " << logEvidence 
@@ -549,12 +549,12 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         // and use this information for the next iteration (if any)
 
         logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);
-        logRemainingPriorMass = logStretchingFactor + logRemainingPriorMass - 1.0/updatedNobjects;
+        logRemainingPriorMass = logStretchingFactor + logRemainingPriorMass - 1.0/updatedNlivePoints;
 
 
         // Update new number of live points in NestedSampler class 
             
-        Nobjects = updatedNobjects;
+        NlivePoints = updatedNlivePoints;
 
 
         // Increase nested loop counter
@@ -569,17 +569,17 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
     unsigned int oldNpointsInPosterior = posteriorSample.cols();
 
-    posteriorSample.conservativeResize(Ndimensions, oldNpointsInPosterior + Nobjects);          // First make enough room
-    posteriorSample.block(0, oldNpointsInPosterior, Ndimensions, Nobjects) = nestedSample;      // Then copy the live sample to the posterior array
-    logWeightOfPosteriorSample.conservativeResize(oldNpointsInPosterior + Nobjects);
-    logWeightOfPosteriorSample.segment(oldNpointsInPosterior, Nobjects).fill(logRemainingPriorMass - log(Nobjects));  // Check if the best condition to impose 
-    logLikelihoodOfPosteriorSample.conservativeResize(oldNpointsInPosterior + Nobjects);
-    logLikelihoodOfPosteriorSample.segment(oldNpointsInPosterior, Nobjects) = logLikelihood; 
+    posteriorSample.conservativeResize(Ndimensions, oldNpointsInPosterior + NlivePoints);          // First make enough room
+    posteriorSample.block(0, oldNpointsInPosterior, Ndimensions, NlivePoints) = nestedSample;      // Then copy the live sample to the posterior array
+    logWeightOfPosteriorSample.conservativeResize(oldNpointsInPosterior + NlivePoints);
+    logWeightOfPosteriorSample.segment(oldNpointsInPosterior, NlivePoints).fill(logRemainingPriorMass - log(NlivePoints));  // Check if the best condition to impose 
+    logLikelihoodOfPosteriorSample.conservativeResize(oldNpointsInPosterior + NlivePoints);
+    logLikelihoodOfPosteriorSample.segment(oldNpointsInPosterior, NlivePoints) = logLikelihood; 
 
 
     // Compute Skilling's error on the log(Evidence)
     
-    logEvidenceError = sqrt(fabs(informationGain)/Nobjects);
+    logEvidenceError = sqrt(fabs(informationGain)/NlivePoints);
 
 
     // Add Mean Live Evidence of the remaining live sample of points to the total log(Evidence) collected
@@ -601,9 +601,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     // Append information to existing output file and close stream afterwards
     
     outputFile << Niterations << endl;
-    outputFile << static_cast<int>((Nobjects*informationGain) + (Nobjects*sqrt(Ndimensions*1.0))) << endl;
+    outputFile << static_cast<int>((NlivePoints*informationGain) + (NlivePoints*sqrt(Ndimensions*1.0))) << endl;
     outputFile << Nclusters << endl;
-    outputFile << Nobjects << endl;
+    outputFile << NlivePoints << endl;
     outputFile << computationalTime << endl;
 }
 
@@ -621,7 +621,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 // NestedSampler::removeLivePointsFromSample()
 //
 // PURPOSE:
-//          Resizes all eigen arrays and vectors of dimensions Nobjects according to 
+//          Resizes all eigen arrays and vectors of dimensions NlivePoints according to 
 //          new number of live points evaluated. The indices of the live points to be removed
 //          are give as an input.
 //          Also relative number of points in clusters are adjusted according to which live points
@@ -640,33 +640,33 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 void NestedSampler::removeLivePointsFromSample(const vector<int> &indicesOfLivePointsToRemove, 
                                                vector<int> &clusterIndices, vector<int> &clusterSizes)
 {
-    int NobjectsToRemove = indicesOfLivePointsToRemove.size();
-    int NobjectsAtCurrentIteration = clusterIndices.size();
+    int NlivePointsToRemove = indicesOfLivePointsToRemove.size();
+    int NlivePointsAtCurrentIteration = clusterIndices.size();
 
-    for (int m = 0; m < NobjectsToRemove; ++m)
+    for (int m = 0; m < NlivePointsToRemove; ++m)
     {
         // Swap the last element of the set of live points with the chosen one 
         // and erase the last element. This is done for all the arrays that store information
         // about live points.
  
         ArrayXd nestedSamplePerLivePointCopy(Ndimensions);
-        nestedSamplePerLivePointCopy = nestedSample.col(NobjectsAtCurrentIteration-1);
-        nestedSample.col(NobjectsAtCurrentIteration-1) = nestedSample.col(indicesOfLivePointsToRemove[m]);
+        nestedSamplePerLivePointCopy = nestedSample.col(NlivePointsAtCurrentIteration-1);
+        nestedSample.col(NlivePointsAtCurrentIteration-1) = nestedSample.col(indicesOfLivePointsToRemove[m]);
         nestedSample.col(indicesOfLivePointsToRemove[m]) = nestedSamplePerLivePointCopy;
-        nestedSample.conservativeResize(Ndimensions, NobjectsAtCurrentIteration-1);       
+        nestedSample.conservativeResize(Ndimensions, NlivePointsAtCurrentIteration-1);       
                 
-        double logLikelihoodCopy = logLikelihood(NobjectsAtCurrentIteration-1);
-        logLikelihood(NobjectsAtCurrentIteration-1) = logLikelihood(indicesOfLivePointsToRemove[m]);
+        double logLikelihoodCopy = logLikelihood(NlivePointsAtCurrentIteration-1);
+        logLikelihood(NlivePointsAtCurrentIteration-1) = logLikelihood(indicesOfLivePointsToRemove[m]);
         logLikelihood(indicesOfLivePointsToRemove[m]) = logLikelihoodCopy;
-        logLikelihood.conservativeResize(NobjectsAtCurrentIteration-1);
+        logLikelihood.conservativeResize(NlivePointsAtCurrentIteration-1);
         
 
         // In the case of clusterIndices also subtract selected live point from
         // corresponding clusterSizes in order to update the size of the cluster 
         // the live point belongs to.
                 
-        int clusterIndexCopy = clusterIndices[NobjectsAtCurrentIteration-1];
-        clusterIndices[NobjectsAtCurrentIteration-1] = clusterIndices[indicesOfLivePointsToRemove[m]];
+        int clusterIndexCopy = clusterIndices[NlivePointsAtCurrentIteration-1];
+        clusterIndices[NlivePointsAtCurrentIteration-1] = clusterIndices[indicesOfLivePointsToRemove[m]];
         --clusterSizes[clusterIndices[indicesOfLivePointsToRemove[m]]];
         clusterIndices[indicesOfLivePointsToRemove[m]] = clusterIndexCopy;
         clusterIndices.pop_back();
@@ -674,7 +674,7 @@ void NestedSampler::removeLivePointsFromSample(const vector<int> &indicesOfLiveP
                 
         // Reduce the current number of live points by one.
                 
-        --NobjectsAtCurrentIteration;
+        --NlivePointsAtCurrentIteration;
     }
 }
 
@@ -792,19 +792,19 @@ unsigned int NestedSampler::getNdimensions()
 
 
 
-// NestedSampler::getNobjects()
+// NestedSampler::getNlivePoints()
 //
 // PURPOSE:
-//      Get protected data member Nobjects.
+//      Get protected data member NlivePoints.
 //
 // OUTPUT:
 //      An integer containing the current number of
 //      live points.
 //
 
-int NestedSampler::getNobjects()
+int NestedSampler::getNlivePoints()
 {
-    return Nobjects;
+    return NlivePoints;
 }
 
 
@@ -818,19 +818,19 @@ int NestedSampler::getNobjects()
 
 
 
-// NestedSampler::getInitialNobjects()
+// NestedSampler::getInitialNlivePoints()
 //
 // PURPOSE:
-//      Get protected data member initialNobjects.
+//      Get protected data member initialNlivePoints.
 //
 // OUTPUT:
 //      An integer containing the initial number of
 //      live points.
 //
 
-int NestedSampler::getInitialNobjects()
+int NestedSampler::getInitialNlivePoints()
 {
-    return initialNobjects;
+    return initialNlivePoints;
 }
 
 
@@ -843,19 +843,19 @@ int NestedSampler::getInitialNobjects()
 
 
 
-// NestedSampler::getMinNobjects()
+// NestedSampler::getMinNlivePoints()
 //
 // PURPOSE:
-//      Get protected data member minNobjects.
+//      Get protected data member minNlivePoints.
 //
 // OUTPUT:
 //      An integer containing the minimum number of
 //      live points allowed.
 //
 
-int NestedSampler::getMinNobjects()
+int NestedSampler::getMinNlivePoints()
 {
-    return minNobjects;
+    return minNlivePoints;
 }
 
 
@@ -1018,18 +1018,18 @@ double NestedSampler::getTerminationFactor()
 
 
 
-// NestedSampler::getNobjectsPerIteration()
+// NestedSampler::getNlivePointsPerIteration()
 //
 // PURPOSE:
-//      Get protected data member NobjectsPerIteration.
+//      Get protected data member NlivePointsPerIteration.
 //
 // OUTPUT:
 //      A double containing the Skilling's error on the logEvidence.
 //
 
-vector<int> NestedSampler::getNobjectsPerIteration()
+vector<int> NestedSampler::getNlivePointsPerIteration()
 {
-    return NobjectsPerIteration;
+    return NlivePointsPerIteration;
 }
 
 

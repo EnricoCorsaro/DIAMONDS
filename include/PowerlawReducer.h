@@ -20,7 +20,7 @@ class PowerlawReducer : public LivePointsReducer
                            const double exponent = 1, const double terminationFactor = 0.05);
         ~PowerlawReducer();
         
-        virtual int updateNobjects();
+        virtual int updateNlivePoints();
 
 
     protected:

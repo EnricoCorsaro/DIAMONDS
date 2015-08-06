@@ -9,17 +9,17 @@
 // INPUT:
 //      printOnTheScreen:       Boolean value specifying whether the results are to 
 //                              be printed on the screen or not.
-//      initialNobjects:        Initial number of live points to start the nesting process
-//      minNobjects:            Minimum number of live points allowed in the nesting process
+//      initialNlivePoints:        Initial number of live points to start the nesting process
+//      minNlivePoints:            Minimum number of live points allowed in the nesting process
 //      ptrPriors:              Vector of pointers to Prior class objects
 //      likelihood:             Likelihood class object used for likelihood sampling.
 //      metric:                 Metric class object to contain the metric used in the problem.
 //      clusterer:              Clusterer class object specifying the type of clustering algorithm to be used.
 //
 
-ZeroSampler::ZeroSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
+ZeroSampler::ZeroSampler(const bool printOnTheScreen, const int initialNlivePoints, const int minNlivePoints, vector<Prior*> ptrPriors, 
                     Likelihood &likelihood, Metric &metric, Clusterer &clusterer)
-: NestedSampler(printOnTheScreen, initialNobjects, minNobjects, ptrPriors, likelihood, metric, clusterer)
+: NestedSampler(printOnTheScreen, initialNlivePoints, minNlivePoints, ptrPriors, likelihood, metric, clusterer)
 {
 }
 
@@ -59,7 +59,7 @@ ZeroSampler::~ZeroSampler()
 //      Empty function not to be used.
 //
 // INPUT:
-//      totalSample:                Eigen Array matrix of size (Ndimensions, Nobjects)
+//      totalSample:                Eigen Array matrix of size (Ndimensions, NlivePoints)
 //                                  containing the total sample of active points at a given nesting iteration
 //      Nclusters:                  Optimal number of clusters found by clustering algorithm
 //      clusterIndices:             Indices of clusters for each point of the sample

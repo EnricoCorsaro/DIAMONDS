@@ -68,26 +68,26 @@ vector<int> LivePointsReducer::findIndicesOfLivePointsToRemove(mt19937 engine)
     // In case no live points must be removed, process will skip initialization
     // of indices.
     
-    NobjectsToRemove = NobjectsAtCurrentIteration - updatedNobjects;
+    NlivePointsToRemove = NlivePointsAtCurrentIteration - updatedNlivePoints;
 
 
     // Create an array of integers to contain the indices of the live points to remove
 
     vector<int> indicesOfLivePointsToRemove;
 
-    if (NobjectsToRemove > 0)
+    if (NlivePointsToRemove > 0)
     {
         // At least one live point has to be removed, hence proceed with inizializing the
         // vector of indices
 
-        for (int m = 0; m < NobjectsToRemove; ++m)
+        for (int m = 0; m < NlivePointsToRemove; ++m)
         {
             // Create uniform random integer generator with current number of live points.
             // This is done because we remove one live point per time. Everytime we repeat the
             // process, we have to take into account that the total number of live points
             // was descreased by one.
 
-            uniform_int_distribution<int> discreteUniform(0, NobjectsAtCurrentIteration-1);
+            uniform_int_distribution<int> discreteUniform(0, NlivePointsAtCurrentIteration-1);
                 
 
             // Select randomly one live point from the actual sample
@@ -97,7 +97,7 @@ vector<int> LivePointsReducer::findIndicesOfLivePointsToRemove(mt19937 engine)
 
             // Reduce the current number of live points by one.
                 
-            --NobjectsAtCurrentIteration;
+            --NlivePointsAtCurrentIteration;
         }
     }
 
@@ -117,13 +117,13 @@ vector<int> LivePointsReducer::findIndicesOfLivePointsToRemove(mt19937 engine)
 
 
 
-// LivePointsReducer::getNobjectsToRemove()
+// LivePointsReducer::getNlivePointsToRemove()
 //
 // PURPOSE:
-//      Gets private data member NobjectsToRemove
+//      Gets private data member NlivePointsToRemove
 //
 
-int LivePointsReducer::getNobjectsToRemove()
+int LivePointsReducer::getNlivePointsToRemove()
 {
-    return NobjectsToRemove;
+    return NlivePointsToRemove;
 }

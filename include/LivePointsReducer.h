@@ -35,21 +35,21 @@ class LivePointsReducer
         ~LivePointsReducer();
        
         vector<int> findIndicesOfLivePointsToRemove(mt19937 engine);
-        int getNobjectsToRemove();
+        int getNlivePointsToRemove();
 
-        virtual int updateNobjects() = 0;
+        virtual int updateNlivePoints() = 0;
         
 
     protected:
 
-        int NobjectsAtCurrentIteration;
-        int updatedNobjects;
+        int NlivePointsAtCurrentIteration;
+        int updatedNlivePoints;
         NestedSampler &nestedSampler;
 
 
     private:
         
-        int NobjectsToRemove;
+        int NlivePointsToRemove;
 
 };
 

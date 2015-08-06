@@ -50,7 +50,7 @@ FerozReducer::~FerozReducer()
 
 
 
-// FerozReducer::updateNobjects()
+// FerozReducer::updateNlivePoints()
 //
 // PURPOSE:
 //      Updates the number of live points for the next iteration of the nesting process.
@@ -64,7 +64,7 @@ FerozReducer::~FerozReducer()
 //      The returned value of live points is ensured to be not below the minimum allowed. 
 //
 
-int FerozReducer::updateNobjects()
+int FerozReducer::updateNlivePoints()
 {
     if (nestedSampler.getNiterations() == 0)
     {
@@ -83,19 +83,19 @@ int FerozReducer::updateNobjects()
 
     // Evaluate the new number of live points to be used in the next iteration of the nesting process
    
-    NobjectsAtCurrentIteration = nestedSampler.getNobjects();
+    NlivePointsAtCurrentIteration = nestedSampler.getNlivePoints();
     double numerator = exp(Functions::logExpDifference(logMaxEvidenceContribution,logMaxEvidenceContributionNew));
     double denominator = exp(logMaxEvidenceContributionNew);
-    int NobjectsToRemove = nestedSampler.getMinNobjects() * numerator / (denominator * tolerance);
-    updatedNobjects = NobjectsAtCurrentIteration - NobjectsToRemove;
+    int NlivePointsToRemove = nestedSampler.getMinNlivePoints() * numerator / (denominator * tolerance);
+    updatedNlivePoints = NlivePointsAtCurrentIteration - NlivePointsToRemove;
     
 
-    // If new number of live points is lower than minNobjects, do not accept the new number and stick to the
+    // If new number of live points is lower than minNlivePoints, do not accept the new number and stick to the
     // previous one.
 
-    if (updatedNobjects < nestedSampler.getMinNobjects())
+    if (updatedNlivePoints < nestedSampler.getMinNlivePoints())
     {
-        updatedNobjects = NobjectsAtCurrentIteration;
+        updatedNlivePoints = NlivePointsAtCurrentIteration;
     }
 
 
@@ -103,6 +103,6 @@ int FerozReducer::updateNobjects()
     
     logMaxEvidenceContribution = logMaxEvidenceContributionNew;
 
-    return updatedNobjects;
+    return updatedNlivePoints;
 }
 

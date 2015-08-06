@@ -11,17 +11,17 @@
 //      likelihood:                     Likelihood class object used for likelihood sampling.
 //      metric:                         Metric class object to contain the metric used in the problem.
 //      clusterer:                      Clusterer class object specifying the type of clustering algorithm to be used.
-//      initialNobjects:                Initial number of active points to start the nesting process
-//      NobjectsMinimum:                Minimum number of active points allowed in the nesting process
+//      initialNlivePoints:                Initial number of active points to start the nesting process
+//      NlivePointsMinimum:                Minimum number of active points allowed in the nesting process
 //      initialEnlargementFraction:     Initial value of the enlargement for the ellipsoids
 //      shrinkingRate:                  Shrinking rate of the enlargement factors, between 0 and 1.
 //
 
 MultiEllipsoidSampler::MultiEllipsoidSampler(const bool printOnTheScreen, vector<Prior*> ptrPriors, 
                                              Likelihood &likelihood, Metric &metric, Clusterer &clusterer,
-                                             const int initialNobjects, const int minNobjects, 
+                                             const int initialNlivePoints, const int minNlivePoints, 
                                              const double initialEnlargementFraction, const double shrinkingRate)
-: NestedSampler(printOnTheScreen, initialNobjects, minNobjects, ptrPriors, likelihood, metric, clusterer),
+: NestedSampler(printOnTheScreen, initialNlivePoints, minNlivePoints, ptrPriors, likelihood, metric, clusterer),
   ellipsoidMatrixDecompositionIsSuccessful(true),
   initialEnlargementFraction(initialEnlargementFraction),
   shrinkingRate(shrinkingRate),
@@ -70,7 +70,7 @@ MultiEllipsoidSampler::~MultiEllipsoidSampler()
 //      then the point is selected with a probability inverse to the number of ellipsoids overlapping in that region.
 //
 // INPUT:
-//      totalSample:                Eigen Array matrix of size (Ndimensions, Nobjects)
+//      totalSample:                Eigen Array matrix of size (Ndimensions, NlivePoints)
 //                                  containing the total sample of active points at a given nesting iteration
 //      Nclusters:                  Optimal number of clusters found by clustering algorithm
 //      clusterIndices:             Indices of clusters for each point of the sample
@@ -348,9 +348,9 @@ bool MultiEllipsoidSampler::verifySamplerStatus()
 //      are stored in the private data members.
 //
 // INPUT:
-//      totalSample(Ndimensions, Nobjects):     Complete sample (spread over all clusters) of points
+//      totalSample(Ndimensions, NlivePoints):     Complete sample (spread over all clusters) of points
 //      Nclusters:                              The number of clusters identified by the clustering algorithm
-//      clusterIndices(Nobjects):               For each point, the integer index of the cluster to which it belongs
+//      clusterIndices(NlivePoints):               For each point, the integer index of the cluster to which it belongs
 //      clusterSizes(Nclusters):                A vector of integers containing the number of points belonging to each cluster
 //
 // OUTPUT:
@@ -517,7 +517,7 @@ void MultiEllipsoidSampler::findOverlappingEllipsoids(vector<unordered_set<int>>
 double MultiEllipsoidSampler::updateEnlargementFraction(const int clusterSize)
 {
     double updatedEnlargementFraction = initialEnlargementFraction * exp( shrinkingRate * logRemainingPriorMass 
-                                            + 0.5 * log(static_cast<double>(Nobjects) / clusterSize) );
+                                            + 0.5 * log(static_cast<double>(NlivePoints) / clusterSize) );
     
     return updatedEnlargementFraction;
 }

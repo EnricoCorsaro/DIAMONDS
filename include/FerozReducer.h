@@ -21,7 +21,7 @@ class FerozReducer : public LivePointsReducer
         FerozReducer(NestedSampler &nestedSampler, const double tolerance);
         ~FerozReducer();
         
-        virtual int updateNobjects();
+        virtual int updateNlivePoints();
 
 
     protected:

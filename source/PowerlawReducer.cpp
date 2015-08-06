@@ -61,7 +61,7 @@ PowerlawReducer::~PowerlawReducer()
 
 
 
-// PowerlawReducer::updateNobjects()
+// PowerlawReducer::updateNlivePoints()
 //
 // PURPOSE:
 //      Updates the number of live points for the upcoming iteration of the nesting process.
@@ -75,7 +75,7 @@ PowerlawReducer::~PowerlawReducer()
 //      The returned value of live points is ensured to be not below the minimum allowed. 
 //
 
-int PowerlawReducer::updateNobjects()
+int PowerlawReducer::updateNlivePoints()
 {
     // Retrive the ratio of live to cumulated evidence for the current iteration 
 
@@ -84,20 +84,20 @@ int PowerlawReducer::updateNobjects()
 
     // Evaluate the new number of live points to be used in the next iteration of the nesting process
    
-    NobjectsAtCurrentIteration = nestedSampler.getNobjects();
+    NlivePointsAtCurrentIteration = nestedSampler.getNlivePoints();
     double ratio = ratioOfRemainderToCurrentEvidence/terminationFactor;
-    int NobjectsToRemove = pow((tolerance/ratio), exponent);
+    int NlivePointsToRemove = pow((tolerance/ratio), exponent);
 
-    updatedNobjects = NobjectsAtCurrentIteration - NobjectsToRemove;
+    updatedNlivePoints = NlivePointsAtCurrentIteration - NlivePointsToRemove;
 
 
-    // If new number of live points is lower than minNobjects, do not accept the new number and stick to the
+    // If new number of live points is lower than minNlivePoints, do not accept the new number and stick to the
     // previous one.
 
-    if (updatedNobjects < nestedSampler.getMinNobjects())
+    if (updatedNlivePoints < nestedSampler.getMinNlivePoints())
     {
-        updatedNobjects = NobjectsAtCurrentIteration;
+        updatedNlivePoints = NlivePointsAtCurrentIteration;
     }
 
-    return updatedNobjects;
+    return updatedNlivePoints;
 }

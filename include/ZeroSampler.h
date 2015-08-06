@@ -18,7 +18,7 @@ class ZeroSampler : public NestedSampler
 
     public:
        
-        ZeroSampler(const bool printOnTheScreen, const int initialNobjects, const int minNobjects, vector<Prior*> ptrPriors, 
+        ZeroSampler(const bool printOnTheScreen, const int initialNlivePoints, const int minNlivePoints, vector<Prior*> ptrPriors, 
                     Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~ZeroSampler();
 
