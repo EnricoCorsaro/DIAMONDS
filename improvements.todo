@@ -24,5 +24,3 @@ ToDone Syntax for action items:
 
 -1 Check in NestedSampler.run() whether the name 'liveSample' is not a better alternative for 'nestedSample'
 
--1 Check whether the name 'NlivePoints' is not a better alternative for 'Nobjects'
-
