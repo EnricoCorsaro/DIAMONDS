@@ -17,8 +17,6 @@ ToDone Syntax for action items:
 -2 Check if we can mitigate the conservativeResize() statements in NestedSampler.run()
    This could speed up the code, they're quite inefficient,
 
--2 Update the incomplete docstring of MultiEllipsoidSampler.drawWithConstraint()
-
 -2 It would be more logical to have the clustering part in MultiEllipsoid.drawWithConstraint() rather than in MultiNest.run()
    Not so easy to refactor.
 
