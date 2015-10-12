@@ -31,7 +31,8 @@ Packet4f plog<Packet4f>(const Packet4f& _x)
 
   /* the smallest non denormalized float number */
   _EIGEN_DECLARE_CONST_Packet4f_FROM_INT(min_norm_pos,  0x00800000);
-
+  _EIGEN_DECLARE_CONST_Packet4f_FROM_INT(minus_inf,     0xff800000);//-1.f/0.f);
+  
   /* natural logarithm computed for 4 simultaneous float
     return NaN for x <= 0
   */
@@ -51,7 +52,8 @@ Packet4f plog<Packet4f>(const Packet4f& _x)
 
   Packet4i emm0;
 
-  Packet4f invalid_mask = _mm_cmple_ps(x, _mm_setzero_ps());
+  Packet4f invalid_mask = _mm_cmpnge_ps(x, _mm_setzero_ps()); // not greater equal is true if x is NaN
+  Packet4f iszero_mask = _mm_cmpeq_ps(x, _mm_setzero_ps());
 
   x = pmax(x, p4f_min_norm_pos);  /* cut off denormalized stuff */
   emm0 = _mm_srli_epi32(_mm_castps_si128(x), 23);
@@ -96,7 +98,9 @@ Packet4f plog<Packet4f>(const Packet4f& _x)
   y2 = pmul(e, p4f_cephes_log_q2);
   x = padd(x, y);
   x = padd(x, y2);
-  return _mm_or_ps(x, invalid_mask); // negative arg will be NAN
+  // negative arg will be NAN, 0 will be -INF
+  return _mm_or_ps(_mm_andnot_ps(iszero_mask, _mm_or_ps(x, invalid_mask)),
+                   _mm_and_ps(iszero_mask, p4f_minus_inf));
 }
 
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
@@ -162,7 +166,7 @@ Packet4f pexp<Packet4f>(const Packet4f& _x)
   emm0 = _mm_cvttps_epi32(fx);
   emm0 = _mm_add_epi32(emm0, p4i_0x7f);
   emm0 = _mm_slli_epi32(emm0, 23);
-  return pmul(y, _mm_castsi128_ps(emm0));
+  return pmax(pmul(y, Packet4f(_mm_castsi128_ps(emm0))), _x);
 }
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet2d pexp<Packet2d>(const Packet2d& _x)
@@ -235,7 +239,7 @@ Packet2d pexp<Packet2d>(const Packet2d& _x)
   emm0 = _mm_add_epi32(emm0, p4i_1023_0);
   emm0 = _mm_slli_epi32(emm0, 20);
   emm0 = _mm_shuffle_epi32(emm0, _MM_SHUFFLE(1,2,0,3));
-  return pmul(x, _mm_castsi128_pd(emm0));
+  return pmax(pmul(x, Packet2d(_mm_castsi128_pd(emm0))), _x);
 }
 
 /* evaluation of 4 sines at onces, using SSE2 intrinsics.
@@ -438,20 +442,31 @@ Packet4f pcos<Packet4f>(const Packet4f& _x)
   return _mm_xor_ps(y, sign_bit);
 }
 
+#if EIGEN_FAST_MATH
+
 // This is based on Quake3's fast inverse square root.
 // For detail see here: http://www.beyond3d.com/content/articles/8/
+// It lacks 1 (or 2 bits in some rare cases) of precision, and does not handle negative, +inf, or denormalized numbers correctly.
 template<> EIGEN_DEFINE_FUNCTION_ALLOWING_MULTIPLE_DEFINITIONS EIGEN_UNUSED
 Packet4f psqrt<Packet4f>(const Packet4f& _x)
 {
   Packet4f half = pmul(_x, pset1<Packet4f>(.5f));
 
   /* select only the inverse sqrt of non-zero inputs */
-  Packet4f non_zero_mask = _mm_cmpgt_ps(_x, pset1<Packet4f>(std::numeric_limits<float>::epsilon()));
+  Packet4f non_zero_mask = _mm_cmpge_ps(_x, pset1<Packet4f>((std::numeric_limits<float>::min)()));
   Packet4f x = _mm_and_ps(non_zero_mask, _mm_rsqrt_ps(_x));
 
   x = pmul(x, psub(pset1<Packet4f>(1.5f), pmul(half, pmul(x,x))));
   return pmul(_x,x);
 }
+
+#else
+
+template<> EIGEN_STRONG_INLINE Packet4f psqrt<Packet4f>(const Packet4f& x) { return _mm_sqrt_ps(x); }
+
+#endif
+
+template<> EIGEN_STRONG_INLINE Packet2d psqrt<Packet2d>(const Packet2d& x) { return _mm_sqrt_pd(x); }
 
 } // end namespace internal
 

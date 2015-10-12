@@ -13,6 +13,16 @@
 
 namespace Eigen {
 
+namespace internal {
+  
+// The index type defined by EIGEN_DEFAULT_DENSE_INDEX_TYPE must be a signed type.
+// This dummy function simply aims at checking that at compile time.
+static inline void check_DenseIndex_is_signed() {
+  EIGEN_STATIC_ASSERT(NumTraits<DenseIndex>::IsSigned,THE_INDEX_TYPE_MUST_BE_A_SIGNED_TYPE); 
+}
+
+} // end namespace internal
+  
 /** \class DenseBase
   * \ingroup Core_Module
   *
@@ -173,10 +183,6 @@ template<typename Derived> class DenseBase
     /** \returns the number of nonzero coefficients which is in practice the number
       * of stored coefficients. */
     inline Index nonZeros() const { return size(); }
-    /** \returns true if either the number of rows or the number of columns is equal to 1.
-      * In other words, this function returns
-      * \code rows()==1 || cols()==1 \endcode
-      * \sa rows(), cols(), IsVectorAtCompileTime. */
 
     /** \returns the outer size.
       *
@@ -256,11 +262,13 @@ template<typename Derived> class DenseBase
     template<typename OtherDerived>
     Derived& operator=(const ReturnByValue<OtherDerived>& func);
 
-#ifndef EIGEN_PARSED_BY_DOXYGEN
-    /** Copies \a other into *this without evaluating other. \returns a reference to *this. */
+    /** \internal Copies \a other into *this without evaluating other. \returns a reference to *this. */
     template<typename OtherDerived>
     Derived& lazyAssign(const DenseBase<OtherDerived>& other);
-#endif // not EIGEN_PARSED_BY_DOXYGEN
+
+    /** \internal Evaluates \a other into *this. \returns a reference to *this. */
+    template<typename OtherDerived>
+    Derived& lazyAssign(const ReturnByValue<OtherDerived>& other);
 
     CommaInitializer<Derived> operator<< (const Scalar& s);
 
@@ -271,7 +279,7 @@ template<typename Derived> class DenseBase
     CommaInitializer<Derived> operator<< (const DenseBase<OtherDerived>& other);
 
     Eigen::Transpose<Derived> transpose();
-    typedef const Transpose<const Derived> ConstTransposeReturnType;
+	typedef typename internal::add_const<Transpose<const Derived> >::type ConstTransposeReturnType;
     ConstTransposeReturnType transpose() const;
     void transposeInPlace();
 #ifndef EIGEN_NO_DEBUG
@@ -336,6 +344,9 @@ template<typename Derived> class DenseBase
     bool isConstant(const Scalar& value, const RealScalar& prec = NumTraits<Scalar>::dummy_precision()) const;
     bool isZero(const RealScalar& prec = NumTraits<Scalar>::dummy_precision()) const;
     bool isOnes(const RealScalar& prec = NumTraits<Scalar>::dummy_precision()) const;
+    
+    inline bool hasNaN() const;
+    inline bool allFinite() const;
 
     inline Derived& operator*=(const Scalar& other);
     inline Derived& operator/=(const Scalar& other);
@@ -415,8 +426,6 @@ template<typename Derived> class DenseBase
       return derived().coeff(0,0);
     }
 
-/////////// Array module ///////////
-
     bool all(void) const;
     bool any(void) const;
     Index count() const;
@@ -442,17 +451,19 @@ template<typename Derived> class DenseBase
 
     template<typename ThenDerived>
     inline const Select<Derived,ThenDerived, typename ThenDerived::ConstantReturnType>
-    select(const DenseBase<ThenDerived>& thenMatrix, typename ThenDerived::Scalar elseScalar) const;
+    select(const DenseBase<ThenDerived>& thenMatrix, const typename ThenDerived::Scalar& elseScalar) const;
 
     template<typename ElseDerived>
     inline const Select<Derived, typename ElseDerived::ConstantReturnType, ElseDerived >
-    select(typename ElseDerived::Scalar thenScalar, const DenseBase<ElseDerived>& elseMatrix) const;
+    select(const typename ElseDerived::Scalar& thenScalar, const DenseBase<ElseDerived>& elseMatrix) const;
 
     template<int p> RealScalar lpNorm() const;
 
     template<int RowFactor, int ColFactor>
-    const Replicate<Derived,RowFactor,ColFactor> replicate() const;
-    const Replicate<Derived,Dynamic,Dynamic> replicate(Index rowFacor,Index colFactor) const;
+    inline const Replicate<Derived,RowFactor,ColFactor> replicate() const;
+    
+    typedef Replicate<Derived,Dynamic,Dynamic> ReplicateReturnType;
+    inline const ReplicateReturnType replicate(Index rowFacor,Index colFactor) const;
 
     typedef Reverse<Derived, BothDirections> ReverseReturnType;
     typedef const Reverse<const Derived, BothDirections> ConstReverseReturnType;

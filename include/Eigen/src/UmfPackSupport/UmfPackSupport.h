@@ -39,7 +39,7 @@ inline int umfpack_symbolic(int n_row,int n_col,
                             const int Ap[], const int Ai[], const std::complex<double> Ax[], void **Symbolic,
                             const double Control [UMFPACK_CONTROL], double Info [UMFPACK_INFO])
 {
-  return umfpack_zi_symbolic(n_row,n_col,Ap,Ai,&internal::real_ref(Ax[0]),0,Symbolic,Control,Info);
+  return umfpack_zi_symbolic(n_row,n_col,Ap,Ai,&numext::real_ref(Ax[0]),0,Symbolic,Control,Info);
 }
 
 inline int umfpack_numeric( const int Ap[], const int Ai[], const double Ax[],
@@ -53,7 +53,7 @@ inline int umfpack_numeric( const int Ap[], const int Ai[], const std::complex<d
                             void *Symbolic, void **Numeric,
                             const double Control[UMFPACK_CONTROL],double Info [UMFPACK_INFO])
 {
-  return umfpack_zi_numeric(Ap,Ai,&internal::real_ref(Ax[0]),0,Symbolic,Numeric,Control,Info);
+  return umfpack_zi_numeric(Ap,Ai,&numext::real_ref(Ax[0]),0,Symbolic,Numeric,Control,Info);
 }
 
 inline int umfpack_solve( int sys, const int Ap[], const int Ai[], const double Ax[],
@@ -67,7 +67,7 @@ inline int umfpack_solve( int sys, const int Ap[], const int Ai[], const std::co
                           std::complex<double> X[], const std::complex<double> B[], void *Numeric,
                           const double Control[UMFPACK_CONTROL], double Info[UMFPACK_INFO])
 {
-  return umfpack_zi_solve(sys,Ap,Ai,&internal::real_ref(Ax[0]),0,&internal::real_ref(X[0]),0,&internal::real_ref(B[0]),0,Numeric,Control,Info);
+  return umfpack_zi_solve(sys,Ap,Ai,&numext::real_ref(Ax[0]),0,&numext::real_ref(X[0]),0,&numext::real_ref(B[0]),0,Numeric,Control,Info);
 }
 
 inline int umfpack_get_lunz(int *lnz, int *unz, int *n_row, int *n_col, int *nz_udiag, void *Numeric, double)
@@ -89,9 +89,9 @@ inline int umfpack_get_numeric(int Lp[], int Lj[], double Lx[], int Up[], int Ui
 inline int umfpack_get_numeric(int Lp[], int Lj[], std::complex<double> Lx[], int Up[], int Ui[], std::complex<double> Ux[],
                                int P[], int Q[], std::complex<double> Dx[], int *do_recip, double Rs[], void *Numeric)
 {
-  double& lx0_real = internal::real_ref(Lx[0]);
-  double& ux0_real = internal::real_ref(Ux[0]);
-  double& dx0_real = internal::real_ref(Dx[0]);
+  double& lx0_real = numext::real_ref(Lx[0]);
+  double& ux0_real = numext::real_ref(Ux[0]);
+  double& dx0_real = numext::real_ref(Dx[0]);
   return umfpack_zi_get_numeric(Lp,Lj,Lx?&lx0_real:0,0,Up,Ui,Ux?&ux0_real:0,0,P,Q,
                                 Dx?&dx0_real:0,0,do_recip,Rs,Numeric);
 }
@@ -103,8 +103,18 @@ inline int umfpack_get_determinant(double *Mx, double *Ex, void *NumericHandle, 
 
 inline int umfpack_get_determinant(std::complex<double> *Mx, double *Ex, void *NumericHandle, double User_Info [UMFPACK_INFO])
 {
-  double& mx_real = internal::real_ref(*Mx);
+  double& mx_real = numext::real_ref(*Mx);
   return umfpack_zi_get_determinant(&mx_real,0,Ex,NumericHandle,User_Info);
+}
+
+namespace internal {
+  template<typename T> struct umfpack_helper_is_sparse_plain : false_type {};
+  template<typename Scalar, int Options, typename StorageIndex>
+  struct umfpack_helper_is_sparse_plain<SparseMatrix<Scalar,Options,StorageIndex> >
+    : true_type {};
+  template<typename Scalar, int Options, typename StorageIndex>
+  struct umfpack_helper_is_sparse_plain<MappedSparseMatrix<Scalar,Options,StorageIndex> >
+    : true_type {};
 }
 
 /** \ingroup UmfPackSupport_Module
@@ -192,10 +202,14 @@ class UmfPackLU : internal::noncopyable
      *  Note that the matrix should be column-major, and in compressed format for best performance.
      *  \sa SparseMatrix::makeCompressed().
      */
-    void compute(const MatrixType& matrix)
+    template<typename InputMatrixType>
+    void compute(const InputMatrixType& matrix)
     {
-      analyzePattern(matrix);
-      factorize(matrix);
+      if(m_symbolic) umfpack_free_symbolic(&m_symbolic,Scalar());
+      if(m_numeric)  umfpack_free_numeric(&m_numeric,Scalar());
+      grapInput(matrix.derived());
+      analyzePattern_impl();
+      factorize_impl();
     }
 
     /** \returns the solution x of \f$ A x = b \f$ using the current decomposition of A.
@@ -230,23 +244,15 @@ class UmfPackLU : internal::noncopyable
       *
       * \sa factorize(), compute()
       */
-    void analyzePattern(const MatrixType& matrix)
+    template<typename InputMatrixType>
+    void analyzePattern(const InputMatrixType& matrix)
     {
-      if(m_symbolic)
-        umfpack_free_symbolic(&m_symbolic,Scalar());
-      if(m_numeric)
-        umfpack_free_numeric(&m_numeric,Scalar());
+      if(m_symbolic) umfpack_free_symbolic(&m_symbolic,Scalar());
+      if(m_numeric)  umfpack_free_numeric(&m_numeric,Scalar());
       
-      grapInput(matrix);
+      grapInput(matrix.derived());
 
-      int errorCode = 0;
-      errorCode = umfpack_symbolic(matrix.rows(), matrix.cols(), m_outerIndexPtr, m_innerIndexPtr, m_valuePtr,
-                                   &m_symbolic, 0, 0);
-
-      m_isInitialized = true;
-      m_info = errorCode ? InvalidInput : Success;
-      m_analysisIsOk = true;
-      m_factorizationIsOk = false;
+      analyzePattern_impl();
     }
 
     /** Performs a numeric decomposition of \a matrix
@@ -255,20 +261,16 @@ class UmfPackLU : internal::noncopyable
       *
       * \sa analyzePattern(), compute()
       */
-    void factorize(const MatrixType& matrix)
+    template<typename InputMatrixType>
+    void factorize(const InputMatrixType& matrix)
     {
       eigen_assert(m_analysisIsOk && "UmfPackLU: you must first call analyzePattern()");
       if(m_numeric)
         umfpack_free_numeric(&m_numeric,Scalar());
 
-      grapInput(matrix);
-
-      int errorCode;
-      errorCode = umfpack_numeric(m_outerIndexPtr, m_innerIndexPtr, m_valuePtr,
-                                  m_symbolic, &m_numeric, 0, 0);
-
-      m_info = errorCode ? NumericalIssue : Success;
-      m_factorizationIsOk = true;
+      grapInput(matrix.derived());
+      
+      factorize_impl();
     }
 
     #ifndef EIGEN_PARSED_BY_DOXYGEN
@@ -283,19 +285,20 @@ class UmfPackLU : internal::noncopyable
 
   protected:
 
-
     void init()
     {
-      m_info = InvalidInput;
-      m_isInitialized = false;
-      m_numeric = 0;
-      m_symbolic = 0;
-      m_outerIndexPtr = 0;
-      m_innerIndexPtr = 0;
-      m_valuePtr      = 0;
+      m_info                  = InvalidInput;
+      m_isInitialized         = false;
+      m_numeric               = 0;
+      m_symbolic              = 0;
+      m_outerIndexPtr         = 0;
+      m_innerIndexPtr         = 0;
+      m_valuePtr              = 0;
+      m_extractedDataAreDirty = true;
     }
     
-    void grapInput(const MatrixType& mat)
+    template<typename InputMatrixType>
+    void grapInput_impl(const InputMatrixType& mat, internal::true_type)
     {
       m_copyMatrix.resize(mat.rows(), mat.cols());
       if( ((MatrixType::Flags&RowMajorBit)==RowMajorBit) || sizeof(typename MatrixType::Index)!=sizeof(int) || !mat.isCompressed() )
@@ -312,6 +315,45 @@ class UmfPackLU : internal::noncopyable
         m_innerIndexPtr = mat.innerIndexPtr();
         m_valuePtr      = mat.valuePtr();
       }
+    }
+    
+    template<typename InputMatrixType>
+    void grapInput_impl(const InputMatrixType& mat, internal::false_type)
+    {
+      m_copyMatrix = mat;
+      m_outerIndexPtr = m_copyMatrix.outerIndexPtr();
+      m_innerIndexPtr = m_copyMatrix.innerIndexPtr();
+      m_valuePtr      = m_copyMatrix.valuePtr();
+    }
+    
+    template<typename InputMatrixType>
+    void grapInput(const InputMatrixType& mat)
+    {
+      grapInput_impl(mat, internal::umfpack_helper_is_sparse_plain<InputMatrixType>());
+    }
+    
+    void analyzePattern_impl()
+    {
+      int errorCode = 0;
+      errorCode = umfpack_symbolic(m_copyMatrix.rows(), m_copyMatrix.cols(), m_outerIndexPtr, m_innerIndexPtr, m_valuePtr,
+                                   &m_symbolic, 0, 0);
+
+      m_isInitialized = true;
+      m_info = errorCode ? InvalidInput : Success;
+      m_analysisIsOk = true;
+      m_factorizationIsOk = false;
+      m_extractedDataAreDirty = true;
+    }
+    
+    void factorize_impl()
+    {
+      int errorCode;
+      errorCode = umfpack_numeric(m_outerIndexPtr, m_innerIndexPtr, m_valuePtr,
+                                  m_symbolic, &m_numeric, 0, 0);
+
+      m_info = errorCode ? NumericalIssue : Success;
+      m_factorizationIsOk = true;
+      m_extractedDataAreDirty = true;
     }
 
     // cached data to reduce reallocation, etc.
