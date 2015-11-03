@@ -12,8 +12,8 @@
 #define EIGEN_MACROS_H
 
 #define EIGEN_WORLD_VERSION 3
-#define EIGEN_MAJOR_VERSION 1
-#define EIGEN_MINOR_VERSION 90
+#define EIGEN_MAJOR_VERSION 2
+#define EIGEN_MINOR_VERSION 6
 
 #define EIGEN_VERSION_AT_LEAST(x,y,z) (EIGEN_WORLD_VERSION>x || (EIGEN_WORLD_VERSION>=x && \
                                       (EIGEN_MAJOR_VERSION>y || (EIGEN_MAJOR_VERSION>=y && \
@@ -94,6 +94,13 @@
 
 #ifndef EIGEN_DEFAULT_DENSE_INDEX_TYPE
 #define EIGEN_DEFAULT_DENSE_INDEX_TYPE std::ptrdiff_t
+#endif
+
+// Cross compiler wrapper around LLVM's __has_builtin
+#ifdef __has_builtin
+#  define EIGEN_HAS_BUILTIN(x) __has_builtin(x)
+#else
+#  define EIGEN_HAS_BUILTIN(x) 0
 #endif
 
 /** Allows to disable some optimizations which might affect the accuracy of the result.
@@ -238,12 +245,19 @@
 #endif
 
 // Suppresses 'unused variable' warnings.
-#define EIGEN_UNUSED_VARIABLE(var) (void)var;
+namespace Eigen {
+  namespace internal {
+    template<typename T> void ignore_unused_variable(const T&) {}
+  }
+}
+#define EIGEN_UNUSED_VARIABLE(var) Eigen::internal::ignore_unused_variable(var);
 
-#if !defined(EIGEN_ASM_COMMENT) && (defined __GNUC__)
-#define EIGEN_ASM_COMMENT(X)  asm("#" X)
-#else
-#define EIGEN_ASM_COMMENT(X)
+#if !defined(EIGEN_ASM_COMMENT)
+  #if (defined __GNUC__) && ( defined(__i386__) || defined(__x86_64__) )
+    #define EIGEN_ASM_COMMENT(X)  __asm__("#" X)
+  #else
+    #define EIGEN_ASM_COMMENT(X)
+  #endif
 #endif
 
 /* EIGEN_ALIGN_TO_BOUNDARY(n) forces data to be n-byte aligned. This is used to satisfy SIMD requirements.
@@ -264,6 +278,7 @@
   #error Please tell me what is the equivalent of __attribute__((aligned(n))) for your compiler
 #endif
 
+#define EIGEN_ALIGN8  EIGEN_ALIGN_TO_BOUNDARY(8)
 #define EIGEN_ALIGN16 EIGEN_ALIGN_TO_BOUNDARY(16)
 
 #if EIGEN_ALIGN_STATICALLY
@@ -282,7 +297,8 @@
 #endif
 
 #ifndef EIGEN_STACK_ALLOCATION_LIMIT
-#define EIGEN_STACK_ALLOCATION_LIMIT 20000
+// 131072 == 128 KB
+#define EIGEN_STACK_ALLOCATION_LIMIT 131072
 #endif
 
 #ifndef EIGEN_DEFAULT_IO_FORMAT
@@ -298,7 +314,7 @@
 // just an empty macro !
 #define EIGEN_EMPTY
 
-#if defined(_MSC_VER) && (!defined(__INTEL_COMPILER))
+#if defined(_MSC_VER) && (_MSC_VER < 1900) && (!defined(__INTEL_COMPILER))
 #define EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived) \
   using Base::operator =;
 #elif defined(__clang__) // workaround clang bug (see http://forum.kde.org/viewtopic.php?f=74&t=102653)
@@ -317,8 +333,11 @@
   }
 #endif
 
-#define EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Derived) \
-  EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived)
+/** \internal
+ * \brief Macro to manually inherit assignment operators.
+ * This is necessary, because the implicitly defined assignment operator gets deleted when a custom operator= is defined.
+ */
+#define EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Derived) EIGEN_INHERIT_ASSIGNMENT_EQUAL_OPERATOR(Derived)
 
 /**
 * Just a side note. Commenting within defines works only by documenting

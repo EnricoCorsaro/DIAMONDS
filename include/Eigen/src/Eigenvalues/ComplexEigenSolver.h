@@ -234,6 +234,12 @@ template<typename _MatrixType> class ComplexEigenSolver
     }
 
   protected:
+    
+    static void check_template_parameters()
+    {
+      EIGEN_STATIC_ASSERT_NON_INTEGER(Scalar);
+    }
+    
     EigenvectorType m_eivec;
     EigenvalueType m_eivalues;
     ComplexSchur<MatrixType> m_schur;
@@ -242,7 +248,7 @@ template<typename _MatrixType> class ComplexEigenSolver
     EigenvectorType m_matX;
 
   private:
-    void doComputeEigenvectors(RealScalar matrixnorm);
+    void doComputeEigenvectors(const RealScalar& matrixnorm);
     void sortEigenvalues(bool computeEigenvectors);
 };
 
@@ -251,6 +257,8 @@ template<typename MatrixType>
 ComplexEigenSolver<MatrixType>& 
 ComplexEigenSolver<MatrixType>::compute(const MatrixType& matrix, bool computeEigenvectors)
 {
+  check_template_parameters();
+  
   // this code is inspired from Jampack
   eigen_assert(matrix.cols() == matrix.rows());
 
@@ -273,7 +281,7 @@ ComplexEigenSolver<MatrixType>::compute(const MatrixType& matrix, bool computeEi
 
 
 template<typename MatrixType>
-void ComplexEigenSolver<MatrixType>::doComputeEigenvectors(RealScalar matrixnorm)
+void ComplexEigenSolver<MatrixType>::doComputeEigenvectors(const RealScalar& matrixnorm)
 {
   const Index n = m_eivalues.size();
 
@@ -294,7 +302,7 @@ void ComplexEigenSolver<MatrixType>::doComputeEigenvectors(RealScalar matrixnorm
       {
         // If the i-th and k-th eigenvalue are equal, then z equals 0.
         // Use a small value instead, to prevent division by zero.
-        internal::real_ref(z) = NumTraits<RealScalar>::epsilon() * matrixnorm;
+        numext::real_ref(z) = NumTraits<RealScalar>::epsilon() * matrixnorm;
       }
       m_matX.coeffRef(i,k) = m_matX.coeff(i,k) / z;
     }

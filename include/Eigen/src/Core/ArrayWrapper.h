@@ -29,6 +29,11 @@ struct traits<ArrayWrapper<ExpressionType> >
   : public traits<typename remove_all<typename ExpressionType::Nested>::type >
 {
   typedef ArrayXpr XprKind;
+  // Let's remove NestByRefBit
+  enum {
+    Flags0 = traits<typename remove_all<typename ExpressionType::Nested>::type >::Flags,
+    Flags = Flags0 & ~NestByRefBit
+  };
 };
 }
 
@@ -55,7 +60,7 @@ class ArrayWrapper : public ArrayBase<ArrayWrapper<ExpressionType> >
     inline Index outerStride() const { return m_expression.outerStride(); }
     inline Index innerStride() const { return m_expression.innerStride(); }
 
-    inline ScalarWithConstIfNotLvalue* data() { return m_expression.data(); }
+    inline ScalarWithConstIfNotLvalue* data() { return m_expression.const_cast_derived().data(); }
     inline const Scalar* data() const { return m_expression.data(); }
 
     inline CoeffReturnType coeff(Index rowId, Index colId) const
@@ -149,6 +154,11 @@ struct traits<MatrixWrapper<ExpressionType> >
  : public traits<typename remove_all<typename ExpressionType::Nested>::type >
 {
   typedef MatrixXpr XprKind;
+  // Let's remove NestByRefBit
+  enum {
+    Flags0 = traits<typename remove_all<typename ExpressionType::Nested>::type >::Flags,
+    Flags = Flags0 & ~NestByRefBit
+  };
 };
 }
 
@@ -175,7 +185,7 @@ class MatrixWrapper : public MatrixBase<MatrixWrapper<ExpressionType> >
     inline Index outerStride() const { return m_expression.outerStride(); }
     inline Index innerStride() const { return m_expression.innerStride(); }
 
-    inline ScalarWithConstIfNotLvalue* data() { return m_expression.data(); }
+    inline ScalarWithConstIfNotLvalue* data() { return m_expression.const_cast_derived().data(); }
     inline const Scalar* data() const { return m_expression.data(); }
 
     inline CoeffReturnType coeff(Index rowId, Index colId) const

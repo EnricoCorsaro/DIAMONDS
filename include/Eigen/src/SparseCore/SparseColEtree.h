@@ -55,13 +55,15 @@ Index etree_find (Index i, IndexVector& pp)
   * \param mat The matrix in column-major format. 
   * \param parent The elimination tree
   * \param firstRowElt The column index of the first element in each row
+  * \param perm The permutation to apply to the column of \b mat
   */
 template <typename MatrixType, typename IndexVector>
-int coletree(const MatrixType& mat, IndexVector& parent, IndexVector& firstRowElt)
+int coletree(const MatrixType& mat, IndexVector& parent, IndexVector& firstRowElt, typename MatrixType::Index *perm=0)
 {
   typedef typename MatrixType::Index Index;
   Index nc = mat.cols(); // Number of columns 
   Index m = mat.rows();
+  Index diagSize = (std::min)(nc,m);
   IndexVector root(nc); // root of subtree of etree 
   root.setZero();
   IndexVector pp(nc); // disjoint sets 
@@ -71,11 +73,13 @@ int coletree(const MatrixType& mat, IndexVector& parent, IndexVector& firstRowEl
   Index row,col; 
   firstRowElt.resize(m);
   firstRowElt.setConstant(nc);
-  firstRowElt.segment(0, nc).setLinSpaced(nc, 0, nc-1);
+  firstRowElt.segment(0, diagSize).setLinSpaced(diagSize, 0, diagSize-1);
   bool found_diag;
   for (col = 0; col < nc; col++)
   {
-    for (typename MatrixType::InnerIterator it(mat, col); it; ++it)
+    Index pcol = col;
+    if(perm) pcol  = perm[col];
+    for (typename MatrixType::InnerIterator it(mat, pcol); it; ++it)
     { 
       row = it.row();
       firstRowElt(row) = (std::min)(firstRowElt(row), col);
@@ -88,18 +92,21 @@ int coletree(const MatrixType& mat, IndexVector& parent, IndexVector& firstRowEl
   Index rset, cset, rroot; 
   for (col = 0; col < nc; col++) 
   {
-    found_diag = false;
+    found_diag = col>=m;
     pp(col) = col; 
     cset = col; 
     root(cset) = col; 
     parent(col) = nc; 
     /* The diagonal element is treated here even if it does not exist in the matrix
      * hence the loop is executed once more */ 
-    for (typename MatrixType::InnerIterator it(mat, col); it||!found_diag; ++it)
+    Index pcol = col;
+    if(perm) pcol  = perm[col];
+    for (typename MatrixType::InnerIterator it(mat, pcol); it||!found_diag; ++it)
     { //  A sequence of interleaved find and union is performed 
       Index i = col;
       if(it) i = it.index();
       if (i == col) found_diag = true;
+      
       row = firstRowElt(i);
       if (row >= col) continue; 
       rset = internal::etree_find(row, pp); // Find the name of the set containing row

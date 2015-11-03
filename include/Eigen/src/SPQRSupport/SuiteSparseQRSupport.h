@@ -64,17 +64,13 @@ class SPQR
     typedef PermutationMatrix<Dynamic, Dynamic> PermutationType;
   public:
     SPQR() 
-    : m_ordering(SPQR_ORDERING_DEFAULT),
-      m_allow_tol(SPQR_DEFAULT_TOL),
-      m_tolerance (NumTraits<Scalar>::epsilon())
+      : m_isInitialized(false), m_ordering(SPQR_ORDERING_DEFAULT), m_allow_tol(SPQR_DEFAULT_TOL), m_tolerance (NumTraits<Scalar>::epsilon()), m_useDefaultThreshold(true)
     { 
       cholmod_l_start(&m_cc);
     }
     
-    SPQR(const _MatrixType& matrix) 
-    : m_ordering(SPQR_ORDERING_DEFAULT),
-      m_allow_tol(SPQR_DEFAULT_TOL),
-      m_tolerance (NumTraits<Scalar>::epsilon())
+    SPQR(const _MatrixType& matrix)
+    : m_isInitialized(false), m_ordering(SPQR_ORDERING_DEFAULT), m_allow_tol(SPQR_DEFAULT_TOL), m_tolerance (NumTraits<Scalar>::epsilon()), m_useDefaultThreshold(true)
     {
       cholmod_l_start(&m_cc);
       compute(matrix);
@@ -82,19 +78,43 @@ class SPQR
     
     ~SPQR()
     {
-      // Calls SuiteSparseQR_free()
-      cholmod_free_sparse(&m_H, &m_cc); 
-      cholmod_free_dense(&m_HTau, &m_cc);
-      delete[] m_E;
-      delete[] m_HPinv; 
+      SPQR_free();
+      cholmod_l_finish(&m_cc);
     }
+    void SPQR_free()
+    {
+      cholmod_l_free_sparse(&m_H, &m_cc);
+      cholmod_l_free_sparse(&m_cR, &m_cc);
+      cholmod_l_free_dense(&m_HTau, &m_cc);
+      std::free(m_E);
+      std::free(m_HPinv);
+    }
+
     void compute(const _MatrixType& matrix)
     {
+      if(m_isInitialized) SPQR_free();
+
       MatrixType mat(matrix);
+      
+      /* Compute the default threshold as in MatLab, see:
+       * Tim Davis, "Algorithm 915, SuiteSparseQR: Multifrontal Multithreaded Rank-Revealing
+       * Sparse QR Factorization, ACM Trans. on Math. Soft. 38(1), 2011, Page 8:3 
+       */
+      RealScalar pivotThreshold = m_tolerance;
+      if(m_useDefaultThreshold) 
+      {
+        using std::max;
+        RealScalar max2Norm = 0.0;
+        for (int j = 0; j < mat.cols(); j++) max2Norm = (max)(max2Norm, mat.col(j).norm());
+        if(max2Norm==RealScalar(0))
+          max2Norm = RealScalar(1);
+        pivotThreshold = 20 * (mat.rows() + mat.cols()) * max2Norm * NumTraits<RealScalar>::epsilon();
+      }
+      
       cholmod_sparse A; 
       A = viewAsCholmod(mat);
       Index col = matrix.cols();
-      m_rank = SuiteSparseQR<Scalar>(m_ordering, m_tolerance, col, &A, 
+      m_rank = SuiteSparseQR<Scalar>(m_ordering, pivotThreshold, col, &A, 
                              &m_cR, &m_E, &m_H, &m_HPinv, &m_HTau, &m_cc);
 
       if (!m_cR)
@@ -110,7 +130,7 @@ class SPQR
     /** 
      * Get the number of rows of the input matrix and the Q matrix
      */
-    inline Index rows() const {return m_H->nrow; }
+    inline Index rows() const {return m_cR->nrow; }
     
     /** 
      * Get the number of columns of the input matrix. 
@@ -135,21 +155,32 @@ class SPQR
     {
       eigen_assert(m_isInitialized && " The QR factorization should be computed first, call compute()");
       eigen_assert(b.cols()==1 && "This method is for vectors only");
-      
+
       //Compute Q^T * b
-      dest = matrixQ().transpose() * b;
+      typename Dest::PlainObject y, y2;
+      y = matrixQ().transpose() * b;
       
-        // Solves with the triangular matrix R
-      Dest y; 
-      y = this->matrixR().solve(dest.derived().topRows(cols()));
+      // Solves with the triangular matrix R
+      Index rk = this->rank();
+      y2 = y;
+      y.resize((std::max)(cols(),Index(y.rows())),y.cols());
+      y.topRows(rk) = this->matrixR().topLeftCorner(rk, rk).template triangularView<Upper>().solve(y2.topRows(rk));
+
       // Apply the column permutation 
-      dest = colsPermutation() * y;
+      // colsPermutation() performs a copy of the permutation,
+      // so let's apply it manually:
+      for(Index i = 0; i < rk; ++i) dest.row(m_E[i]) = y.row(i);
+      for(Index i = rk; i < cols(); ++i) dest.row(m_E[i]).setZero();
+      
+//       y.bottomRows(y.rows()-rk).setZero();
+//       dest = colsPermutation() * y.topRows(cols());
       
       m_info = Success;
     }
     
-    /// Get the sparse triangular matrix R. It is a sparse matrix
-    const SparseTriangularView<MatrixType, Upper> matrixR() const
+    /** \returns the sparse triangular factor R. It is a sparse matrix
+     */
+    const MatrixType matrixR() const
     {
       eigen_assert(m_isInitialized && " The QR factorization should be computed first, call compute()");
       if(!m_isRUpToDate) {
@@ -183,15 +214,16 @@ class SPQR
       return m_cc.SPQR_istat[4];
     }
     /// Set the fill-reducing ordering method to be used
-    void setOrdering(int ord) { m_ordering = ord;}
+    void setSPQROrdering(int ord) { m_ordering = ord;}
     /// Set the tolerance tol to treat columns with 2-norm < =tol as zero
-    void setThreshold(RealScalar tol) { m_tolerance = tol; }
+    void setPivotThreshold(const RealScalar& tol)
+    {
+      m_useDefaultThreshold = false;
+      m_tolerance = tol;
+    }
     
-    /// Return a pointer to SPQR workspace 
-    cholmod_common *cc() const { return &m_cc; }
-    cholmod_sparse * H() const { return m_H; }
-    Index  *HPinv() const { return m_HPinv; }
-    cholmod_dense* HTau() const { return m_HTau; }
+    /** \returns a pointer to the SPQR workspace */
+    cholmod_common *cholmodCommon() const { return &m_cc; }
     
     
     /** \brief Reports whether previous computation was successful.
@@ -221,6 +253,8 @@ class SPQR
     mutable cholmod_dense *m_HTau; // The Householder coefficients
     mutable Index m_rank; // The rank of the matrix
     mutable cholmod_common m_cc; // Workspace and parameters
+    bool m_useDefaultThreshold;     // Use default threshold
+    template<typename ,typename > friend struct SPQR_QProduct;
 };
 
 template <typename SPQRType, typename Derived>
@@ -240,11 +274,11 @@ struct SPQR_QProduct : ReturnByValue<SPQR_QProduct<SPQRType,Derived> >
     cholmod_dense y_cd;
     cholmod_dense *x_cd; 
     int method = m_transpose ? SPQR_QTX : SPQR_QX; 
-    cholmod_common *cc = m_spqr.cc();
+    cholmod_common *cc = m_spqr.cholmodCommon();
     y_cd = viewAsCholmod(m_other.const_cast_derived());
-    x_cd = SuiteSparseQR_qmult<Scalar>(method, m_spqr.H(), m_spqr.HTau(), m_spqr.HPinv(), &y_cd, cc);
+    x_cd = SuiteSparseQR_qmult<Scalar>(method, m_spqr.m_H, m_spqr.m_HTau, m_spqr.m_HPinv, &y_cd, cc);
     res = Matrix<Scalar,ResType::RowsAtCompileTime,ResType::ColsAtCompileTime>::Map(reinterpret_cast<Scalar*>(x_cd->x), x_cd->nrow, x_cd->ncol);
-    cholmod_free_dense(&x_cd, cc); 
+    cholmod_l_free_dense(&x_cd, cc);
   }
   const SPQRType& m_spqr; 
   const Derived& m_other; 
