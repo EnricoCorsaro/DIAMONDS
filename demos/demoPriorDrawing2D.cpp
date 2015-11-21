@@ -62,7 +62,7 @@ int main()
 
     // Output the results 
     
-    cerr << "Input number of clusters: 2" << endl; 
+    cerr << "Input number of clusters: 1" << endl; 
     cerr << "Optimal number of clusters: " << optimalNclusters << endl;
     
 
@@ -159,13 +159,15 @@ int main()
 
     // If Ellipsoid i overlaps with ellipsoid j, than of course ellipsoid j also overlaps with i.
     // The indices are kept in an unordered_set<> which automatically takes care
-    // that there are no duplicates.  
+    // that there are no duplicates.
+
+    bool ellipsoidMatrixDecompositionIsSuccessful;
 
     for (int i = 0; i < Nellipsoids-1; ++i)
     {
         for (int j = i+1; j < Nellipsoids; ++j)
         {
-            if (ellipsoids[i].overlapsWith(ellipsoids[j]))
+            if (ellipsoids[i].overlapsWith(ellipsoids[j], ellipsoidMatrixDecompositionIsSuccessful))
             {
                 overlappingEllipsoidsIndices[i].insert(j);
                 overlappingEllipsoidsIndices[j].insert(i);
@@ -187,6 +189,7 @@ int main()
     for (int n=0; n < Nellipsoids; ++n)
     {
         normalizedHyperVolumes[n] = ellipsoids[n].getHyperVolume();
+        cerr << normalizedHyperVolumes[n] << endl;
     }
 
     double sumOfHyperVolumes = accumulate(normalizedHyperVolumes.begin(), normalizedHyperVolumes.end(), 0.0, plus<double>());
@@ -205,8 +208,6 @@ int main()
         cerr << "Covariance Matrix: " << covarianceMatrix << endl;
         cerr << endl;
     }
-
-
 
 
     // Pick an ellipsoid with a probability according to its normalized hyper-volume
@@ -228,18 +229,17 @@ int main()
         cumulativeHyperVolume += normalizedHyperVolumes[indexOfSelectedEllipsoid];
     }
 
-    
     cerr << "Selected ellipsoid #: " << indexOfSelectedEllipsoid << endl;
     cerr << endl;
-
-
+   
 
     // ------ Set up prior distributions on each coordinate ------
     
     int Npoints = 10000;    
     ArrayXXd sampleOfDrawnPoints(Npoints,Ndimensions);
     ArrayXd drawnPoint(Ndimensions);
-    
+   
+    /*      GRID PRIOR
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersWidth(Ndimensions);
     ArrayXd parametersSeparation(Ndimensions);
@@ -251,8 +251,9 @@ int main()
     parametersNsteps << 5,5;
     GridPrior gridPrior(parametersWidth, parametersSeparation, parametersStartingCoordinate, parametersNsteps);
     ptrPriors[0] = &gridPrior;  
-
-    /*
+    */
+    
+    /*      UNIFORM PRIOR
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
@@ -262,24 +263,24 @@ int main()
     ptrPriors[0] = &uniformPrior;  
     */ 
 
-    /*
+    /*      NORMAL PRIOR */
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMean(Ndimensions);
     ArrayXd parametersSDV(Ndimensions);
-    parametersMean <<  -4.0, -4.0;
-    parametersSDV << 1.0, 1.0;
+    parametersMean <<  0.0, 0.0;
+    parametersSDV << 0.4, 0.4;
     NormalPrior normalPrior(parametersMean, parametersSDV);
     ptrPriors[0] = &normalPrior;  
-    */
+    /* */
     
-    /*
+    /*      SUPER GAUSSIAN PRIOR
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMean(Ndimensions);
     ArrayXd parametersSDV(Ndimensions);
     ArrayXd parametersWOP(Ndimensions);
-    parametersMean <<  -4.0, -4.0;
+    parametersMean <<  0.0, 0.0;
     parametersSDV << 0.5, 0.5;
-    parametersWOP << 1.0, 1.0;
+    parametersWOP << 0.4, 0.4;
     SuperGaussianPrior superGaussianPrior(parametersMean, parametersSDV, parametersWOP);
     ptrPriors[0] = &superGaussianPrior;  
     */
