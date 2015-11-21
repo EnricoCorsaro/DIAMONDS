@@ -39,7 +39,7 @@ class NormalPrior : public Prior
     private:
         
         vector<normal_distribution<>> normalDistributionVector;
-        normal_distribution<> normal;
+        uniform_real_distribution<> uniform;
         ArrayXd mean;
         ArrayXd standardDeviation;
 

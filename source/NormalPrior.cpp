@@ -16,6 +16,7 @@
 
 NormalPrior::NormalPrior(RefArrayXd const mean, RefArrayXd const standardDeviation)
 : Prior(mean.size()),
+  uniform(0.0,1.0),
   mean(mean),
   standardDeviation(standardDeviation)
 {
@@ -173,25 +174,20 @@ double NormalPrior::logDensity(RefArrayXd const x, const bool includeConstantTer
 
 bool NormalPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
 {
-    ArrayXd referencePoint(Ndimensions);
+    // Evaluate the distribution density value in a normalized scale 
+
+    double normalizedDensity = exp(logDensity(drawnPoint));
 
     
-    // Draw a reference point according to normal distribution in each coordinate
+    // Compute a reference density from a uniform distribution between 0 and 1
     
-    for (int i = 0; i < Ndimensions; i++)
-    {
-        referencePoint(i) = normalDistributionVector[i](engine);
-    }
+    double referenceNormalizedDensity = uniform(engine);
     
-    ArrayXd scatter1 = (drawnPoint - mean).abs();
-    ArrayXd scatter2 = (referencePoint - mean).abs();
 
+    // Compare the two densities and accept the point only if the drawn density is larger than the reference one
 
-    // Compare the scatter from the mean for each coordinate.
-    // Accept the point only if the new point boundary is smaller than the reference one
+    bool pointIsAccepted = normalizedDensity > referenceNormalizedDensity;
 
-    bool pointIsAccepted = (scatter1 < scatter2).prod();
-    
     return pointIsAccepted;
 }
 
