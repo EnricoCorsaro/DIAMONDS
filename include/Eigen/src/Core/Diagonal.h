@@ -75,7 +75,7 @@ template<typename MatrixType, int _DiagIndex> class Diagonal
     EIGEN_INHERIT_ASSIGNMENT_OPERATORS(Diagonal)
 
     inline Index rows() const
-    { return m_index.value()<0 ? (std::min)(m_matrix.cols(),m_matrix.rows()+m_index.value()) : (std::min)(m_matrix.rows(),m_matrix.cols()-m_index.value()); }
+    { return m_index.value()<0 ? (std::min<Index>)(m_matrix.cols(),m_matrix.rows()+m_index.value()) : (std::min<Index>)(m_matrix.rows(),m_matrix.cols()-m_index.value()); }
 
     inline Index cols() const { return 1; }
 
@@ -172,7 +172,7 @@ MatrixBase<Derived>::diagonal()
 
 /** This is the const version of diagonal(). */
 template<typename Derived>
-inline const typename MatrixBase<Derived>::ConstDiagonalReturnType
+inline typename MatrixBase<Derived>::ConstDiagonalReturnType
 MatrixBase<Derived>::diagonal() const
 {
   return ConstDiagonalReturnType(derived());
@@ -190,18 +190,18 @@ MatrixBase<Derived>::diagonal() const
   *
   * \sa MatrixBase::diagonal(), class Diagonal */
 template<typename Derived>
-inline typename MatrixBase<Derived>::template DiagonalIndexReturnType<DynamicIndex>::Type
+inline typename MatrixBase<Derived>::DiagonalDynamicIndexReturnType
 MatrixBase<Derived>::diagonal(Index index)
 {
-  return typename DiagonalIndexReturnType<DynamicIndex>::Type(derived(), index);
+  return DiagonalDynamicIndexReturnType(derived(), index);
 }
 
 /** This is the const version of diagonal(Index). */
 template<typename Derived>
-inline typename MatrixBase<Derived>::template ConstDiagonalIndexReturnType<DynamicIndex>::Type
+inline typename MatrixBase<Derived>::ConstDiagonalDynamicIndexReturnType
 MatrixBase<Derived>::diagonal(Index index) const
 {
-  return typename ConstDiagonalIndexReturnType<DynamicIndex>::Type(derived(), index);
+  return ConstDiagonalDynamicIndexReturnType(derived(), index);
 }
 
 /** \returns an expression of the \a DiagIndex-th sub or super diagonal of the matrix \c *this

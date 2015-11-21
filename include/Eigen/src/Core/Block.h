@@ -66,8 +66,9 @@ struct traits<Block<XprType, BlockRows, BlockCols, InnerPanel> > : traits<XprTyp
                          : ColsAtCompileTime != Dynamic ? int(ColsAtCompileTime)
                          : int(traits<XprType>::MaxColsAtCompileTime),
     XprTypeIsRowMajor = (int(traits<XprType>::Flags)&RowMajorBit) != 0,
-    IsRowMajor = (MaxRowsAtCompileTime==1&&MaxColsAtCompileTime!=1) ? 1
-               : (MaxColsAtCompileTime==1&&MaxRowsAtCompileTime!=1) ? 0
+    IsDense = is_same<StorageKind,Dense>::value,
+    IsRowMajor = (IsDense&&MaxRowsAtCompileTime==1&&MaxColsAtCompileTime!=1) ? 1
+               : (IsDense&&MaxColsAtCompileTime==1&&MaxRowsAtCompileTime!=1) ? 0
                : XprTypeIsRowMajor,
     HasSameStorageOrderAsXprType = (IsRowMajor == XprTypeIsRowMajor),
     InnerSize = IsRowMajor ? int(ColsAtCompileTime) : int(RowsAtCompileTime),
@@ -81,7 +82,7 @@ struct traits<Block<XprType, BlockRows, BlockCols, InnerPanel> > : traits<XprTyp
                        && (InnerStrideAtCompileTime == 1)
                         ? PacketAccessBit : 0,
     MaskAlignedBit = (InnerPanel && (OuterStrideAtCompileTime!=Dynamic) && (((OuterStrideAtCompileTime * int(sizeof(Scalar))) % 16) == 0)) ? AlignedBit : 0,
-    FlagsLinearAccessBit = (RowsAtCompileTime == 1 || ColsAtCompileTime == 1) ? LinearAccessBit : 0,
+    FlagsLinearAccessBit = (RowsAtCompileTime == 1 || ColsAtCompileTime == 1 || (InnerPanel && (traits<XprType>::Flags&LinearAccessBit))) ? LinearAccessBit : 0,
     FlagsLvalueBit = is_lvalue<XprType>::value ? LvalueBit : 0,
     FlagsRowMajorBit = IsRowMajor ? RowMajorBit : 0,
     Flags0 = traits<XprType>::Flags & ( (HereditaryBits & ~RowMajorBit) |
@@ -137,8 +138,8 @@ template<typename XprType, int BlockRows, int BlockCols, bool InnerPanel> class 
     {
       eigen_assert((RowsAtCompileTime==Dynamic || RowsAtCompileTime==blockRows)
           && (ColsAtCompileTime==Dynamic || ColsAtCompileTime==blockCols));
-      eigen_assert(a_startRow >= 0 && blockRows >= 0 && a_startRow + blockRows <= xpr.rows()
-          && a_startCol >= 0 && blockCols >= 0 && a_startCol + blockCols <= xpr.cols());
+      eigen_assert(a_startRow >= 0 && blockRows >= 0 && a_startRow  <= xpr.rows() - blockRows
+          && a_startCol >= 0 && blockCols >= 0 && a_startCol <= xpr.cols() - blockCols);
     }
 };
          

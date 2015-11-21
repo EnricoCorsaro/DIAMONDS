@@ -91,7 +91,8 @@ template<typename T> struct functor_traits
   enum
   {
     Cost = 10,
-    PacketAccess = false
+    PacketAccess = false,
+    IsRepeatable = false
   };
 };
 
@@ -340,7 +341,7 @@ template<typename T, int n=1, typename PlainObject = typename eval<T>::type> str
 };
 
 template<typename T>
-T* const_cast_ptr(const T* ptr)
+inline T* const_cast_ptr(const T* ptr)
 {
   return const_cast<T*>(ptr);
 }
