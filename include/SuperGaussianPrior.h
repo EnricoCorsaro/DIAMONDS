@@ -45,6 +45,7 @@ class SuperGaussianPrior : public Prior
         ArrayXd center;
         ArrayXd sigma;
         ArrayXd widthOfPlateau;
+        ArrayXd halfWidthOfPlateau;
         ArrayXd plateauArea;
         ArrayXd tailsArea;
         ArrayXd totalArea;

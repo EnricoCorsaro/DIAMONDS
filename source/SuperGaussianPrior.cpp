@@ -21,7 +21,8 @@ SuperGaussianPrior::SuperGaussianPrior(const RefArrayXd center, const RefArrayXd
   uniform(0.0,1.0),
   center(center),
   sigma(sigma),
-  widthOfPlateau(widthOfPlateau)
+  widthOfPlateau(widthOfPlateau),
+  halfWidthOfPlateau(widthOfPlateau/2.0)
 {
     assert(center.size() == sigma.size());
     assert(center.size() == widthOfPlateau.size());
@@ -38,7 +39,7 @@ SuperGaussianPrior::SuperGaussianPrior(const RefArrayXd center, const RefArrayXd
         normal_distribution<double> normal(center(i),sigma(i));
         normalDistributionVector[i] = normal;
     }
-    
+
 
     // Compute the exact integral of the prior for the regions containing the Gaussian tails
     // Normalize areas of different prior regions (i.e. either tails or plateau) to total prior area
@@ -186,7 +187,7 @@ double SuperGaussianPrior::logDensity(RefArrayXd const x, const bool includeCons
     for (int i = 0; i < Ndimensions; ++i)
     {
         
-        if (fabs(position(i)) < 0.5*widthOfPlateau(i))
+        if (fabs(position(i)) < halfWidthOfPlateau(i))
         {
             // If point is falling in the plateau region, give a constant prior having unitary amplitude
             
@@ -197,7 +198,7 @@ double SuperGaussianPrior::logDensity(RefArrayXd const x, const bool includeCons
             // If point is falling in the Gaussian tails then compute the logDensity according to the non-normalized Gaussian function
             // having unitary maximum amplitude
 
-            logDens += -0.5 * pow((x(i) - center(i))/sigma(i),2);     // The total logDensity is updated
+            logDens += -0.5 * pow((fabs(x(i) - center(i)) - halfWidthOfPlateau(i))/sigma(i),2);     // The total logDensity is updated
         }
     }
 
@@ -238,40 +239,19 @@ double SuperGaussianPrior::logDensity(RefArrayXd const x, const bool includeCons
 
 bool SuperGaussianPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
 {
-    ArrayXd scatter1 = (drawnPoint - center).abs();
-    ArrayXd scatter2(Ndimensions);
-    vector<bool> coordinateIsAccepted(Ndimensions); 
+    // Evaluate the distribution density value in a normalized scale 
 
+    double normalizedDensity = exp(logDensity(drawnPoint));
+   
 
-    // Loop over all the coordinates of the input point
-
-    for (int i = 0; i < Ndimensions; i++)
-    {
-        // Check if the coordinate belongs to either the plateau region or the tails of the Super-Gaussian.
+    // Compute a reference density from a uniform distribution between 0 and 1
     
-        if (scatter1(i) > widthOfPlateau(i)/2.)
-        {
-            // The coordinate is falling in the tails
+    double referenceNormalizedDensity = uniform(engine);
+    
 
-            double referenceCoordinate = normalDistributionVector[i](engine);
-            scatter2(i) = fabs(referenceCoordinate-center(i)) + widthOfPlateau(i)/2.;
-            coordinateIsAccepted[i] = scatter1(i) < scatter2(i);
-            
-            coordinateIsAccepted[i] = scatter1(i) < scatter2(i);
-        }
-        else
-        {
-            // The coordinate is falling in the plateau
-            
-            coordinateIsAccepted[i] = true;
-        }
-    }
+    // Compare the two densities and accept the point only if the drawn density is larger than the reference one
 
-
-    // Compare the scatter for each coordinate.
-    // Accept the point only if the new point boundary is smaller than the reference one
-
-    bool pointIsAccepted = accumulate(coordinateIsAccepted.begin(), coordinateIsAccepted.end(), 1.0, multiplies<bool>());
+    bool pointIsAccepted = normalizedDensity > referenceNormalizedDensity;
 
     return pointIsAccepted;
 }
@@ -348,7 +328,7 @@ void SuperGaussianPrior::draw(RefArrayXXd drawnSample)
                         // In the case drawn point falls in the right-hand part, shift it to the right 
                         // by half of the width of the plateau
 
-                        normalDistributedCoordinate += 0.5*widthOfPlateau(i);
+                        normalDistributedCoordinate += halfWidthOfPlateau(i);
                     }
                     else
                         if (normalDistributedCoordinate < center(i))
@@ -356,7 +336,7 @@ void SuperGaussianPrior::draw(RefArrayXXd drawnSample)
                             // In the case drawn point falls in the left-hand part, shift it to the left 
                             // by half of the width of the plateau
                     
-                            normalDistributedCoordinate -= 0.5*widthOfPlateau(i);
+                            normalDistributedCoordinate -= halfWidthOfPlateau(i);
                         }
 
                     drawnSample(i,j) = normalDistributedCoordinate;
@@ -367,7 +347,7 @@ void SuperGaussianPrior::draw(RefArrayXXd drawnSample)
                 // In the case plateau are selected sample the parameter according to the 
                 // uniform distribution centered at "center" and having width = "widthOfPlateau"
 
-                double uniformDistributedCoordinate = uniform(engine)*widthOfPlateau(i) - 0.5*widthOfPlateau(i) + centralCoordinate; 
+                double uniformDistributedCoordinate = uniform(engine)*widthOfPlateau(i) - halfWidthOfPlateau(i) + centralCoordinate; 
                 
                 drawnSample(i,j) = uniformDistributedCoordinate;
             }
@@ -500,7 +480,7 @@ void SuperGaussianPrior::drawWithConstraint(RefArrayXd drawnPoint, Likelihood &l
 
 void SuperGaussianPrior::writeHyperParametersToFile(string fullPath)
 {
-    ArrayXXd hyperParameters(center.size(),3);
+    ArrayXXd hyperParameters(Ndimensions,3);
     hyperParameters.col(0) = center;
     hyperParameters.col(1) = sigma;
     hyperParameters.col(2) = widthOfPlateau;
