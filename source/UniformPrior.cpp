@@ -132,7 +132,7 @@ double UniformPrior::logDensity(RefArrayXd const x, const bool includeConstantTe
     }
     else
     {
-        // The point falls inside the distribution's boundaries.
+        // The point falls inside the boundaries of the distribution.
 
         logDens = 0.0;
     }
