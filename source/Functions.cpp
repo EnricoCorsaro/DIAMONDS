@@ -366,10 +366,10 @@ bool Functions::selfAdjointMatrixDecomposition(RefArrayXXd const covarianceMatri
 // Functions::product()
 //
 // PURPOSE: 
-//      Computes the product of the elements contained in a vector of doubles of class vector.
+//      Computes the product of the elements contained in a vector of doubles.
 //
 // INPUT:
-//      vec : vector of values to be multiplied
+//      vec : vector of double values to be multiplied
 //
 // OUTPUT:
 //      The productoria of the vector elements.
@@ -379,6 +379,7 @@ inline double Functions::product(const vector<double> &vec)
 {
     return accumulate(vec.begin(), vec.end(), 1.0, multiplies<double>());
 }
+
 
 
 
