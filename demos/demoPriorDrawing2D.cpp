@@ -17,7 +17,7 @@
 #include "UniformPrior.h"
 #include "NormalPrior.h"
 #include "SuperGaussianPrior.h"
-#include "GridPrior.h"
+#include "GridUniformPrior.h"
 
 using namespace std;
 using namespace Eigen;
@@ -239,19 +239,19 @@ int main()
     ArrayXXd sampleOfDrawnPoints(Npoints,Ndimensions);
     ArrayXd drawnPoint(Ndimensions);
    
-    /*      GRID PRIOR
+    /*      GRID PRIOR  */
     vector<Prior*> ptrPriors(1);
-    ArrayXd parametersWidth(Ndimensions);
-    ArrayXd parametersSeparation(Ndimensions);
     ArrayXd parametersStartingCoordinate(Ndimensions);
-    ArrayXd parametersNsteps(Ndimensions);
-    parametersWidth << 0.2,0.2;
-    parametersSeparation << 0.5,0.5;
+    ArrayXd parametersNgridPoints(Ndimensions);
+    ArrayXd parametersSeparation(Ndimensions);
+    ArrayXd parametersTolerance(Ndimensions);
     parametersStartingCoordinate << -2.0,-2.0;
-    parametersNsteps << 5,5;
-    GridPrior gridPrior(parametersWidth, parametersSeparation, parametersStartingCoordinate, parametersNsteps);
-    ptrPriors[0] = &gridPrior;  
-    */
+    parametersNgridPoints << 5,5;
+    parametersSeparation << 0.5,0.5;
+    parametersTolerance << 0.1,0.1;
+    GridUniformPrior gridUniformPrior(parametersStartingCoordinate, parametersNgridPoints, parametersSeparation, parametersTolerance);
+    ptrPriors[0] = &gridUniformPrior;  
+    /*  */
     
     /*      UNIFORM PRIOR
     vector<Prior*> ptrPriors(1);
@@ -263,7 +263,7 @@ int main()
     ptrPriors[0] = &uniformPrior;  
     */ 
 
-    /*      NORMAL PRIOR */
+    /*      NORMAL PRIOR
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMean(Ndimensions);
     ArrayXd parametersSDV(Ndimensions);
@@ -271,7 +271,7 @@ int main()
     parametersSDV << 0.4, 0.4;
     NormalPrior normalPrior(parametersMean, parametersSDV);
     ptrPriors[0] = &normalPrior;  
-    /* */
+    */
     
     /*      SUPER GAUSSIAN PRIOR
     vector<Prior*> ptrPriors(1);

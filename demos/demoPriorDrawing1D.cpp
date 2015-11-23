@@ -15,10 +15,9 @@
 #include "KmeansClusterer.h"
 #include "Ellipsoid.h"
 #include "UniformPrior.h"
-#include "DiscreteUniformPrior.h"
 #include "NormalPrior.h"
 #include "SuperGaussianPrior.h"
-#include "GridPrior.h"
+#include "GridUniformPrior.h"
 
 using namespace std;
 using namespace Eigen;
@@ -240,7 +239,7 @@ int main()
 
     // ------ Set up prior distributions on each coordinate ------
     
-    int Npoints = 10000;    
+    int Npoints = 1000;    
     ArrayXXd sampleOfDrawnPoints(Npoints, Ndimensions);
     ArrayXd drawnPoint(Ndimensions);
     
@@ -267,19 +266,19 @@ int main()
     ptrPriors[0] = &uniformPrior;  
     */
 
-    /*      GRID PRIOR
+    /*      GRID UNIFORM PRIOR      */
     vector<Prior*> ptrPriors(1);
-    ArrayXd parametersWidth(Ndimensions);
-    ArrayXd parametersSeparation(Ndimensions);
     ArrayXd parametersStartingCoordinate(Ndimensions);
-    ArrayXd parametersNsteps(Ndimensions);
-    parametersWidth << 0.2;
+    ArrayXd parametersNgridPoints(Ndimensions);
+    ArrayXd parametersSeparation(Ndimensions);
+    ArrayXd parametersTolerance(Ndimensions);
+    parametersStartingCoordinate << 1.0;
+    parametersNgridPoints << 4;
     parametersSeparation << 0.5;
-    parametersStartingCoordinate << 1.5;
-    parametersNsteps << 1;
-    GridPrior gridPrior(parametersWidth, parametersSeparation, parametersStartingCoordinate, parametersNsteps);
-    ptrPriors[0] = &gridPrior;  
-    */
+    parametersTolerance << 0.1;
+    GridUniformPrior gridUniformPrior(parametersStartingCoordinate, parametersNgridPoints, parametersSeparation, parametersTolerance);
+    ptrPriors[0] = &gridUniformPrior;  
+    /*  */
 
     /*     GAUSSIAN PRIOR
     vector<Prior*> ptrPriors(1);
@@ -290,8 +289,8 @@ int main()
     NormalPrior normalPrior(parametersMean, parametersSDV);
     ptrPriors[0] = &normalPrior;  
     */ 
-   
-    /*      SUPER GAUSSIAN PRIOR    */
+
+    /*      SUPER GAUSSIAN PRIOR
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMean(Ndimensions);
     ArrayXd parametersSDV(Ndimensions);
@@ -301,7 +300,7 @@ int main()
     parametersWOP << 0.6;
     SuperGaussianPrior superGaussianPrior(parametersMean, parametersSDV, parametersWOP);
     ptrPriors[0] = &superGaussianPrior;  
-    /*  */
+    */
     
     
     // ------ Draw points from the Ellipsoid ------

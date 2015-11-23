@@ -17,7 +17,7 @@
 #include "UniformPrior.h"
 #include "NormalPrior.h"
 #include "SuperGaussianPrior.h"
-#include "GridPrior.h"
+#include "GridUniformPrior.h"
 
 using namespace std;
 using namespace Eigen;
@@ -253,7 +253,7 @@ int main()
     ArrayXXd sampleOfDrawnPoints(Npoints,Ndimensions);
     ArrayXd drawnPoint(Ndimensions);
    
-    /*      MIX PRIOR       UNIFORM-GRID-UNIFORM
+    /*      MIX PRIOR       UNIFORM-GRID UNIFORM-UNIFORM
     vector<Prior*> ptrPriors(3);
     ArrayXd parametersMinima(1);
     ArrayXd parametersMaxima(1);
@@ -262,17 +262,17 @@ int main()
     UniformPrior uniformPrior1(parametersMinima, parametersMaxima);
     ptrPriors[0] = &uniformPrior1;  
 
-    ArrayXd parametersWidth(1);
-    ArrayXd parametersSeparation(1);
     ArrayXd parametersStartingCoordinate(1);
-    ArrayXd parametersNsteps(1);
-    parametersWidth << 0.2;
-    parametersSeparation << 1.0;
+    ArrayXd parametersNgridPoints(1);
+    ArrayXd parametersSeparation(1);
+    ArrayXd parametersTolerance(1);
     parametersStartingCoordinate << 0.0;
-    parametersNsteps << 6;
-    GridPrior gridPrior(parametersWidth, parametersSeparation, parametersStartingCoordinate, parametersNsteps);
-    ptrPriors[1] = &gridPrior;  
-    
+    parametersNgridPoints << 6;
+    parametersSeparation << 0.5;
+    parametersTolerance << 0.1;
+    GridUniformPrior gridUniformPrior(parametersStartingCoordinate, parametersNgridPoints, parametersSeparation, parametersTolerance);
+    ptrPriors[0] = &gridUniformPrior;  
+
     parametersMinima <<  0.0;
     parametersMaxima << 4.0;
     UniformPrior uniformPrior2(parametersMinima, parametersMaxima);
@@ -321,7 +321,7 @@ int main()
     ptrPriors[0] = &normalPrior;
     */  
     
-    /*      SUPER GAUSSIAN PRIOR    */
+    /*      SUPER GAUSSIAN PRIOR
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMean(Ndimensions);
     ArrayXd parametersSDV(Ndimensions);
@@ -331,7 +331,7 @@ int main()
     parametersWOP << 0.4, 0.4, 0.4;
     SuperGaussianPrior superGaussianPrior(parametersMean, parametersSDV, parametersWOP);
     ptrPriors[0] = &superGaussianPrior;  
-    /*  */
+    */
 
 
     // ------ Draw points from the Ellipsoid ------
