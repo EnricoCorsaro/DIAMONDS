@@ -242,19 +242,6 @@ int main()
     int Npoints = 1000;    
     ArrayXXd sampleOfDrawnPoints(Npoints, Ndimensions);
     ArrayXd drawnPoint(Ndimensions);
-    
-    /*      DISCRETE UNIFORM PRIOR
-    vector<Prior*> ptrPriors(1);
-    ArrayXd parametersMinima(Ndimensions);
-    ArrayXd parametersMaxima(Ndimensions);
-    ArrayXd parametersNsteps(Ndimensions);
-    parametersMinima << 1.0;
-    parametersMaxima << 2.0;
-    parametersNsteps << 4.0;
-    DiscreteUniformPrior discreteUniformPrior(parametersMinima, parametersMaxima, parametersNsteps);
-    ptrPriors[0] = &discreteUniformPrior;  
-    */
-  
 
     /*      UNIFORM PRIOR
     vector<Prior*> ptrPriors(1);

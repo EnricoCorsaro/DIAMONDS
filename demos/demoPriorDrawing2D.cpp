@@ -285,22 +285,6 @@ int main()
     ptrPriors[0] = &superGaussianPrior;  
     */
 
-/*
-    vector<Prior*> ptrPriors(2);
-    
-    ArrayXd parametersMinima(1);
-    ArrayXd parametersMaxima(1);
-    parametersMinima <<  -5.0;
-    parametersMaxima << 5.0;
-    UniformPrior uniformPrior(parametersMinima, parametersMaxima);
-    ptrPriors[0] = &uniformPrior;
-
-    ArrayXd parameterConstant(1);
-    parameterConstant << 2.0;
-    DeltaPrior deltaPrior(parameterConstant);
-    ptrPriors[1] = &deltaPrior;
-*/
-
     // ------ Draw points from the Ellipsoid ------
 
     for (int i=0; i < Npoints; ++i)
