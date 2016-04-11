@@ -301,7 +301,7 @@ int main()
     ptrPriors[2] = &normalPrior2;  
     */
     
-    /*      UNIFORM PRIOR
+    /*      UNIFORM PRIOR       */
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
@@ -309,7 +309,7 @@ int main()
     parametersMaxima << 4.0, 4.0, 4.0;
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriors[0] = &uniformPrior;  
-    */  
+
 
     /*      GAUSSIAN PRIOR
     vector<Prior*> ptrPriors(1);
