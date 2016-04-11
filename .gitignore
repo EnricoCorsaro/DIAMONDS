@@ -8,7 +8,10 @@ source/.*swo
 source/.*swp
 include/.*swo
 include/.*swp
+demos/.*txt
 demos/*.txt
+demos/reduced
+demos/standard
 
 # Compiled source 
 
