@@ -31,6 +31,8 @@ namespace File
     void openOutputFile(ofstream &outputFile, string outputFileName);
     
     ArrayXXd arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, const int Ncols, char separator = ' ', char commentChar = '#');
+    vector<string> vectorStringFromFile(ifstream &inputFile, const unsigned long Nrows, char commentChar = '#');
+
     void arrayXXdToFile(ofstream &outputFile, RefArrayXXd array, string separator = "  ", string terminator = "\n");
     void twoArrayXdToFile(ofstream &outputFile, RefArrayXd array1, RefArrayXd array2, string separator = "  ", string terminator = "\n");
     void arrayXdToFile(ofstream &outputFile, RefArrayXd array, string terminator = "\n");

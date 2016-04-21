@@ -1,4 +1,3 @@
-
 #include "File.h"
 
 
@@ -177,6 +176,77 @@ ArrayXXd File::arrayXXdFromFile(ifstream &inputFile, const unsigned long Nrows, 
     return array;
 }
 
+
+
+
+
+
+
+
+
+// File::vectorStringFromFile()
+//
+// PURPOSE: 
+//      Reads an ascii file into a vector of string type (one column only).
+//      Useful especially when reading input working paths 
+//
+// INPUT:
+//      inputFile: input stream. Supposed to be already opened, and checked for sanity.
+//      Nrows: number of rows with strings in the file
+//      commentChar: all lines starting with this character (e.g. '#') are skipped
+// 
+// OUTPUT:
+//      A vector type of strings.
+//
+//  REMARKS:
+//      - the stream is not closed afterwards.
+//
+
+vector<string> File::vectorStringFromFile(ifstream &inputFile, const unsigned long Nrows, char commentChar)
+{
+    string line;
+    unsigned long iRow = 0;
+    vector<string> vectorString(Nrows);
+  
+    while(!inputFile.eof())
+    {
+        getline(inputFile, line);
+    
+
+        // Skip those lines that start with the comment character
+        
+        if (line[0] == commentChar) continue; 
+    
+
+        // Skip those lines with only whitespace
+        
+        const std::string whitespace = " \t";
+        const auto strBegin = line.find_first_not_of(whitespace);
+        if (strBegin == string::npos) continue;
+        
+
+        // Check if the line number doesn't exceed the expected number of lines
+        
+        if (iRow > Nrows-1)
+        {
+            cerr << "Error: numbers of rows in file exceeds " << Nrows << endl;
+            exit(EXIT_FAILURE);
+        }
+    
+        vectorString[iRow] = line;
+        iRow++;
+    }
+    
+
+    // Check if the current line number is less than the expected number of lines
+    
+    if (iRow < Nrows)
+    {
+        cerr << "Warning: too few lines in the file: " << iRow << " < " << Nrows << endl;
+    }
+    
+    return vectorString;
+}
 
     
 
