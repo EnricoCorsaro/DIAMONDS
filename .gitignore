@@ -10,6 +10,7 @@ include/.*swo
 include/.*swp
 demos/.*txt
 demos/*.txt
+demos/*.rtf
 demos/reduced
 demos/standard
 
