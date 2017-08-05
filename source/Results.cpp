@@ -814,6 +814,93 @@ void Results::writePosteriorProbabilityToFile(string fileName)
 
 
 
+
+// Results::writeLogEvidenceToFile()
+//
+// PURPOSE:
+//      writes the cumulated log(Evidence) obtained from the 
+//      nested sampling into an ASCII file of one column format.
+//
+// INPUT:
+//      fileName:   a string variable containing the file name of the output file to be saved.
+//
+// OUTPUT:
+//      void
+//
+// REMARK:
+//      Note that these values are cumulated log(Evidence), hence they increase as the nested iteration
+//      increases (i.e. the line number in the output file).
+//      In addition, the number of values is limited to the number of nested iterations only, thus
+//      leaving outside the final set of live points.
+// 
+
+void Results::writeLogEvidenceToFile(string fileName)
+{
+    ArrayXd logEvidence = nestedSampler.getLogEvidenceOfPosteriorSample();
+    string fullPath = nestedSampler.getOutputPathPrefix() + fileName;
+    
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+            
+    outputFile << "# Cumulated log(Evidence) from nested sampling" << endl;
+    outputFile << scientific << setprecision(5);
+    File::arrayXdToFile(outputFile, logEvidence);
+    outputFile.close();
+} 
+
+
+
+
+
+
+
+
+
+// Results::writeLogMeanLiveEvidenceToFile()
+//
+// PURPOSE:
+//      writes the remaining log(MeanLiveEvidence) obtained from the 
+//      nested sampling into an ASCII file of one column format.
+//
+// INPUT:
+//      fileName:   a string variable containing the file name of the output file to be saved.
+//
+// OUTPUT:
+//      void
+//
+// REMARK:
+//      Note that these values are remaining log(MeanLiveEvidence), hence they decrease as the nested iteration
+//      increases (i.e. the line number in the output file).
+//      In addition, the number of values is limited to the number of nested iterations only, thus
+//      leaving outside the final set of live points.
+//      By dividing the MeanLiveEvidence at each iteration by the cumulated evidence in the same iteration, one obtains
+//      the ratio condition used in the stopping criterion for the computations.
+// 
+
+void Results::writeLogMeanLiveEvidenceToFile(string fileName)
+{
+    ArrayXd logMeanLiveEvidence = nestedSampler.getLogMeanLiveEvidenceOfPosteriorSample();
+    string fullPath = nestedSampler.getOutputPathPrefix() + fileName;
+    
+    ofstream outputFile;
+    File::openOutputFile(outputFile, fullPath);
+            
+    outputFile << "# Remaining log(MeanLiveEvidence) from nested sampling" << endl;
+    outputFile << scientific << setprecision(5);
+    File::arrayXdToFile(outputFile, logMeanLiveEvidence);
+    outputFile.close();
+} 
+
+
+
+
+
+
+
+
+
+
+
 // Results:writeParametersSummaryToToFile()
 //
 // PURPOSE:
