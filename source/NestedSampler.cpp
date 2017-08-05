@@ -101,7 +101,7 @@ NestedSampler::~NestedSampler()
 // PURPOSE:
 //      Start nested sampling computation. Save results in Eigen
 //      Arrays logLikelihoodOfPosteriorSample, posteriorSample,
-//      logWeightOfPosteriorSample.
+//      logWeightOfPosteriorSample,logEvidenceOfPosteriorSample,logMeanLiveEvidenceOfPosteriorSample.
 //
 // INPUT:
 //      livePointsReducer:                    An object of a class that takes care of the way the number of live points
@@ -234,9 +234,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
     // Initialize the prior mass interval and cumulate it
 
-    double logWidthInPriorMass = log(1.0 - exp(-1.0/NlivePoints));                                             // X_0 - X_1    First width in prior mass
-    logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);               // 1 - X_1
-    logRemainingPriorMass = Functions::logExpDifference(logRemainingPriorMass, logWidthInPriorMass);        // X_1
+    double logWidthInPriorMass = log(1.0 - exp(-1.0/NlivePoints));                                      // X_0 - X_1    First width in prior mass
+    logCumulatedPriorMass = Functions::logExpSum(logCumulatedPriorMass, logWidthInPriorMass);           // 1 - X_1
+    logRemainingPriorMass = Functions::logExpDifference(logRemainingPriorMass, logWidthInPriorMass);    // X_1
 
 
     // Initialize first part of width in prior mass for trapezoidal rule
@@ -256,7 +256,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     // This will require the containers clusterIndices and clusterSizes.
 
     unsigned int Nclusters = 0;
-    vector<int> clusterIndices(NlivePoints);           // clusterIndices must have the same number of elements as the number of live points
+    vector<int> clusterIndices(NlivePoints);        // clusterIndices must have the same number of elements as the number of live points
     vector<int> clusterSizes;                       // The number of live points counted in each cluster is updated everytime one live point
                                                     // is removed from the sample.
 
@@ -285,6 +285,8 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
         posteriorSample.conservativeResize(Ndimensions, Niterations + 1);  
         logLikelihoodOfPosteriorSample.conservativeResize(Niterations + 1);
+        logEvidenceOfPosteriorSample.conservativeResize(Niterations + 1);
+        logMeanLiveEvidenceOfPosteriorSample.conservativeResize(Niterations + 1);
         logWeightOfPosteriorSample.conservativeResize(Niterations + 1);
         
 
@@ -472,6 +474,8 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         // Only when we gathered enough evidence, this ratio will be sufficiently small so that we can stop the iterations.
 
         ratioOfRemainderToCurrentEvidence = exp(logMeanLiveEvidence - logEvidence);
+        logEvidenceOfPosteriorSample(Niterations) = logEvidence;
+        logMeanLiveEvidenceOfPosteriorSample(Niterations) = logMeanLiveEvidence;
 
 
         // Re-evaluate the stopping criterion, using the condition suggested by Keeton (2011)
@@ -518,15 +522,6 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         logWidthInPriorMassRight = logWidthInPriorMass;
 
 
-        // Update the evidence and the information Gain
-        
-        double logEvidenceNew = Functions::logExpSum(logEvidence, logEvidenceContributionNew);
-        informationGain = exp(logEvidenceContributionNew - logEvidenceNew) * worstLiveLogLikelihood 
-                        + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
-                        - logEvidenceNew;
-        logEvidence = logEvidenceNew;
-
-
         // Print current information on the screen, if required
 
         if (printOnTheScreen)
@@ -543,6 +538,15 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
                      << endl; 
             }
         }
+        
+        
+        // Update the evidence and the information Gain
+        
+        double logEvidenceNew = Functions::logExpSum(logEvidence, logEvidenceContributionNew);
+        informationGain = exp(logEvidenceContributionNew - logEvidenceNew) * worstLiveLogLikelihood 
+                        + exp(logEvidence - logEvidenceNew) * (informationGain + logEvidence) 
+                        - logEvidenceNew;
+        logEvidence = logEvidenceNew;
 
 
         // Update total width in prior mass and remaining width in prior mass from beginning to current iteration
@@ -1390,6 +1394,54 @@ ArrayXd NestedSampler::getLogWeightOfPosteriorSample()
     return logWeightOfPosteriorSample;
 }
 
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogEvidenceOfPosteriorSample()
+//
+// PURPOSE:
+//      Get private data member logEvidenceOfPosteriorSample.
+//
+// OUTPUT:
+//      An eigen array containing the cumulated log(Evidence) values for each
+//      nested iteration
+//
+
+ArrayXd NestedSampler::getLogEvidenceOfPosteriorSample()
+{
+    return logEvidenceOfPosteriorSample;
+}
+
+
+
+
+
+
+
+
+
+
+
+// NestedSampler::getLogMeanLiveEvidenceOfPosteriorSample()
+//
+// PURPOSE:
+//      Get private data member logMeanLiveEvidenceOfPosteriorSample.
+//
+// OUTPUT:
+//      An eigen array containing the log(MeanLiveEvidence) values remaining at each
+//      nested iteration
+//
+
+ArrayXd NestedSampler::getLogMeanLiveEvidenceOfPosteriorSample()
+{
+    return logMeanLiveEvidenceOfPosteriorSample;
+}
 
 
 

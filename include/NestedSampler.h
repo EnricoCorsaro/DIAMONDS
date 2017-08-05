@@ -86,6 +86,9 @@ class NestedSampler
         void setLogWeightOfPosteriorSample(ArrayXd newLogWeightOfPosteriorSample);
         ArrayXd getLogWeightOfPosteriorSample();
         
+        ArrayXd getLogEvidenceOfPosteriorSample();
+        ArrayXd getLogMeanLiveEvidenceOfPosteriorSample();
+        
         void setOutputPathPrefix(string newOutputPathPrefix);
         string getOutputPathPrefix();
        
@@ -106,7 +109,7 @@ class NestedSampler
         double logCumulatedPriorMass;               // The total (cumulated) prior mass at a given nested iteration
         double logRemainingPriorMass;               // The remaining width in prior mass at a given nested iteration (log X)
         double ratioOfRemainderToCurrentEvidence;   // The current ratio of live to cumulated evidence 
-        vector<int> NlivePointsPerIteration;           // A vector that stores the number of live points used at each iteration of the nesting process
+        vector<int> NlivePointsPerIteration;        // A vector that stores the number of live points used at each iteration of the nesting process
         
         mt19937 engine;
 
@@ -132,6 +135,8 @@ class NestedSampler
         ArrayXXd posteriorSample;                // Parameter values (for all the free parameters of the problem) in the final posterior sampling
         ArrayXd logLikelihoodOfPosteriorSample;  // log(Likelihood) values corresponding to the posterior sample 
         ArrayXd logWeightOfPosteriorSample;      // log(Weights) = log(Likelihood) + log(dX) corresponding to the posterior sample
+        ArrayXd logEvidenceOfPosteriorSample;    // log(Evidence) cumulated at iteration in the nesting process
+        ArrayXd logMeanLiveEvidenceOfPosteriorSample; // log(MeanLiveEvidence) remaining at each iteration in the nesting process
 
         void removeLivePointsFromSample(const vector<int> &indicesOfLivePointsToRemove, 
                                         vector<int> &clusterIndices, vector<int> &clusterSizes);
