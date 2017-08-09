@@ -1,9 +1,9 @@
 // Main code for Bayesian Inference with DIAMONDS
-// Created by Enrico Corsaro @ CEA - October 2015
+// Created by Enrico Corsaro @ OACT - August 2017
 // e-mail: emncorsaro@gmail.com
-// Source code file "LinearModel.cpp"
+// Source code file "CubicModel.cpp"
 
-// To compile: clang++ -o BayesianInference BayesianInference.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
+// To compile: clang++ -o BayesianInferenceCubic BayesianInferenceCubic.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
 
 #include <cstdlib>
 #include <iostream>
@@ -19,7 +19,7 @@
 #include "UniformPrior.h"
 #include "NormalPrior.h"
 #include "NormalLikelihood.h"
-#include "LinearModel.h"
+#include "CubicModel.h"
 #include "FerozReducer.h"
 #include "PowerlawReducer.h"
 #include "Results.h"
@@ -32,7 +32,7 @@ int main(int argc, char *argv[])
     
     if (argc != 1)
     {
-        cerr << "Usage: ./BayesianInference" << endl;
+        cerr << "Usage: ./BayesianInferenceCubic" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -45,8 +45,8 @@ int main(int argc, char *argv[])
     int Ncols;
     ArrayXXd data;
     string baseInputDirName = "";
-    string inputFileName = "linear_data.txt";
-    string outputPathPrefix = "BayesianInference_";
+    string inputFileName = "cubic_data.txt";
+    string outputPathPrefix = "BayesianInferenceCubic_";
 
     ifstream inputFile;
     File::openInputFile(inputFile, inputFileName);
@@ -69,12 +69,12 @@ int main(int argc, char *argv[])
     // Uniform Prior
     unsigned long Nparameters;              // Number of parameters for which prior distributions are defined
     
-    int Ndimensions = 2;        // Number of free parameters (dimensions) of the problem
+    int Ndimensions = 4;        // Number of free parameters (dimensions) of the problem
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
-    parametersMinima <<  0.5, 2.0;         // Minima values for the free parameters (free parameter #1, free parameter #2, ..., etc.)
-    parametersMaxima << 3.0, 20.0;     // Maxima values for the free parameters (same order as minima)
+    parametersMinima <<  -1.0, -0.1, -0.1, 2.0;         // Minima values for the free parameters (free parameter #1, free parameter #2, ..., etc.)
+    parametersMaxima << 4.0, 0.4, 0.2, 50.0;              // Maxima values for the free parameters (same order as minima)
     UniformPrior uniformPrior(parametersMinima, parametersMaxima);
     ptrPriors[0] = &uniformPrior;
 
@@ -86,7 +86,7 @@ int main(int argc, char *argv[])
     // ---- Second step. Set up the models for the inference problem ----- 
     // -------------------------------------------------------------------
     
-    LinearModel model(covariates);      // Linear function of the type f = a*x + b
+    CubicModel model(covariates);      // Cubic function of the type f = a*x + b*x^2 + c*x^3 + d
 
 
     // -----------------------------------------------------------------
@@ -201,6 +201,8 @@ int main(int argc, char *argv[])
     results.writeLogWeightsToFile("logWeights.txt");
     results.writeEvidenceInformationToFile("evidenceInformation.txt");
     results.writePosteriorProbabilityToFile("posteriorDistribution.txt");
+    results.writeLogEvidenceToFile("logEvidence.txt");
+    results.writeLogMeanLiveEvidenceToFile("logMeanLiveEvidence.txt");
 
     double credibleLevel = 68.3;
     bool writeMarginalDistributionToFile = true;
