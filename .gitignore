@@ -10,11 +10,10 @@ include/.*swo
 include/.*swp
 demos/.*txt
 demos/*.txt
-demos/*.rtf
 demos/reduced
 demos/standard
 
-# Compiled source 
+# Compiled source
 
 *.class
 *.dll
@@ -47,3 +46,49 @@ demos/standard
 .DS_Store*
 Icon?
 Thumbs.db
+
+python_wrapper/__init__\.py
+
+cmake-build-debug/
+
+\.idea/
+
+pyDiamonds\.egg-info/
+
+
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+*.so
+*.pyd
+*.dll
+*.sln
+*.sdf
+*.opensdf
+*.vcxproj
+*.filters
+example.dir
+Win32
+x64
+Release
+Debug
+.vs
+CTestTestfile.cmake
+Testing
+autogen
+MANIFEST
+/.ninja_*
+/*.ninja
+/docs/.build
+*.py[co]
+*.egg-info
+*~
+.DS_Store
+/dist
+/build
+/cmake/
+.cache/
+sosize-*.txt
+pybind11Config*.cmake
+pybind11Targets.cmake

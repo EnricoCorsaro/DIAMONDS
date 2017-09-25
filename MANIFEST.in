@@ -1,0 +1,7 @@
+recursive-include include/ *
+recursive-include source/ *
+include *.cpp
+include *.h
+recursive-include pybind11/ *
+recursive-include python_wrapper/ *
+include CMakeLists.txt
