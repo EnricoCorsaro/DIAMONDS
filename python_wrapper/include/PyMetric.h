@@ -10,15 +10,15 @@
 
 using namespace std;
 
-class PyMetric : public Metric
+template <class MetricBase = Metric> class PyMetric : public MetricBase
 {
 public:
-    using Metric::Metric;
+    using MetricBase::MetricBase;
     double distance(RefArrayXd point1, RefArrayXd point2) override
     {
         PYBIND11_OVERLOAD_PURE(
                 double,
-                Metric,
+                MetricBase,
                 distance,
                 point1,
                 point2

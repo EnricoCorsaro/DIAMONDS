@@ -12,18 +12,17 @@ using namespace std;
 using namespace Eigen;
 typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
-class PyClusterer : public Clusterer
+template <class ClustererBase = Clusterer> class PyClusterer : public ClustererBase
 {
-public:
-    using Clusterer::Clusterer;
+    using ClustererBase::ClustererBase;
     int cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices, vector<int> &optimalClusterSizes) override {
         PYBIND11_OVERLOAD_PURE(
-        int,
-        Clusterer,
-        cluster,
-        sample,
-        optimalClusterIndices,
-        optimalClusterSizes
+                int,
+                ClustererBase,
+                cluster,
+                sample,
+                optimalClusterIndices,
+                optimalClusterSizes
         );
     }
 };

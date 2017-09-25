@@ -4,6 +4,9 @@
 //pybind includes
 #include <pybind11/pybind11.h>
 #include <pybind11/eigen.h>
+#include <pybind11/stl.h>
+#include <pybind11/complex.h>
+#include <pybind11/chrono.h>
 //Diamonds includes
 #include "UniformPrior.h"
 #include "Model.h"
@@ -37,7 +40,6 @@
 #include "include/PyEuclideanMetric.h"
 #include "include/PyFerozReducer.h"
 #include "include/PyGridUniformPrior.h"
-#include "include/PyKmeansClusterer.h"
 #include "include/PyLikelihood.h"
 #include "include/PyLivePointsReducer.h"
 #include "include/PyMeanNormalLikelihood.h"
@@ -50,7 +52,6 @@
 #include "include/PyPrior.h"
 #include "include/PySuperGaussianPrior.h"
 #include "include/PyUniformPrior.h"
-#include "include/PyZeroClusterer.h"
 #include "include/PyZeroModel.h"
 #include "include/PyZeroPrior.h"
 #include "include/PyZeroSampler.h"
@@ -63,8 +64,7 @@ typedef Eigen::Ref<Eigen::ArrayXXd> RefArrayXXd;
 
 PYBIND11_MODULE(pyDiamonds,m)
 {
-    py::class_<Clusterer,PyClusterer> cluster(m,"Clusterer");
-    cluster
+    py::class_<Clusterer,PyClusterer<>> (m,"Clusterer")
         .def(py::init_alias<Metric&>())
         .def("cluster",&Clusterer::cluster);
 
@@ -83,19 +83,82 @@ PYBIND11_MODULE(pyDiamonds,m)
         .def("getHyperVolume",&Ellipsoid::getHyperVolume)
         .def("getEnlargementFraction",&Ellipsoid::getEnlargementFraction);
 
-    py::class_<EuclideanMetric,PyEuclideanMetric>(m,"EuclideanMetric")
+    py::class_<Metric,PyMetric<>>(m,"Metric")
+            .def(py::init_alias<>())
+            .def("distance",&Metric::distance);
+
+    py::class_<Likelihood,PyLikelihood>(m,"Likelihood")
+            .def(py::init_alias<const RefArrayXd,Model&>())
+            .def("logValue",&Likelihood::logValue);
+
+    py::class_<Model,PyModel> (m,"Model")
+            .def(py::init_alias<const RefArrayXd>())
+            .def("getCovariates",&Model::getCovariates)
+            .def("getNparameters",&Model::getNparameters)
+            .def("predict",&Model::predict);
+
+    py::class_<Prior,PyPrior>(m,"Prior")
+            .def(py::init<const int>())
+            .def("getNdimensions",&Prior::getNdimensions)
+            .def("logDensity",&Prior::logDensity)
+            .def("drawnPointIsAccepted",&Prior::drawnPointIsAccepted)
+            .def("draw",&Prior::draw)
+            .def("drawWithConstraint",&Prior::drawWithConstraint)
+            .def("writeHyperParametersToFile",&Prior::writeHyperParametersToFile);
+
+    py::class_<LivePointsReducer,PyLivePointsReducer>(m,"LivePointsReducer")
+            .def(py::init_alias<NestedSampler&>())
+            .def("findIndicesOfLivePointsToRemove",&LivePointsReducer::findIndicesOfLivePointsToRemove)
+            .def("getNlivePointsToRemove",&LivePointsReducer::getNlivePointsToRemove)
+            .def("updateNlivePoints",&LivePointsReducer::updateNlivePoints);
+
+    py::class_<NestedSampler,PyNestedSampler>(m,"NestedSampler")
+            .def(py::init<const bool, const int, const int, vector<Prior*>,Likelihood&,Metric&,Clusterer&>())
+            .def("run",&NestedSampler::run)
+            .def("drawWithConstraint",&NestedSampler::drawWithConstraint)
+            .def("getNiterations",&NestedSampler::getNiterations)
+            .def("getNdimensions",&NestedSampler::getNdimensions)
+            .def("getNlivePoints",&NestedSampler::getNlivePoints)
+            .def("getInitialNlivePoints",&NestedSampler::getInitialNlivePoints)
+            .def("getMinNlivePoints",&NestedSampler::getMinNlivePoints)
+            .def("getLogCumulatedPriorMass",&NestedSampler::getLogCumulatedPriorMass)
+            .def("getLogRemainingPriorMass",&NestedSampler::getLogRemainingPriorMass)
+            .def("getRatioOfRemainderToCurrentEvidence",&NestedSampler::getRatioOfRemainderToCurrentEvidence)
+            .def("getLogMaxLikelihoodOfLivePoints",&NestedSampler::getLogMaxLikelihoodOfLivePoints)
+            .def("getComputationalTime",&NestedSampler::getComputationalTime)
+            .def("getTerminationFactor",&NestedSampler::getTerminationFactor)
+            .def("getNlivePointsPerIteration",&NestedSampler::getNlivePointsPerIteration)
+            .def("getNestedSample",&NestedSampler::getNestedSample)
+            .def("getLogLikelihood",&NestedSampler::getLogLikelihood)
+            .def("setLogEvidence",&NestedSampler::setLogEvidence)
+            .def("getLogEvidence",&NestedSampler::getLogEvidence)
+            .def("setLogEvidenceError",&NestedSampler::setLogEvidenceError)
+            .def("getLogEvidenceError",&NestedSampler::getLogEvidenceError)
+            .def("setInformationGain",&NestedSampler::setInformationGain)
+            .def("getInformationGain",&NestedSampler::getInformationGain)
+            .def("setPosteriorSample",&NestedSampler::setPosteriorSample)
+            .def("getPosteriorSample",&NestedSampler::getPosteriorSample)
+            .def("setLogLikelihoodOfPosteriorSample",&NestedSampler::setLogLikelihoodOfPosteriorSample)
+            .def("getLogLikelihoodOfPosteriorSample",&NestedSampler::getLogLikelihoodOfPosteriorSample)
+            .def("setLogWeightOfPosteriorSample",&NestedSampler::setLogWeightOfPosteriorSample)
+            .def("getLogWeightOfPosteriorSample",&NestedSampler::getLogWeightOfPosteriorSample)
+            .def("setOutputPathPrefix",&NestedSampler::setOutputPathPrefix)
+            .def("getOutputPathPrefix",&NestedSampler::getOutputPathPrefix)
+            .def("verifySamplerStatus",&NestedSamplerPublicist::verifySamplerStatus);
+
+    py::class_<EuclideanMetric,PyMetric<EuclideanMetric>,Metric>(m,"EuclideanMetric")
         .def(py::init_alias<>())
         .def("distance",&EuclideanMetric::distance);
 
-    py::class_<ExponentialLikelihood>(m,"ExponentialLikelihood")
+    py::class_<ExponentialLikelihood,Likelihood>(m,"ExponentialLikelihood")
         .def(py::init<const RefArrayXd,Model&>())
         .def("logValue",&ExponentialLikelihood::logValue);
 
-    py::class_<FerozReducer,PyFerozReducer>(m,"FerozReducer")
+    py::class_<FerozReducer,PyFerozReducer,LivePointsReducer>(m,"FerozReducer")
         .def(py::init_alias<NestedSampler&,const double>())
         .def("updateNlivePoints",&FerozReducer::updateNlivePoints);
 
-    py::class_<GridUniformPrior,PyGridUniformPrior>(m,"GridUniformPrior")
+    py::class_<GridUniformPrior,PyGridUniformPrior,Prior>(m,"GridUniformPrior")
         .def(py::init_alias<const RefArrayXd,const RefArrayXd,const RefArrayXd, const RefArrayXd>())
         .def("getStartingCoordinate",&GridUniformPrior::getStartingCoordinate)
         .def("getNgridPoints",&GridUniformPrior::getNgridPoints)
@@ -107,22 +170,12 @@ PYBIND11_MODULE(pyDiamonds,m)
         .def("drawWithConstraint",&GridUniformPrior::drawWithConstraint)
         .def("writeHyperParametersToFile",&GridUniformPrior::writeHyperParametersToFile);
 
-    py::class_<KmeansClusterer,PyKmeansClusterer>(m,"KmeansClusterer")
+    py::class_<KmeansClusterer,PyClusterer<KmeansClusterer>,Clusterer>(m,"KmeansClusterer")
         .def(py::init_alias<Metric&,unsigned int, unsigned int, unsigned int, double>())
         .def("cluster",&KmeansClusterer::cluster);
 
-    py::class_<Likelihood,PyLikelihood>(m,"Likelihood")
-        .def(py::init_alias<const RefArrayXd,Model&>())
-        .def("logValue",&Likelihood::logValue);
-
-    py::class_<LivePointsReducer,PyLivePointsReducer>(m,"LivePointsReducer")
-        .def(py::init_alias<NestedSampler&>())
-        .def("findIndicesOfLivePointsToRemove",&LivePointsReducer::findIndicesOfLivePointsToRemove)
-        .def("getNlivePointsToRemove",&LivePointsReducer::getNlivePointsToRemove)
-        .def("updateNlivePoints",&LivePointsReducer::updateNlivePoints);
-
     /*
-    py::class_<MeanNormalLikelihood,PyMeanNormalLikelihood>(m,"MeanNormalLikelihood")
+    py::class_<MeanNormalLikelihood,PyMeanNormalLikelihood,Likelihood>(m,"MeanNormalLikelihood")
         .def(py::init_alias<const RefArrayXd,const RefArrayXd,Model&>())
         .def("getUncertainties",&MeanNormalLikelihood::getUncertainties)
         .def("getNormalizedUncertainties",&MeanNormalLikelihood::getNormalizedUncertainties)
@@ -130,14 +183,7 @@ PYBIND11_MODULE(pyDiamonds,m)
         .def("logValue",&MeanNormalLikelihood::logValue);
     */
 
-    py::class_<Model,PyModel> model(m,"Model");
-    model
-        .def(py::init_alias<const RefArrayXd>())
-        .def("getCovariates",&Model::getCovariates)
-        .def("getNparameters",&Model::getNparameters)
-        .def("predict",&Model::predict);
-
-    py::class_<MultiEllipsoidSampler,PyMultiEllipsoidSampler>(m,"MultiEllipsoidSampler")
+    py::class_<MultiEllipsoidSampler,PyMultiEllipsoidSampler,NestedSampler>(m,"MultiEllipsoidSampler")
         .def(py::init<const bool,vector<Prior*>,Likelihood&,Metric&,Clusterer &,const int, const int, const double, const double>())
         .def("drawWithConstraint",&MultiEllipsoidSampler::drawWithConstraint)
         .def("verifySamplerStatus",&MultiEllipsoidSampler::verifySamplerStatus)
@@ -145,46 +191,12 @@ PYBIND11_MODULE(pyDiamonds,m)
         .def("getInitialEnlargementFraction",&MultiEllipsoidSampler::getInitialEnlargementFraction)
         .def("getShrinkingRate",&MultiEllipsoidSampler::getShrinkingRate);
 
-    py::class_<NestedSampler,PyNestedSampler>(m,"NestedSampler")
-        .def(py::init<const bool, const int, const int, vector<Prior*>,Likelihood&,Metric&,Clusterer&>())
-        .def("run",&NestedSampler::run)
-        .def("drawWithConstraint",&NestedSampler::drawWithConstraint)
-        .def("getNiterations",&NestedSampler::getNiterations)
-        .def("getNdimensions",&NestedSampler::getNdimensions)
-        .def("getNlivePoints",&NestedSampler::getNlivePoints)
-        .def("getInitialNlivePoints",&NestedSampler::getInitialNlivePoints)
-        .def("getMinNlivePoints",&NestedSampler::getMinNlivePoints)
-        .def("getLogCumulatedPriorMass",&NestedSampler::getLogCumulatedPriorMass)
-        .def("getLogRemainingPriorMass",&NestedSampler::getLogRemainingPriorMass)
-        .def("getRatioOfRemainderToCurrentEvidence",&NestedSampler::getRatioOfRemainderToCurrentEvidence)
-        .def("getLogMaxLikelihoodOfLivePoints",&NestedSampler::getLogMaxLikelihoodOfLivePoints)
-        .def("getComputationalTime",&NestedSampler::getComputationalTime)
-        .def("getTerminationFactor",&NestedSampler::getTerminationFactor)
-        .def("getNlivePointsPerIteration",&NestedSampler::getNlivePointsPerIteration)
-        .def("getNestedSample",&NestedSampler::getNestedSample)
-        .def("getLogLikelihood",&NestedSampler::getLogLikelihood)
-        .def("setLogEvidence",&NestedSampler::setLogEvidence)
-        .def("getLogEvidence",&NestedSampler::getLogEvidence)
-        .def("setLogEvidenceError",&NestedSampler::setLogEvidenceError)
-        .def("getLogEvidenceError",&NestedSampler::getLogEvidenceError)
-        .def("setInformationGain",&NestedSampler::setInformationGain)
-        .def("getInformationGain",&NestedSampler::getInformationGain)
-        .def("setPosteriorSample",&NestedSampler::setPosteriorSample)
-        .def("getPosteriorSample",&NestedSampler::getPosteriorSample)
-        .def("setLogLikelihoodOfPosteriorSample",&NestedSampler::setLogLikelihoodOfPosteriorSample)
-        .def("getLogLikelihoodOfPosteriorSample",&NestedSampler::getLogLikelihoodOfPosteriorSample)
-        .def("setLogWeightOfPosteriorSample",&NestedSampler::setLogWeightOfPosteriorSample)
-        .def("getLogWeightOfPosteriorSample",&NestedSampler::getLogWeightOfPosteriorSample)
-        .def("setOutputPathPrefix",&NestedSampler::setOutputPathPrefix)
-        .def("getOutputPathPrefix",&NestedSampler::getOutputPathPrefix)
-        .def("verifySamplerStatus",&NestedSamplerPublicist::verifySamplerStatus);
-
-    py::class_<NormalLikelihood,PyNormalLikelihood>(m,"NormalLikelihood")
+    py::class_<NormalLikelihood,PyNormalLikelihood,Likelihood>(m,"NormalLikelihood")
         .def(py::init<const RefArrayXd,const RefArrayXd,Model&>())
         .def("getUncertainties",&NormalLikelihood::getUncertainties)
         .def("logValue",&NormalLikelihood::logValue);
 
-    py::class_<NormalPrior,PyNormalPrior>(m,"NormalPrior")
+    py::class_<NormalPrior,PyNormalPrior,Prior>(m,"NormalPrior")
         .def(py::init_alias<RefArrayXd const,RefArrayXd const>())
         .def("getMean",&NormalPrior::getMean)
         .def("getStandardDeviation",&NormalPrior::getStandardDeviation)
@@ -194,18 +206,10 @@ PYBIND11_MODULE(pyDiamonds,m)
         .def("drawWithConstraint",&NormalPrior::drawWithConstraint)
         .def("writeHyperParametersToFile",&NormalPrior::writeHyperParametersToFile);
 
-    py::class_<PowerlawReducer,PyPowerlawReducer>(m,"PowerlawReducer")
+    py::class_<PowerlawReducer,PyPowerlawReducer,LivePointsReducer>(m,"PowerlawReducer")
         .def(py::init<NestedSampler&,const double,const double,const double>())
         .def("updateNlivePoints",&PowerlawReducer::updateNlivePoints);
 
-    py::class_<Prior,PyPrior>(m,"Prior")
-        .def(py::init<const int>())
-        .def("getNdimensions",&Prior::getNdimensions)
-        .def("logDensity",&Prior::logDensity)
-        .def("drawnPointIsAccepted",&Prior::drawnPointIsAccepted)
-        .def("draw",&Prior::draw)
-        .def("drawWithConstraint",&Prior::drawWithConstraint)
-        .def("writeHyperParametersToFile",&Prior::writeHyperParametersToFile);
 
     py::class_<Results>(m,"Results")
         .def(py::init<NestedSampler&>())
@@ -217,7 +221,7 @@ PYBIND11_MODULE(pyDiamonds,m)
         .def("writeParametersSummaryToFile",&Results::writeParametersSummaryToFile)
         .def("writeObjectsIdentificationToFile",&Results::writeObjectsIdentificationToFile);
 
-    py::class_<SuperGaussianPrior,PySuperGaussianPrior>(m,"SuperGaussianPrior")
+    py::class_<SuperGaussianPrior,PySuperGaussianPrior,Prior>(m,"SuperGaussianPrior")
         .def(py::init<const RefArrayXd, const RefArrayXd, const RefArrayXd>())
         .def("getCenter",&SuperGaussianPrior::getCenter)
         .def("getSigma",&SuperGaussianPrior::getSigma)
@@ -228,7 +232,7 @@ PYBIND11_MODULE(pyDiamonds,m)
         .def("drawWithConstraint",&SuperGaussianPrior::drawWithConstraint)
         .def("writeHyperParametersToFile",&SuperGaussianPrior::writeHyperParametersToFile);
 
-    py::class_<UniformPrior,PyUniformPrior>(m,"UniformPrior")
+    py::class_<UniformPrior,PyUniformPrior,Prior>(m,"UniformPrior")
         .def(py::init<const RefArrayXd,const RefArrayXd >())
         .def("getMinima", &UniformPrior::getMinima)
         .def("getMaxima", &UniformPrior::getMaxima)
@@ -238,15 +242,15 @@ PYBIND11_MODULE(pyDiamonds,m)
         .def("drawWithConstraint",&UniformPrior::drawWithConstraint)
         .def("writeHyperParametersToFile",&UniformPrior::writeHyperParametersToFile);
 
-    py::class_<ZeroClusterer,PyZeroClusterer>(m,"ZeroClusterer")
+    py::class_<ZeroClusterer,PyClusterer<ZeroClusterer>,Clusterer>(m,"ZeroClusterer")
         .def(py::init<Metric&>())
         .def("cluster",&ZeroClusterer::cluster);
 
-    py::class_<ZeroModel,PyZeroModel>(m,"ZeroModel")
+    py::class_<ZeroModel,PyZeroModel,Model>(m,"ZeroModel")
         .def(py::init<const RefArrayXd>())
         .def("predict",&ZeroModel::predict);
 
-    py::class_<ZeroPrior,PyZeroPrior>(m,"ZeroPrior")
+    py::class_<ZeroPrior,PyZeroPrior,Prior>(m,"ZeroPrior")
         .def(py::init<const int>())
         .def("logDensity",&ZeroPrior::logDensity)
         .def("drawnPointIsAccepted",&ZeroPrior::drawnPointIsAccepted)
