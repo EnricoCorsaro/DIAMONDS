@@ -8,11 +8,11 @@ source/.*swo
 source/.*swp
 include/.*swo
 include/.*swp
-demos/.*txt
 demos/*.txt
 demos/*.rtf
 demos/reduced
 demos/standard
+demos/linear_test
 
 # Compiled source 
 
