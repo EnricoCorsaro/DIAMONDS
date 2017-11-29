@@ -148,12 +148,12 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
     // Save configuring parameters to an output ASCII file
 
-    string fileName = "configuringParameters.txt";
+    string fileName = "computationParameters.txt";
     string fullPath = outputPathPrefix + fileName;
     File::openOutputFile(outputFile, fullPath);
    
    
-    outputFile << "# List of configuring parameters used for the NSMC." << endl;
+    outputFile << "# List of computation parameters for this process." << endl;
     outputFile << "# Row #1: Ndimensions" << endl;
     outputFile << "# Row #2: Initial(Maximum) NlivePoints" << endl;
     outputFile << "# Row #3: Minimum NlivePoints" << endl;
@@ -166,6 +166,8 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     outputFile << "# Row #10: Final Nclusters" << endl;
     outputFile << "# Row #11: Final NlivePoints" << endl;
     outputFile << "# Row #12: Computational Time (seconds)" << endl;
+    outputFile << "# Row #13: Error: No better likelihood found (1 = yes / 0 = no)" << endl;
+    outputFile << "# Row #14: Error: Ellipsoid matrix decomposition failed (1 = yes / 0 = no)" << endl;
     outputFile << Ndimensions << endl;
     outputFile << initialNlivePoints << endl;
     outputFile << minNlivePoints << endl;
@@ -274,6 +276,8 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     }
         
     bool nestedSamplingShouldContinue = true;
+    bool noBetterLikelihoodFound = false;                           // Flag control for error caused by no better likelihood point found
+    bool ellipsoidMatrixDecompositionSuccessful = true;             // Flag control for error caused by ellipsoid matrix decomposition failure
     bool livePointsShouldBeReduced = (initialNlivePoints > minNlivePoints);       // Update live points only if required
     
     Niterations = 0;
@@ -385,8 +389,13 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         // If the adopted sampler produces an error (e.g. in the case of the ellipsoidal sampler a failure
         // in the ellipsoid matrix decomposition), then we can stop right here.
         
-        nestedSamplingShouldContinue = verifySamplerStatus();
-        if (!nestedSamplingShouldContinue) break;
+        ellipsoidMatrixDecompositionSuccessful = verifySamplerStatus();
+
+        if (!ellipsoidMatrixDecompositionSuccessful)
+        {
+            nestedSamplingShouldContinue = false;
+            break;
+        }
 
 
         // If we didn't find a point with a better likelihood, then we can stop right here.
@@ -394,6 +403,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         if (!newPointIsFound)
         {
             nestedSamplingShouldContinue = false;
+            noBetterLikelihoodFound = true;
             cerr << "Can't find point with a better Likelihood." << endl; 
             cerr << "Stopping the nested sampling loop prematurely." << endl;
             break;
@@ -609,6 +619,24 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     outputFile << Nclusters << endl;
     outputFile << NlivePoints << endl;
     outputFile << computationalTime << endl;
+
+    if (noBetterLikelihoodFound)
+    {
+        outputFile << 1 << endl;
+    }
+    else
+    {
+        outputFile << 0 << endl;
+    }
+
+    if (!ellipsoidMatrixDecompositionSuccessful)
+    {
+        outputFile << 1 << endl;
+    }
+    else
+    {
+        outputFile << 0 << endl;
+    }
 }
 
 
