@@ -153,7 +153,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     File::openOutputFile(outputFile, fullPath);
    
    
-    outputFile << "# List of computation parameters for this process." << endl;
+    outputFile << "# List of computation parameters used for this process." << endl;
     outputFile << "# Row #1: Ndimensions" << endl;
     outputFile << "# Row #2: Initial(Maximum) NlivePoints" << endl;
     outputFile << "# Row #3: Minimum NlivePoints" << endl;
