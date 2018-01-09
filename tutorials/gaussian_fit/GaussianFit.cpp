@@ -132,7 +132,7 @@ int main(int argc, char *argv[])
     // ---- Second step. Set up the models for the inference problem ----- 
     // -------------------------------------------------------------------
     
-    GaussianModel model(multiCovariates, Nobservables);      // Gaussian function of the type y = offset + a*x_1 + b*x_2 + c*x_3 + ...
+    GaussianModel model(multiCovariates, Nobservables);      // Gaussian function of any dimension (depending on the number of covariates)
 
 
     // -----------------------------------------------------------------
