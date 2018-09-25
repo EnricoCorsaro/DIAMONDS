@@ -278,8 +278,8 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const double 
     // value of the parameter. Cumulate the probability within the range and repeat the process until 
     // probability >= probability(credibleLevel). The skenwess is adopted to select the direction 
     // of the iterative process for a more optimal computation of the shortest CI. 
-    // For skewness < 0, the distribution is asymetric to the left, hence the step is towards the left side.
-    // For skewness > 0, the distribution is asymetric to the right, hence the step is towards the right side.
+    // For skewness < 0, the distribution is asymmetric to the left, hence the step is towards the left side.
+    // For skewness > 0, the distribution is asymmetric to the right, hence the step is towards the right side.
 
     int min = 0;
     double credibleLevelFraction = credibleLevel/100.;
