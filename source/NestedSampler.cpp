@@ -32,6 +32,7 @@ NestedSampler::NestedSampler(const bool printOnTheScreen, const int initialNlive
   printOnTheScreen(printOnTheScreen),
   NlivePoints(initialNlivePoints),
   minNlivePoints(minNlivePoints),
+  reducedNdimensions(0),
   logCumulatedPriorMass(numeric_limits<double>::lowest()),
   logRemainingPriorMass(0.0),
   ratioOfRemainderToCurrentEvidence(numeric_limits<double>::max()),
@@ -351,9 +352,12 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
             {
                 // After the first N initial iterations, we do a proper clustering.
                 
+                clusterSizes.clear();
                 Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes);
+                reducedNdimensions = clusterer.getReducedNdimensions();
             }
         }
+
 
 
         // Draw a new point, which should replace the point with the worst likelihood.
@@ -545,6 +549,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
                      << "   Ratio: " << ratioOfRemainderToCurrentEvidence
                      << "   log(E): " << logEvidence 
                      << "   IG: " << informationGain
+                     << "   FP-dim: " << reducedNdimensions
                      << endl; 
             }
         }

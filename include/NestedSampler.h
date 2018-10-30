@@ -105,6 +105,7 @@ class NestedSampler
         unsigned int Ndimensions;                   // Total number of dimensions of the inference
         int NlivePoints;                            // Total number of live points at a given iteration
         int minNlivePoints;                         // Minimum number of live points allowed
+        int reducedNdimensions;                     // Number of effective dimensions of the clustering when a feature projector is activated
         double worstLiveLogLikelihood;              // The worst likelihood value of the current live sample
         double logCumulatedPriorMass;               // The total (cumulated) prior mass at a given nested iteration
         double logRemainingPriorMass;               // The remaining width in prior mass at a given nested iteration (log X)
