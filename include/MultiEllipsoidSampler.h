@@ -60,7 +60,7 @@ class MultiEllipsoidSampler : public NestedSampler
         double initialEnlargementFraction;      // Initial fraction for enlargement of ellipsoids
         double shrinkingRate;                   // Prior volume shrinkage rate (between 0 and 1)
         
-        uniform_real_distribution<> uniform;  
+        uniform_real_distribution<> uniform; 
 
 };
 
