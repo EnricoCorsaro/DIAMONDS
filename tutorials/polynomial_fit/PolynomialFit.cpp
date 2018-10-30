@@ -27,6 +27,7 @@
 #include "PowerlawReducer.h"
 #include "Results.h"
 #include "Ellipsoid.h"
+#include "PrincipalComponentProjector.h"
 
 int main(int argc, char *argv[])
 {
@@ -75,7 +76,6 @@ int main(int argc, char *argv[])
 
     // ---- Read prior hyper parameters for resolved modes -----
     string inputFileNamePrior(argv[2]);
-    // inputFileName = "priors_hyperParameters.txt";
     File::openInputFile(inputFile, inputFileNamePrior);
     File::sniffFile(inputFile, Nparameters, Ncols);
     ArrayXXd hyperParameters;
@@ -153,7 +153,14 @@ int main(int argc, char *argv[])
     double relTolerance = 0.01;
 
     EuclideanMetric myMetric;
-    KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
+
+    bool printNdimensions = false;
+    PrincipalComponentProjector projector(printNdimensions);
+    bool featureProjectionActivated = true;
+
+    KmeansClusterer kmeans(myMetric, projector, featureProjectionActivated, 
+                           minNclusters, maxNclusters, Ntrials, relTolerance); 
+
 
 
     // ---------------------------------------------------------------------

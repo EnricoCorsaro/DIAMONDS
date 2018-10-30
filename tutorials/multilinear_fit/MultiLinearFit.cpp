@@ -27,6 +27,7 @@
 #include "PowerlawReducer.h"
 #include "Results.h"
 #include "Ellipsoid.h"
+#include "PrincipalComponentProjector.h"
 
 int main(int argc, char *argv[])
 {
@@ -176,7 +177,13 @@ int main(int argc, char *argv[])
     double relTolerance = 0.01;
 
     EuclideanMetric myMetric;
-    KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
+
+    bool printNdimensions = false;
+    PrincipalComponentProjector projector(printNdimensions);
+    bool featureProjectionActivated = true;
+    
+    KmeansClusterer kmeans(myMetric, projector, featureProjectionActivated, 
+                           minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
     // ---------------------------------------------------------------------
