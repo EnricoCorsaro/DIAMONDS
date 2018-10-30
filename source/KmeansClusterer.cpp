@@ -9,6 +9,8 @@
 //
 // INPUT: 
 //      metric: this class is used to compute the squared distance between two points
+//      featureProjector: this class is used to compute a dimensionality reduction of the input sample of points
+//      featureProjectionActivated: a boolean to activate or deactivate the dimensionality reduction through the featureProjector class
 //      minNclusters: the minimum number of clusters that is to be fitted
 //      maxNclusters: the maximum number of clusters that is to be fitted
 //      Ntrials: as k-means is sensitive to the initial choice of the cluster centers, 
@@ -17,8 +19,9 @@
 //                    change in total sum of distances of all points to their cluster center. 
 // 
 
-KmeansClusterer::KmeansClusterer(Metric &metric, unsigned int minNclusters, unsigned int maxNclusters, unsigned int Ntrials, double relTolerance)
-: Clusterer(metric), 
+KmeansClusterer::KmeansClusterer(Metric &metric, Projector &featureProjector, bool featureProjectionActivated, 
+unsigned int minNclusters, unsigned int maxNclusters, unsigned int Ntrials, double relTolerance)
+: Clusterer(metric, featureProjector, featureProjectionActivated), 
   minNclusters(minNclusters), 
   maxNclusters(maxNclusters), 
   Ntrials(Ntrials), 
@@ -69,17 +72,13 @@ KmeansClusterer::~KmeansClusterer()
 // INPUT:
 //      sample(Ndimensions, Npoints): sample of N-dimensional points
 //      center(Ndimensions, Nclusters): set of N-dimensional coordinates of the cluster centers 
-//      Nclusters: number of clusters considered
 // 
 // OUTPUT: 
 //      void
 //
 
-void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXXd centers, unsigned int Nclusters)
+void KmeansClusterer::chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXXd centers)
 {
-    unsigned int Npoints = sample.cols();
-
-
     // Set up a some random generators
     
     uniform_real_distribution<> uniform01(0.0, 1.0);
@@ -216,9 +215,6 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
                                                          RefArrayXd clusterSizes, vector<int> &clusterIndices,
                                                          double &sumOfDistancesToClosestCenter, double relTolerance)
 {
-    unsigned int Npoints = sample.cols();
-    unsigned int Ndimensions = sample.rows();
-    unsigned int Nclusters = centers.cols();
     ArrayXXd updatedCenters = ArrayXXd::Zero(Ndimensions, Nclusters);   // coordinates of each of the new cluster centers
 
 
@@ -354,11 +350,6 @@ bool KmeansClusterer::updateClusterCentersUntilConverged(RefArrayXXd sample, Ref
 double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers, 
                                          RefArrayXd clusterSizes, vector<int> &clusterIndices)
 {
-    unsigned int Npoints = sample.cols();
-    unsigned int Ndimensions = sample.rows();
-    unsigned int Nclusters = centers.cols();
-        
-
     // Compute the intra-cluster variance for each cluster, assuming that each cluster 
     // is spherical, making it a one-dimensional problem.
     
@@ -370,7 +361,7 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
         intraClusterVariances(clusterIndices[n]) += metric.distance(sample.col(n), centers.col(clusterIndices[n]));
     }
     
-    intraClusterVariances /= (clusterSizes-1); 
+    intraClusterVariances /= (clusterSizes-1);
     
 
     // Initialize the cluster priors, i.e. the prior probability that a point belongs 
@@ -442,8 +433,28 @@ double KmeansClusterer::evaluateBICvalue(RefArrayXXd sample, RefArrayXXd centers
 int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices, vector<int> &optimalClusterSizes)
 {
     bool convergedSuccessfully;
-    unsigned int Npoints = sample.cols();
-    unsigned int Ndimensions = sample.rows();
+    Npoints = sample.cols();
+    
+    ArrayXXd optimizedSample;
+
+    // If activated, apply a dimensionality reduction of the data sample according to the chosen feature projector (e.g. PCA)
+
+    if (featureProjectionActivated)
+    {
+        // If a dimensionality reduction is applied, from now on the clustering analysis 
+        // will be performed on the sample of reduced dimensionality. 
+        // The new sample will consist of a number of points equal to the original sample but with a number of
+        // features (i.e. dimensions) <= than that of the original sample.
+        
+        optimizedSample = featureProjector.projection(sample);
+    }
+    else
+    {
+        optimizedSample = sample;
+    }
+    
+    Ndimensions = optimizedSample.rows();
+
     unsigned int optimalNclusters;    
     double bestBICvalue = numeric_limits<double>::max();
     double BICvalue; 
@@ -461,8 +472,10 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
     // user-specified range of clusters, and determine which number gives the
     // optimal clustering
 
-    for (unsigned int Nclusters = minNclusters; Nclusters <= maxNclusters; ++Nclusters)
+    for (unsigned int c = minNclusters; c <= maxNclusters; ++c)
     {
+        Nclusters = c;
+
         centers = ArrayXXd::Zero(Ndimensions, Nclusters);          // coordinates of each of the old cluster centers
         bestCenters = ArrayXXd::Zero(Ndimensions, Nclusters);      // coordinates of the best centers (over all trials)
         clusterSizes = ArrayXd::Zero(Nclusters);                    // # of points belonging to each cluster...
@@ -477,8 +490,8 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
                     
         for (int m = 0; m < Ntrials; ++m)
         {
-            chooseInitialClusterCenters(sample, centers, Nclusters);
-            convergedSuccessfully = updateClusterCentersUntilConverged(sample, centers, clusterSizes, clusterIndices, 
+            chooseInitialClusterCenters(optimizedSample, centers);
+            convergedSuccessfully = updateClusterCentersUntilConverged(optimizedSample, centers, clusterSizes, clusterIndices, 
                                                                        sumOfDistancesToClosestCenter, relTolerance);
    
 
@@ -507,7 +520,7 @@ int KmeansClusterer::cluster(RefArrayXXd sample, vector<int> &optimalClusterIndi
 
         if (maxNclusters - minNclusters > 1)
         {
-            BICvalue = evaluateBICvalue(sample, bestCenters, bestClusterSizes, bestClusterIndices);
+            BICvalue = evaluateBICvalue(optimizedSample, bestCenters, bestClusterSizes, bestClusterIndices);
             
             if (BICvalue < bestBICvalue)
             {

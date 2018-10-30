@@ -24,7 +24,8 @@ class KmeansClusterer : public Clusterer
 {
     public:
     
-        KmeansClusterer(Metric &metric, unsigned int minNclusters, unsigned int maxNclusters, unsigned int Ntrials, double relTolerance);
+        KmeansClusterer(Metric &metric, Projector &featureProjector, bool featureProjectionActivated, 
+        unsigned int minNclusters, unsigned int maxNclusters, unsigned int Ntrials, double relTolerance);
         ~KmeansClusterer();
     
         virtual int cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices, vector<int> &optimalClusterSizes);
@@ -35,7 +36,7 @@ class KmeansClusterer : public Clusterer
 
     private:
     
-        void chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXXd centers, unsigned int Nclusters);
+        void chooseInitialClusterCenters(RefArrayXXd sample, RefArrayXXd centers);
         bool updateClusterCentersUntilConverged(RefArrayXXd sample, RefArrayXXd centers, 
                                                 RefArrayXd clusterSizes, vector<int> &clusterIndices,
                                                 double &sumOfDistancesToClosestCenter, double relTolerance);
@@ -45,6 +46,9 @@ class KmeansClusterer : public Clusterer
         unsigned int minNclusters;
         unsigned int maxNclusters;
         unsigned int Ntrials;
+        unsigned int Ndimensions;
+        unsigned int Npoints;
+        unsigned int Nclusters;
         double relTolerance;
         mt19937 engine;
 
