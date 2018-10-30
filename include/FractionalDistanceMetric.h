@@ -9,7 +9,6 @@
 #define FRACTIONALDISTANCEMETRIC_H
 
 
-#include <Eigen/Core>
 #include "Metric.h"
 #include <cassert>
 

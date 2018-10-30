@@ -9,7 +9,6 @@
 #define MANHATTANMETRIC_H
 
 
-#include <Eigen/Core>
 #include "Metric.h"
 
 
