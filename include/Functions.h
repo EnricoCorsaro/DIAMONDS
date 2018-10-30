@@ -46,6 +46,8 @@ namespace Functions
                      const double centroid = 0.0, const double height = 1.0, const double linewidth = 1.0);
     void modeProfileWithAmplitude(RefArrayXd predictions, const RefArrayXd covariates, 
                                   const double centroid = 0.0, const double amplitude = 1.0, const double linewidth = 1.0);
+    void modeProfileAsymmetricWithAmplitude(RefArrayXd predictions, const RefArrayXd covariates, const double centroid = 0.0, 
+                                            const double amplitude = 1.0, const double linewidth = 1.0, const double asymmetry = 0.0);
     void modeProfileSinc(RefArrayXd predictions, const RefArrayXd covariates, 
                      const double centroid = 0.0, const double height = 1.0, const double resolution = 1.0);
     double logGaussProfile(const double covariate, const double mu = 0.0, 

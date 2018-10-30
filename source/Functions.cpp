@@ -35,7 +35,6 @@ void Functions::lorentzProfile(RefArrayXd predictions, const RefArrayXd covariat
 
 
 
-
 // Functions::modeProfile()
 //
 // PURPOSE: 
@@ -98,6 +97,46 @@ void Functions::modeProfileWithAmplitude(RefArrayXd predictions, const RefArrayX
     predictions = amplitude*amplitude/(Functions::PI * linewidth)/(1.0 + (4.0*(covariates-centroid).square()/(linewidth*linewidth)));
 }
 
+
+
+
+
+
+
+
+
+
+
+// Functions::modeProfileAsymmetricWithAmplitude()
+//
+// PURPOSE: 
+//      Computes a single asymmetric Lorentzian profile that models an oscillation mode in a power spectrum.
+//      The profile is computed given the centroid, the amplitude and the linewidth.
+//      Nigam & Kosovichev 1998 profile.
+//
+// INPUT:
+//      predictions : vector containing the result
+//      covariates : vector containing independent variable values
+//      centroid : centroid of the Lorentzian profile (default = 0), expressed in muHz
+//      amplitude : amplitude of the Lorentzian profile (default = 1), expressed in ppm
+//      linewidth : width of the Lorentzian profile (mode linewidth) (default = 1), expressed in muHz
+//      asymmetry : adimensional parameter for the asymmetric of the mode profile
+//
+// OUTPUT:
+//      void
+//
+// REMARKS:
+//      Saves the predictions into the input vector predictions.
+//
+
+void Functions::modeProfileAsymmetricWithAmplitude(RefArrayXd predictions, const RefArrayXd covariates, 
+                               const double centroid, const double amplitude, const double linewidth, const double asymmetry)
+{
+    ArrayXd x = 2*((covariates-centroid)/linewidth);
+    // predictions = amplitude*amplitude/(Functions::PI * linewidth) * ((1.0 + asymmetry * x).square() + asymmetry*asymmetry) /
+    predictions = amplitude * ((1.0 + asymmetry * x).square() + asymmetry*asymmetry) /
+                  (1.0 + x.square());
+}
 
 
 
@@ -343,7 +382,7 @@ bool Functions::selfAdjointMatrixDecomposition(RefArrayXXd const covarianceMatri
 
     if (eigenSolver.info() != Success)
     {
-        cout << "Covariance Matrix decomposition failed." << endl;
+        cout << "Matrix decomposition failed." << endl;
         cout << "Quitting program" << endl;
         return false;
     }
