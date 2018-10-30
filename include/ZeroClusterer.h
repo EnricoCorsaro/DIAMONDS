@@ -6,7 +6,6 @@
 // Header file "ZeroClusterer.h"
 // Implementations contained in "ZeroClusterer.cpp"
 
-
 #ifndef ZEROCLUSTERER_H
 #define ZEROCLUSTERER_H
 
@@ -26,7 +25,7 @@ class ZeroClusterer : public Clusterer
 {
     public:
     
-        ZeroClusterer(Metric &metric);
+        ZeroClusterer(Metric &metric, Projector &featureProjector, bool featureProjectionActivated);
         ~ZeroClusterer();
     
         virtual int cluster(RefArrayXXd sample, vector<int> &optimalClusterIndices, vector<int> &optimalClusterSizes) override;

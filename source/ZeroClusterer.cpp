@@ -10,8 +10,8 @@
 //      metric: this class is used to compute the squared distance between two points
 // 
 
-ZeroClusterer::ZeroClusterer(Metric &metric)
-: Clusterer(metric) 
+ZeroClusterer::ZeroClusterer(Metric &metric, Projector &featureProjector, bool featureProjectionActivated)
+: Clusterer(metric, featureProjector, featureProjectionActivated) 
 {
 }
 
