@@ -20,6 +20,7 @@
 #include "FerozReducer.h"
 #include "PowerlawReducer.h"
 #include "demoEggboxFunction.h"
+#include "PrincipalComponentProjector.h"
 
 
 int main(int argc, char *argv[])
@@ -75,7 +76,12 @@ int main(int argc, char *argv[])
     int Ntrials = 10;
     double relTolerance = 0.01;
 
-    KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
+    bool printNdimensions = false;
+    PrincipalComponentProjector projector(printNdimensions);
+    bool featureProjectionActivated = true;
+
+    KmeansClusterer kmeans(myMetric, projector, featureProjectionActivated, 
+                           minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
     // ---------------------------------------------------------------------

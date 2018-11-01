@@ -14,6 +14,7 @@
 #include "EuclideanMetric.h"
 #include "KmeansClusterer.h"
 #include "Ellipsoid.h"
+#include "PrincipalComponentProjector.h"
 
 using namespace std;
 using namespace Eigen;
@@ -35,24 +36,31 @@ int main()
     inputFile.close();
 
 
-    // Set up the K-means clusterer using a Euclidean metric
+    
+    
+    // Set up the clusterer using a Euclidean metric
 
     EuclideanMetric myMetric;
     int minNclusters = 2;
     int maxNclusters = 10;
-    int Ntrials = 10;
+    int Ntrials = 20;
     double relTolerance = 0.01;
 
-    KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
+    bool printNdimensions = false;
+    PrincipalComponentProjector projector(printNdimensions);
+    bool featureProjectionActivated = false;
 
- 
+    KmeansClusterer clusterer(myMetric, projector, featureProjectionActivated, 
+                           minNclusters, maxNclusters, Ntrials, relTolerance); 
+
+
     // Do the clustering, and get for each point the index of the cluster it belongs to
 
     int optimalNclusters;
     vector<int> clusterIndices(Nrows);
     vector<int> clusterSizes;
 
-    optimalNclusters = kmeans.cluster(sample, clusterIndices, clusterSizes);
+    optimalNclusters = clusterer.cluster(sample, clusterIndices, clusterSizes);
     int Nclusters = optimalNclusters; 
    
 
@@ -189,9 +197,9 @@ int main()
 
     double sumOfHyperVolumes = accumulate(normalizedHyperVolumes.begin(), normalizedHyperVolumes.end(), 0.0, plus<double>());
 
-    cerr << "Normalized Hyper-Volumes" << endl;
     ArrayXd centerCoordinate(2);
-    
+   
+    cout << "Nrmalized Hyper-Volumes" << endl;
     for (int n = 0; n < Nellipsoids; ++n)
     {
         normalizedHyperVolumes[n] /= sumOfHyperVolumes;
