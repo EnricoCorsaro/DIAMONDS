@@ -1,5 +1,6 @@
 //
-// Compile with: clang++ -o demoTwo2DCircles demoTwo2DCircles.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
+// Compile with: 
+// clang++ -o demoTwo2DCircles demoTwo2DCircles.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
 // 
 
 #include <cstdlib>
@@ -20,6 +21,7 @@
 #include "FerozReducer.h"
 #include "PowerlawReducer.h"
 #include "demoTwo2DCircles.h"
+#include "PrincipalComponentProjector.h"
 
 
 int main(int argc, char *argv[])
@@ -76,7 +78,12 @@ int main(int argc, char *argv[])
     int Ntrials = 10;
     double relTolerance = 0.01;
 
-    KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
+    bool printNdimensions = false;
+    PrincipalComponentProjector projector(printNdimensions);
+    bool featureProjectionActivated = false;
+
+    KmeansClusterer kmeans(myMetric, projector, featureProjectionActivated, 
+                           minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
     // ---------------------------------------------------------------------
@@ -105,7 +112,6 @@ int main(int argc, char *argv[])
     double tolerance = 1.e2;
     double exponent = 0.4;
     PowerlawReducer livePointsReducer(nestedSampler, tolerance, exponent, terminationFactor);
-    //FerozReducer livePointsReducer(nestedSampler, tolerance);
    
     string outputPathPrefix = "demoTwo2DCircles_";
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 

@@ -1,5 +1,6 @@
 //
-// Compile with: clang++ -o demoHimmelblauFunction demoHimmelblauFunction.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
+// Compile with: 
+// clang++ -o demoHimmelblauFunction demoHimmelblauFunction.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
 // 
 
 #include <cstdlib>
@@ -10,6 +11,7 @@
 #include "File.h"
 #include "MultiEllipsoidSampler.h"
 #include "KmeansClusterer.h"
+#include "GaussianMixtureClusterer.h"
 #include "EuclideanMetric.h"
 #include "Prior.h"
 #include "UniformPrior.h"
@@ -20,6 +22,7 @@
 #include "FerozReducer.h"
 #include "PowerlawReducer.h"
 #include "demoHimmelblauFunction.h"
+#include "PrincipalComponentProjector.h"
 
 
 int main(int argc, char *argv[])
@@ -77,9 +80,14 @@ int main(int argc, char *argv[])
     int minNclusters = 1;
     int maxNclusters = 6;
     int Ntrials = 10;
-    double relTolerance = 0.01;
+    double relTolerance = 0.01;             // k-means
 
-    KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
+    bool printNdimensions = false;
+    PrincipalComponentProjector projector(printNdimensions);
+    bool featureProjectionActivated = true;
+
+    KmeansClusterer clusterer(myMetric, projector, featureProjectionActivated,
+                           minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
     // ---------------------------------------------------------------------
@@ -91,7 +99,7 @@ int main(int argc, char *argv[])
     int minNobjects = 400;                          // Minimum number of active points allowed in the nesting process.
     int maxNdrawAttempts = 50000;                   // Maximum number of attempts when trying to draw a new sampling point.
     int NinitialIterationsWithoutClustering = 500;  // The first N iterations, we assume that there is only 1 cluster.
-    int NiterationsWithSameClustering = 20;         // Clustering is only happening every X iterations.
+    int NiterationsWithSameClustering = 200;         // Clustering is only happening every X iterations.
     double initialEnlargementFraction = 2.5;        // Fraction by which each axis in an ellipsoid has to be enlarged.
                                                     // It can be a number >= 0, where 0 means no enlargement.
     double shrinkingRate = 0.1;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
@@ -100,13 +108,12 @@ int main(int argc, char *argv[])
     double terminationFactor = 0.05;                // Termination factor for nesting loop.
 
 
-    MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
+    MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, clusterer, 
                                         initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
     
     double tolerance = 1.e2;
     double exponent = 0.4;
     PowerlawReducer livePointsReducer(nestedSampler, tolerance, exponent, terminationFactor);
-    //FerozReducer livePointsReducer(nestedSampler, tolerance); 
 
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
                       maxNdrawAttempts, terminationFactor, outputPathPrefix);

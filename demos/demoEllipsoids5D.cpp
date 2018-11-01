@@ -14,6 +14,7 @@
 #include "EuclideanMetric.h"
 #include "KmeansClusterer.h"
 #include "Ellipsoid.h"
+#include "PrincipalComponentProjector.h"
 
 using namespace std;
 using namespace Eigen;
@@ -43,7 +44,12 @@ int main()
     int Ntrials = 10;
     double relTolerance = 0.01;
 
-    KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
+    bool printNdimensions = false;
+    PrincipalComponentProjector projector(printNdimensions);
+    bool featureProjectionActivated = true;
+
+    KmeansClusterer kmeans(myMetric, projector, featureProjectionActivated, 
+                           minNclusters, maxNclusters, Ntrials, relTolerance); 
 
  
     // Do the clustering, and get for each point the index of the cluster it belongs to

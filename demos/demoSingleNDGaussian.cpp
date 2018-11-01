@@ -1,5 +1,6 @@
 //
-// Compile with: clang++ -o demoSingleNDGaussian demoSingleNDGaussian.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
+// Compile with: 
+// clang++ -o demoSingleNDGaussian demoSingleNDGaussian.cpp -L../build/ -I ../include/ -l diamonds -stdlib=libc++ -std=c++11 -Wno-deprecated-register
 // 
 
 #include <cstdlib>
@@ -20,6 +21,7 @@
 #include "FerozReducer.h"
 #include "PowerlawReducer.h"
 #include "demoSingleNDGaussian.h"
+#include "PrincipalComponentProjector.h"
 
 
 int main(int argc, char *argv[])
@@ -49,7 +51,7 @@ int main(int argc, char *argv[])
     // ----- Second step. Set up all prior distributions -----
     // -------------------------------------------------------
 
-    int Ndimensions = 3;        // Number of free parameters (dimensions) of the problem
+    int Ndimensions = 4;        // Number of free parameters (dimensions) of the problem
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersMinima(Ndimensions);
     ArrayXd parametersMaxima(Ndimensions);
@@ -76,7 +78,12 @@ int main(int argc, char *argv[])
     int Ntrials = 10;
     double relTolerance = 0.01;
 
-    KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
+    bool printNdimensions = false;
+    PrincipalComponentProjector projector(printNdimensions);
+    bool featureProjectionActivated = true;
+
+    KmeansClusterer kmeans(myMetric, projector, featureProjectionActivated, 
+                           minNclusters, maxNclusters, Ntrials, relTolerance); 
 
 
     // ---------------------------------------------------------------------
@@ -94,7 +101,7 @@ int main(int argc, char *argv[])
     double shrinkingRate = 0.8;                     // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                     // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                     // of the ellipsoids.
-    double terminationFactor = 0.01;                // Termination factor for nesting loop.
+    double terminationFactor = 1.0;                // Termination factor for nesting loop.
 
 
     // Start the computation
@@ -105,7 +112,6 @@ int main(int argc, char *argv[])
     double tolerance = 1.e2;
     double exponent = 0.4;
     PowerlawReducer livePointsReducer(nestedSampler, tolerance, exponent, terminationFactor);
-    //FerozReducer livePointsReducer(nestedSampler, tolerance);
 
     ostringstream numberString;
     numberString << Ndimensions;

@@ -10,6 +10,7 @@
 #include "File.h"
 #include "EuclideanMetric.h"
 #include "KmeansClusterer.h"
+#include "PrincipalComponentProjector.h"
 
 using namespace std;
 using namespace Eigen;
@@ -38,7 +39,12 @@ int main()
     int Ntrials = 10;
     double relTolerance = 0.01;
 
-    KmeansClusterer kmeans(myMetric, minNclusters, maxNclusters, Ntrials, relTolerance); 
+    bool printNdimensions = true;
+    PrincipalComponentProjector projector(printNdimensions);
+    bool featureProjectionActivated = false;
+
+    KmeansClusterer kmeans(myMetric, projector, featureProjectionActivated, 
+                           minNclusters, maxNclusters, Ntrials, relTolerance); 
 
  
     // Do the clustering, and get for each point the index of the cluster it belongs to
@@ -55,12 +61,20 @@ int main()
     cerr << "Input number of clusters: 4" << endl; 
     cerr << "Optimal number of clusters: " << optimalNclusters << endl;
     
+    ArrayXXd finalSample(Nrows,Ncols+1);
+    finalSample.block(0,0,Nrows,Ncols) = data;
+    
     for (int n = 0; n < Nrows; ++n)
     {
-        cout << data(n,0) << "  " << data(n,1) << "  " << data(n,2) << "  " 
-             << data(n,3) << "  " << data(n,4) << "  " << clusterIndices[n] << endl;
+        finalSample(n,Ncols) = clusterIndices[n];
     }
 
+    ofstream outputFile;
+    File::openOutputFile(outputFile, "clusterMembershipFromKmeans5D.txt");
+    outputFile << scientific << setprecision(4);
+    File::arrayXXdToFile(outputFile, finalSample);
+    outputFile.close();
+    
     // That's it!
  
     return EXIT_SUCCESS;
