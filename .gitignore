@@ -13,13 +13,14 @@ demos/*.rtf
 demos/reduced
 demos/standard
 demos/linear_test
-tutorials/gaussian_fit/GaussianFit_*
-tutorials/multilinear_fit/M1/*
-tutorials/multilinear_fit/M2/*
-tutorials/multilinear_fit/M3/*
-tutorials/multilinear_fit/M4/*
-tutorials/polynomial_fit/PolynomialFit_*
-tutorials/supergaussian_fit/SuperGaussianFit_*
+tutorials/gaussian_fit/GaussianFit_*.txt
+tutorials/multilinear_fit/M1/*.txt
+tutorials/multilinear_fit/M2/*.txt
+tutorials/multilinear_fit/M3/*.txt
+tutorials/multilinear_fit/M4/*.txt
+tutorials/polynomial_fit/PolynomialFit_*.txt
+tutorials/supergaussian_fit/SuperGaussianFit_*.txt
+docs/html/*
 
 # Compiled source 
 
