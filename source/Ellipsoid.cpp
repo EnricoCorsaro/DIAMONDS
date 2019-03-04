@@ -425,7 +425,7 @@ ArrayXd Ellipsoid::getEigenvalues()
 
 
 
-// Ellipsoid::getSampleOf()
+// Ellipsoid::getSample()
 //
 // PURPOSE: 
 //      Gets the protected data member sample.      

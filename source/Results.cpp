@@ -490,6 +490,7 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
 
         double parameterStart = 0.0;
         double parameterEnd = 0.0;
+        int binSize;
         parameterValuesRebinned.resize(Nbins);
         parameterValuesRebinned.setZero();
         marginalDistributionRebinned.resize(Nbins);
@@ -529,7 +530,7 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
                 
                 // Find the number of array elements belonging to the selected bin and take as parameter value the mid point
 
-                int binSize = Functions::countArrayIndicesWithinBoundaries(parameterValues, parameterStart, parameterEnd);
+                binSize = Functions::countArrayIndicesWithinBoundaries(parameterValues, parameterStart, parameterEnd);
                 parameterValuesRebinnedPerShift(j) = (parameterStart + parameterEnd)/2.0;
 
                 if (binSize > 0)

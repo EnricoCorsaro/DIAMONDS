@@ -122,7 +122,7 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
     // to the sum of the hyper-volumes over all the ellipsoids
 
     vector<double> normalizedHyperVolumes(Nellipsoids);
-    
+
     for (int n=0; n < Nellipsoids; ++n)
     {
         normalizedHyperVolumes[n] = ellipsoids[n].getHyperVolume();
@@ -279,18 +279,10 @@ bool MultiEllipsoidSampler::drawWithConstraint(const RefArrayXXd totalSample, co
         }
 
     } // end while-loop (newPointIsFound == false)
-
-
+    
     // Depending on whether we found a new point or not, return true or false.
 
-    if (newPointIsFound)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
+    return newPointIsFound;
 }
 
 
