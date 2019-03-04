@@ -19,7 +19,8 @@ using namespace Eigen;
 int main()
 {
     // Open the input file and read the data (synthetic sampling of a 2D parameter space)
-    
+    double startTime = time(0);
+
     ifstream inputFile;
     //File::openInputFile(inputFile, "twoclusters2D.txt");
     //File::openInputFile(inputFile, "threeclusters2D.txt");
@@ -39,8 +40,8 @@ int main()
     // Set up the K-means clusterer using a Euclidean metric
 
     EuclideanMetric myMetric;
-    int minNclusters = 2;
-    int maxNclusters = 15;
+    int minNclusters = 1;
+    int maxNclusters = 10;
     int Ntrials = 20;
     double relTolerance = 1.e-3;
 
@@ -81,7 +82,9 @@ int main()
     File::arrayXXdToFile(outputFile, finalSample);
     outputFile.close();
 
+    double endTime = time(0);
 
+    cout << "Total computational time: " << endTime - startTime << endl;
 
     // That's it!
  
