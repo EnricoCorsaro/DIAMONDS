@@ -25,7 +25,6 @@
 #include "LivePointsReducer.h"
 #include "File.h"
 
-
 using namespace std;
 using namespace Eigen;
 typedef Eigen::Ref<Eigen::ArrayXd> RefArrayXd;
@@ -42,9 +41,10 @@ class NestedSampler
                       Likelihood &likelihood, Metric &metric, Clusterer &clusterer); 
         ~NestedSampler();
         
-        void run(LivePointsReducer &livePointsReducer, const int NinitialIterationsWithoutClustering = 100, 
-                 const int NiterationsWithSameClustering = 50, const int maxNdrawAttempts = 5000, 
-                 const double maxRatioOfRemainderToCurrentEvidence = 0.05, string pathPrefix = "");
+        void run(LivePointsReducer &livePointsReducer, const int NinitialIterationsWithoutClustering = 1000, 
+                 const int NiterationsWithSameClustering = 50, const int maxNdrawAttempts = 10000, 
+                 const double minRatioOfRemainderToCurrentEvidence = 0.05, const int maxNiterations = 0, 
+                 string pathPrefix = "");
         
         virtual bool drawWithConstraint(const RefArrayXXd totalSample, const unsigned int Nclusters, const vector<int> &clusterIndices,
                                         const vector<int> &clusterSizes, RefArrayXd drawnPoint, 
@@ -106,14 +106,13 @@ class NestedSampler
         int NlivePoints;                            // Total number of live points at a given iteration
         int minNlivePoints;                         // Minimum number of live points allowed
         int reducedNdimensions;                     // Number of effective dimensions of the clustering when a feature projector is activated
-        double worstLiveLogLikelihood;              // The worst likelihood value of the current live sample
+        double worstLiveLogLikelihood;              // The worst log likelihood value of the current live sample
         double logCumulatedPriorMass;               // The total (cumulated) prior mass at a given nested iteration
         double logRemainingPriorMass;               // The remaining width in prior mass at a given nested iteration (log X)
         double ratioOfRemainderToCurrentEvidence;   // The current ratio of live to cumulated evidence 
         vector<int> NlivePointsPerIteration;        // A vector that stores the number of live points used at each iteration of the nesting process
         
         mt19937 engine;
-
         virtual bool verifySamplerStatus() = 0; 
         
 

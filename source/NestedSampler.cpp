@@ -115,7 +115,7 @@ NestedSampler::~NestedSampler()
 //                                            likely purely noise.
 //      NiterationsWithSameClustering:        A new clustering will only happen every N iterations.
 //      maxNdrawAttempts:                     The maximum number of attempts allowed when drawing from a single ellipsoid.
-//      maxRatioOfRemainderToCurrentEvidence: The fraction of remainder evidence to gained evidence used to terminate 
+//      minRatioOfRemainderToCurrentEvidence: The minimum fraction of remainder evidence to gained evidence used to terminate 
 //                                            the nested iteration loop. This value is also used as a tolerance on the final
 //                                            evidence to update the number of live points in the nesting process.
 //      pathPrefix:                           A string specifying the path where the output information from the Nested Sampler
@@ -131,11 +131,12 @@ NestedSampler::~NestedSampler()
 
 void NestedSampler::run(LivePointsReducer &livePointsReducer, const int NinitialIterationsWithoutClustering, 
                         const int NiterationsWithSameClustering, const int maxNdrawAttempts, 
-                        const double maxRatioOfRemainderToCurrentEvidence, string pathPrefix)
+                        const double minRatioOfRemainderToCurrentEvidence, const int maxNiterations, 
+                        string pathPrefix)
 {
     int startTime = time(0);
     double logMeanLiveEvidence;
-    terminationFactor = maxRatioOfRemainderToCurrentEvidence;
+    terminationFactor = minRatioOfRemainderToCurrentEvidence;
     outputPathPrefix = pathPrefix;
 
     if (printOnTheScreen)
@@ -163,12 +164,13 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     outputFile << "# Row #6: maxNdrawAttempts" << endl;
     outputFile << "# Row #7: terminationFactor" << endl;
     outputFile << "# Row #8: Niterations" << endl;
-    outputFile << "# Row #9: Optimal Niterations" << endl;
-    outputFile << "# Row #10: Final Nclusters" << endl;
-    outputFile << "# Row #11: Final NlivePoints" << endl;
-    outputFile << "# Row #12: Computational Time (seconds)" << endl;
-    outputFile << "# Row #13: Error: No better likelihood found (1 = yes / 0 = no)" << endl;
-    outputFile << "# Row #14: Error: Ellipsoid matrix decomposition failed (1 = yes / 0 = no)" << endl;
+    outputFile << "# Row #9: Maximum number of nested iterations (0 if not set)" << endl;
+    outputFile << "# Row #10: Optimal Niterations" << endl;
+    outputFile << "# Row #11: Final Nclusters" << endl;
+    outputFile << "# Row #12: Final NlivePoints" << endl;
+    outputFile << "# Row #13: Computational Time (seconds)" << endl;
+    outputFile << "# Row #14: Error: No better likelihood found (1 = yes / 0 = no)" << endl;
+    outputFile << "# Row #15: Error: Ellipsoid matrix decomposition failed (1 = yes / 0 = no)" << endl;
     outputFile << Ndimensions << endl;
     outputFile << initialNlivePoints << endl;
     outputFile << minNlivePoints << endl;
@@ -176,7 +178,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     outputFile << NiterationsWithSameClustering << endl;
     outputFile << maxNdrawAttempts << endl;
     outputFile << terminationFactor << endl;
-
+    
 
     // Set up the random number generator. It generates integer random numbers
     // between 0 and NlivePoints-1, inclusive.
@@ -228,7 +230,8 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     // Compute the log(Likelihood) for each of our points in the live sample
 
     logLikelihood.resize(NlivePoints);
-    
+   
+    #pragma omp parallel for
     for (int i = 0; i < NlivePoints; ++i)
     {
         logLikelihood(i) = likelihood.logValue(nestedSample.col(i));
@@ -324,21 +327,29 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         }
 
         logMeanLikelihoodOfLivePoints -= log(NlivePoints);
-                
+               
 
         // Find clusters in our live sample of points. Don't do this every iteration but only
-        // every x iterations, where x is given by 'NiterationsWithSameClustering'.
+        // every X iterations, where X is given by 'NiterationsWithSameClustering'.
         
         if ((Niterations % NiterationsWithSameClustering) == 0)
-        {            
+        {
             // Don't do clustering the first N iterations, where N is user-specified. That is, 
             // the first N iterations we assume that there is only 1 cluster containing all the points.
             // This is often useful because initially the points may be sampled from a uniform prior,
             // and we therefore don't expect any clustering _before_ the algorithm is able to tune in on 
             // the island(s) of high likelihood. Clusters found in the first N initial iterations are
             // therefore likely purely noise.
-        
-            if (Niterations < NinitialIterationsWithoutClustering)
+            
+            if (Niterations > NinitialIterationsWithoutClustering)
+            {
+                // After the first N initial iterations, we do a proper clustering.
+                
+                clusterSizes.clear();
+                Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes);
+                reducedNdimensions = clusterer.getReducedNdimensions();
+            }
+            else         
             {
                 // There is only 1 cluster, containing all objects. All points have the same cluster
                 // index, namely 0.
@@ -348,16 +359,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
                 clusterSizes[0] = NlivePoints;
                 fill(clusterIndices.begin(), clusterIndices.end(), 0);
             }
-            else         
-            {
-                // After the first N initial iterations, we do a proper clustering.
-                
-                clusterSizes.clear();
-                Nclusters = clusterer.cluster(nestedSample, clusterIndices, clusterSizes);
-                reducedNdimensions = clusterer.getReducedNdimensions();
-            }
         }
-
 
 
         // Draw a new point, which should replace the point with the worst likelihood.
@@ -386,6 +388,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
         ArrayXd drawnPoint = nestedSample.col(indexOfRandomlyChosenLivePoint);
         double logLikelihoodOfDrawnPoint = 0.0;
+
         bool newPointIsFound = drawWithConstraint(nestedSample, Nclusters, clusterIndices, clusterSizes, 
                                                   drawnPoint, logLikelihoodOfDrawnPoint, maxNdrawAttempts); 
 
@@ -492,9 +495,17 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         logMeanLiveEvidenceOfPosteriorSample(Niterations) = logMeanLiveEvidence;
 
 
-        // Re-evaluate the stopping criterion, using the condition suggested by Keeton (2011)
+        // Re-evaluate the stopping criterion, using the condition suggested by Keeton (2011) or the total
+        // number of nested iterations
 
-        nestedSamplingShouldContinue = (ratioOfRemainderToCurrentEvidence > maxRatioOfRemainderToCurrentEvidence);
+        if (maxNiterations == 0)
+        {
+            nestedSamplingShouldContinue = (ratioOfRemainderToCurrentEvidence > minRatioOfRemainderToCurrentEvidence);
+        }
+        else
+        {   
+            nestedSamplingShouldContinue = (Niterations <= maxNiterations);
+        }
 
 
         // Shrink prior mass interval according to proper number of live points 
@@ -620,6 +631,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     // Append information to existing output file and close stream afterwards
     
     outputFile << Niterations << endl;
+    outputFile << maxNiterations << endl;
     outputFile << static_cast<int>((NlivePoints*informationGain) + (NlivePoints*sqrt(Ndimensions*1.0))) << endl;
     outputFile << Nclusters << endl;
     outputFile << NlivePoints << endl;
