@@ -59,6 +59,7 @@ class GaussianMixtureClusterer : public Clusterer
         void computeGaussianMixtureModel(RefArrayXXd sample);
         
         bool updateClustersUntilConverged(RefArrayXXd sample);
+        bool searchForEmptyClusters();
         void obtainClusterMembership(vector<int> &optimalClusterIndices, vector<int> &optimalClusterSizes,
                                         RefArrayXXd optimalAssignmentProbabilities);
 

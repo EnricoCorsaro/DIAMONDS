@@ -303,7 +303,7 @@ void GaussianMixtureClusterer::computeGaussianMixtureModel(RefArrayXXd sample)
 //      all clusters contain at least 2 points.
 
 
-bool GaussianMixtureClusterer::updateClustersUntilConverged(RefArrayXXd sample)
+bool GaussianMixtureClusterer::updateClustersUntilConverged(RefArrayXXd optimizedSample)
 {
     // Perform the GMM EM clustering iteration, each time improving the cluster centers and covariance matrices.
     // Once convergence is reached, determe which points belongs to which cluster
@@ -321,7 +321,7 @@ bool GaussianMixtureClusterer::updateClustersUntilConverged(RefArrayXXd sample)
         // the probabilities computed from each cluster (weights). 
     
         amplitudes = responsibilities/Npoints; 
-        centers = sample.matrix() * assignmentProbabilities.matrix();
+        centers = optimizedSample.matrix() * assignmentProbabilities.matrix();
         centers = centers.rowwise()/responsibilities.transpose();
 
 
@@ -329,7 +329,7 @@ bool GaussianMixtureClusterer::updateClustersUntilConverged(RefArrayXXd sample)
 
         for (int i = 0; i < Nclusters; i++)
         {
-            differenceFromCenters.block(0,i*Npoints,Ndimensions, Npoints) = sample.colwise() - centers.col(i);
+            differenceFromCenters.block(0,i*Npoints,Ndimensions, Npoints) = optimizedSample.colwise() - centers.col(i);
 
             covarianceMatrices.block(0, i*Ndimensions,Ndimensions, Ndimensions) = 
                     differenceFromCenters.block(0, i*Npoints,Ndimensions, Npoints).matrix() * 
@@ -357,7 +357,7 @@ bool GaussianMixtureClusterer::updateClustersUntilConverged(RefArrayXXd sample)
             
         // If this step has been reached, then covariance matrices are invertible and the GMM can be computed
             
-        computeGaussianMixtureModel(sample);
+        computeGaussianMixtureModel(optimizedSample);
        
 
         // A new set of clusters has been determined.
@@ -378,7 +378,6 @@ bool GaussianMixtureClusterer::updateClustersUntilConverged(RefArrayXXd sample)
         }
 
         loop++;
-
     }  // end GMM updating loop 
     
     
@@ -388,6 +387,52 @@ bool GaussianMixtureClusterer::updateClustersUntilConverged(RefArrayXXd sample)
     
     return convergenceReached;  
 }
+
+
+
+
+
+
+
+
+
+
+
+// GaussianMixtureClusterer::searchForEmptyClusters()
+//
+// PURPOSE: 
+//      Use the optimal solution from the Gaussian Mixture Model clustering algorithm 
+// based on Expectation Maximization to determine whether a cluster exist without points inside.
+//
+// OUTPUT:
+//      void
+//
+
+bool GaussianMixtureClusterer::searchForEmptyClusters()
+{
+    Index maxIndexOfCluster;        // Store subscript containing index of cluster
+    double maxAssignmentProbability;
+    bool noEmptyClustersFound = true;
+    ArrayXi clusterNumberOfPoints(Nclusters);
+    clusterNumberOfPoints.setZero();
+
+    for (int i = 0; i < Npoints; ++i)
+    {
+        maxAssignmentProbability = assignmentProbabilities.row(i).maxCoeff(&maxIndexOfCluster);
+        clusterNumberOfPoints(maxIndexOfCluster)++;
+    }
+
+
+    // Discard a cluster if it has less than 2 points
+
+    if (clusterNumberOfPoints.minCoeff() <= 1)
+    {
+        noEmptyClustersFound = false;
+    }
+    
+    return noEmptyClustersFound;
+}
+
 
 
 
@@ -482,6 +527,8 @@ int GaussianMixtureClusterer::cluster(RefArrayXXd sample, vector<int> &optimalCl
     modelProbability.resize(Npoints);
 
     bool convergedSuccessfully;
+    bool noEmptyClustersFound;
+    bool allClustersAreNotEmpty; 
     unsigned int optimalNclusters;    
 
 
@@ -510,7 +557,7 @@ int GaussianMixtureClusterer::cluster(RefArrayXXd sample, vector<int> &optimalCl
     for (unsigned int c = minNclusters; c <= maxNclusters; ++c)
     {
         Nclusters = c;
-
+        cout << "GMM: Number of clusters inspected: " << Nclusters << " out of " << maxNclusters << endl;
 
         // Give an initial random set of amplitudes for the selected number of clusters
        
@@ -561,8 +608,11 @@ int GaussianMixtureClusterer::cluster(RefArrayXXd sample, vector<int> &optimalCl
         
         bestTotalLogOfModelProbability = -1.0*numeric_limits<double>::max();
         
+        allClustersAreNotEmpty = false;     // Assume by default that at least one cluster having not enough points can exist
+        
         for (int m = 0; m < Ntrials; ++m)
         {
+            // cout << "Number of trail: " << m << endl;
             chooseInitialClusterCenters(optimizedSample);
             chooseInitialClusterCovarianceMatrices(optimizedSample);
             
@@ -571,15 +621,22 @@ int GaussianMixtureClusterer::cluster(RefArrayXXd sample, vector<int> &optimalCl
             totalLogOfModelProbability = minTotalLogOfModelProbability;
 
             convergedSuccessfully = updateClustersUntilConverged(optimizedSample);
-
+            noEmptyClustersFound = searchForEmptyClusters();
+            
 
             // If the convergence was not successfull (e.g. because some clusters contain 0 or 1 points),
             // we likely had an unfortunate set of initial cluster centers. In this case, simply continue
             // with the next 'trial'.
-           
 
             if (!convergedSuccessfully) continue;
-   
+            if (!noEmptyClustersFound) continue;
+
+
+            // If here, then the trail has a set of clusters where each one contains at least 2 points.
+            // In this case this set with Nclusters is considered valid and we store this information.
+            
+            allClustersAreNotEmpty = noEmptyClustersFound;
+
 
             // If we did obtain a successful convergence, compare it with the previous clusterings 
             // (all of them with the same number of clusters), and keep the best one.
@@ -594,6 +651,12 @@ int GaussianMixtureClusterer::cluster(RefArrayXXd sample, vector<int> &optimalCl
 
         } // end loop over Ntrials to determine the best clustering trying different initial centers
        
+
+        // Do not explore additional number of clusters since the current set cannot find a solution where
+        // all the clusters are not empty (it is supposed to become worse if we incrase Nclusters).
+
+        if (!allClustersAreNotEmpty) break;
+
 
         // Identify the number of clusters that is best at reproducing the sample. This can be done by directly inspecting
         // the total model probability since the GMM is a probability function by definition.
@@ -631,7 +694,6 @@ int GaussianMixtureClusterer::cluster(RefArrayXXd sample, vector<int> &optimalCl
         {
             // User allowed only 1 particular number of clusters. There is no need to check for the best
             // number of clusters.
-                         
             optimalNclusters = Nclusters;
             optimalCenters.resize(Ndimensions, Nclusters);
             optimalCenters = bestCenters;
@@ -647,10 +709,20 @@ int GaussianMixtureClusterer::cluster(RefArrayXXd sample, vector<int> &optimalCl
     // an identical way from the reduced sample to the original sample because the number of data points is unchanged
     // during the dimensionality reduction process.
 
-    optimalClusterSizes.resize(optimalNclusters);
-    obtainClusterMembership(optimalClusterIndices, optimalClusterSizes, optimalAssignmentProbabilities);
+    if (allClustersAreNotEmpty || (!allClustersAreNotEmpty && (Nclusters > minNclusters)))
+    {
+        optimalClusterSizes.resize(optimalNclusters);
+        obtainClusterMembership(optimalClusterIndices, optimalClusterSizes, optimalAssignmentProbabilities);
+    }
+    else
+    {
+        cout << "Could not find cluster solution with input Nclusters range." << endl;
+        cout << "Setting optimal number of clusters to 1 (entire sample)." << endl;
+        optimalNclusters = 1;
+    }
 
     // That's it!
+
 
     return optimalNclusters;
 }
