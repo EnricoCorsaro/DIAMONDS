@@ -198,7 +198,7 @@ double SuperGaussianPrior::logDensity(RefArrayXd const x, const bool includeCons
             // If point is falling in the Gaussian tails then compute the logDensity according to the non-normalized Gaussian function
             // having unitary maximum amplitude
 
-            logDens += -0.5 * pow((fabs(x(i) - center(i)) - halfWidthOfPlateau(i))/sigma(i),2);     // The total logDensity is updated
+            logDens += -0.5 * pow((fabs(position(i)) - halfWidthOfPlateau(i))/sigma(i),2);     // The total logDensity is updated
         }
     }
 

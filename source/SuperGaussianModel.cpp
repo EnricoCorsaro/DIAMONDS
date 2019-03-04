@@ -94,7 +94,7 @@ void SuperGaussianModel::predict(RefArrayXd predictions, RefArrayXd const modelP
         {
             // If the point is outside the region of the plateau, set its prediction value to that of a Gaussian function 
             
-            argument = -0.5 * pow((fabs(position(i) - meanValue) - halfWidthOfPlateau)/standardDeviation,2);
+            argument = -0.5 * pow((fabs(position(i)) - halfWidthOfPlateau)/standardDeviation,2);
             predictions(i) = exp(argument)*amplitude;
         }
     }
