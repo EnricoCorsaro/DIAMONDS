@@ -3,8 +3,8 @@
 import os
 import sys
 # sys.path.insert(0, os.path.abspath('.'))
-from jupyter_sphinx_theme import *
-init_theme()
+#from jupyter_sphinx_theme import *
+#init_theme()
 
 
 # -- Project information -----------------------------------------------------
@@ -95,3 +95,6 @@ html_static_path = ['_static']
 #---sphinx-themes-----
 #from jupyter_sphinx_theme import *
 #init_theme()
+
+html_theme = 'jupyter_sphinx_theme'
+html_theme_path = ['../',]
