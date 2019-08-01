@@ -44,8 +44,3 @@ Navigation
    publications
    events
    logo
-
-Indices
-^^^^^^^
-* :ref:`genindex`
-* :ref:`search`

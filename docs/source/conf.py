@@ -16,7 +16,7 @@ author = 'Enrico Corsaro'
 # The short X.Y version
 version = ''
 # The full version, including alpha/beta/rc tags
-release = '1'
+release = ''
 
 
 # -- General configuration ---------------------------------------------------
@@ -95,5 +95,6 @@ html_static_path = ['_static']
 #from jupyter_sphinx_theme import *
 #init_theme()
 
-html_theme = 'jupyter_sphinx_theme'
-html_theme_path = ['../',]
+#html_theme = 'jupyter_sphinx_theme'
+html_theme = 'classic'
+#html_theme_path = ['../',]
