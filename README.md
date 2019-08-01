@@ -18,4 +18,4 @@ The <b>DIAMONDS</b> (high-<b>DI</b>mensional <b>A</b>nd multi-<b>MO</b>dal <b>N<
 </div>
 
 ### Documentation
-Please make sure you read the documentation at [diamonds.readthedocs.io](diamonds.readthedocs.io) before installing and using the code.
+Please make sure you read the documentation at [diamonds.readthedocs.io](http://diamonds.readthedocs.io/) before installing and using the code.
