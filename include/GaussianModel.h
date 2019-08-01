@@ -1,4 +1,4 @@
-// Derived class for building a gaussian model
+// Derived class for building a multi-dimensional Gaussian model
 // Created by Enrico Corsaro @ OACT - December 2017
 // e-mail: emncorsaro@gmail.com
 // Header file "GaussianModel.h"

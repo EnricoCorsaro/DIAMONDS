@@ -1,4 +1,4 @@
-// Derived class for building a linear model
+// Derived class for building a polynomial model
 // Created by Enrico Corsaro @ OACT - December 2017
 // e-mail: emncorsaro@gmail.com
 // Header file "PolynomialModel.h"

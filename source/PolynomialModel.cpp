@@ -73,7 +73,7 @@ int PolynomialModel::getNdegrees()
 // PolynomialModel::predict()
 //
 // PURPOSE:
-//      Builds the predictions from a quadratic model of the type f = offset + a*x + b*x^2 + c*x^3 + ...
+//      Builds the predictions from a polynomial model of the type f = offset + a*x + b*x^2 + c*x^3 + ...
 //      where offset, a, b, c, ... are the free parameters and x the covariates.
 //      The free parameters related to the covariates have to be sorted in increasing degree order.
 //

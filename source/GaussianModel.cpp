@@ -52,11 +52,8 @@ GaussianModel::~GaussianModel()
 // GaussianModel::predict()
 //
 // PURPOSE:
-//      Builds the predictions from a multilinear model of the type y = offset + a*x_1 + b*x_2 + c*x_3 ...
-//      where offset, a, b, c, ... are the free parameters and x_i the independent covariates.
-//      It is implicit that the covariates are expressed as natural logarithms, otherwise the
-//      multilinear model is not valid. The order of the free parameters has to respect the same
-//      column order as the input dataset. The offset parameter is always the last one.
+//      Builds the predictions from a multi-dimensional Gaussian model as a function of the
+//      x_i the independent covariates.
 //
 // INPUT:
 //      predictions:        one-dimensional array to contain the predictions
