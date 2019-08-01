@@ -10,12 +10,12 @@ Prerequisites
 
 1. We advise you to first read the original code paper describing the code, `E. Corsaro & J. De Ridder 2014 A&A, 571, 71 <https://www.aanda.org/articles/aa/abs/2014/11/aa24181-14/aa24181-14.html>`_. This is a preliminary task that is necessary to become more familiar with the working scheme of the code and the meaning of its configuring parameters.
 
-2. Before installing DIAMONDS you need to install the `CMake <http://www.cmake.org/>`_ compiler, a compiler suited for C, C++ source files that is able to recognize the most suited compiler installed in your machine, depending on the platform you have. For Mac OS X it is clang, while for Linux-based OS is gcc. For our purposes, we recommend you to install a version 2.8 or later. You can find the dmg file of the version 2.8.12.2 (suggested for Mavericks OS) `here <http://www.cmake.org/files/v2.8/cmake-2.8.12.2-Darwin64-universal.dmg>`_, while more recent versions are required for El Captain OS (we recommend version 3.5.1). 
+2. Before installing DIAMONDS you need to install the `CMake <http://www.cmake.org/>`_ compiler, a compiler suited for C, C++ source files that is able to recognize the most suited compiler installed in your machine, depending on the platform you have. For Mac OS X it is clang, while for Linux-based OS it is gcc. For our purposes, we recommend you to install CMake 2.8 or later. You can find the dmg file of the version 2.8.12.2 (suggested for Mavericks OS) `here <http://www.cmake.org/files/v2.8/cmake-2.8.12.2-Darwin64-universal.dmg>`_, while more recent versions are required for El Captain OS or more recent OS X (we recommend CMake version 3.5.1 or later in this case). 
 
     .. warning:: 
         Make sure you install the CMake command line tool as well, since you need that to compile DIAMONDS via terminal. To do so, either open the CMake app and go to Tools/Install for Command Line Use if you have installed it already, or select the option during the installation phase. To avoid further compilation issues, we also recommend to update Xcode to its latest version.
 
-3. Retrieve the code package from the public GitHub repository. How to retrieve the package and a description of the content of the package are presented in the :ref:`package_content` section of this website, and we suggest you to read this information before proceeding.
+3. Retrieve the code package from the public GitHub repository. How to retrieve the package and a description of the content of the package are presented in the :ref:`package_content` section of this website. We also recommend to read this information before proceeding.
 
 
 Mac OS X 10.6 or later
