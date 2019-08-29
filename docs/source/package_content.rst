@@ -172,9 +172,9 @@ Tutorials
 
 The current version of the code includes a number of tutorials that are ready to be compiled and run in your system. These tutorials allow you to have a good starting point to set up DIAMONDS for your own application, as well as providing suitable examples of real-life applications that can be used in a variety of fields. The tutorials available are:
 
-- Polynomial Fit: to perform a fit using a polynomial of an arbitraty degree
+- Polynomial Fit: to perform a fit using a polynomial of an arbitrary degree
 - Gaussian Fit: to perform a fit using a multi-dimensional Gaussian over an arbitrary number of input covariates
-- Multi-Linear fit: to perform a fit using a multi-linear model over an arbitraty number of input covariates, and related uncertainties
+- Multi-Linear fit: to perform a fit using a multi-linear model over an arbitrary number of input covariates, and related uncertainties
 
 For more information on the tutorials, how to compile the codes, and run the tests, please refer to the hands-on tutorial presentation available `here <https://github.com/EnricoCorsaro/DIAMONDS/blob/master/docs/pdf/DIAMONDS_10012018_Tutorials.pdf>`_.
 
