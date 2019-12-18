@@ -4,9 +4,13 @@ Publications
 ============
 In the following we list publications in peer-reviewed journals and other non-refereed journals that have used DIAMONDS.
 
-Peer-reviewd journals
-^^^^^^^^^^^^^^^^^^^^^
-- Bonanno A., Corsaro E., Del Sordo F. et al. 2019, `Acoustic oscillations and dynamo action in the G8 sub-giant EK Eri <https://arxiv.org/pdf/1907.01338.pdf>`_, Astronomy & Astrophysics (in press)
+Peer-reviewed journals
+^^^^^^^^^^^^^^^^^^^^^^
+- Silva Aguirre V., Stello D., Stokholm A. et al. 2019, `Detection and characterisation of oscillating red giants: first results from the TESS satellite
+<https://ui.adsabs.harvard.edu/abs/2019arXiv191207604S/abstract>`_, The Astrophyisical Journal Letters (in press) 
+- Pereira F., Campante T. L., Cunha M. et al. 2019, `Gaussian process modelling of granulation and oscillations in red giant stars <https://academic.oup.com/mnras/article/489/4/5764/5561520>`_, Monthly Notices of the Royal Astronomical Society, 489, 5764
+- Campante T. L., Corsaro E., Lund M. N. et al. 2019, `TESS Asteroseismology of the Known Red-giant Host Stars HD 212771 and HD 203949 <https://iopscience.iop.org/article/10.3847/1538-4357/ab44a8>`_, The Astrophysical Journal, 885, 31 
+- Bonanno A., Corsaro E., Del Sordo F. et al. 2019, `Acoustic oscillations and dynamo action in the G8 sub-giant EK Eri <https://www.aanda.org/articles/aa/abs/2019/08/aa35834-19/aa35834-19.html>`_, Astronomy & Astrophysics, 628, 106
 - Viani L., Basu S., Corsaro E. et al. 2019, `Determining the Best Method of Calculating the Large Frequency Separation For Stellar Models <https://iopscience.iop.org/article/10.3847/1538-4357/ab232e>`_, The Astrophysical Journal, 879, 33
 - Huber D., Chaplin W. J., Chontos A. 2019, `A Hot Saturn Orbiting an Oscillating Late Subgiant Discovered by TESS <https://iopscience.iop.org/article/10.3847/1538-3881/ab1488>`_, The Astronomical Journal, 157, 245
 - Creevey O., Grundahl F., Thévenin F. 2019, `First detection of oscillations in the Halo giant HD 122563: Validation of seismic scaling relations and new parameters <https://www.aanda.org/articles/aa/abs/2019/05/aa34721-18/aa34721-18.html>`_, Astronomy & Astrophysics, 625, 33
@@ -32,7 +36,6 @@ Peer-reviewd journals
 
 Non peer-reviewed journals
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
-
 
 - Beck P. G., Kallinger T., Pavlovski, K. et al. 2017, `Constraining stellar physics from red-giant stars in binaries - stellar rotation, mixing processes and stellar activity <https://www.epj-conferences.org/articles/epjconf/abs/2017/29/epjconf_azores2017_05008/epjconf_azores2017_05008.html>`_, Conference proceedings for KASC meeting "Seismology of the Sun and the Distant Stars 2016"
 - Corsaro E., Yueh-Ning L., García R. A. et al. 2016, `Formation history of old open clusters constrained by detailed asteroseismology of red giant stars observed by Kepler <http://adsabs.harvard.edu/abs/2016sf2a.conf..203C>`_, Conference proceeding for SF2A 2016
