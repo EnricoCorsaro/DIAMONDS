@@ -6,10 +6,9 @@ In the following we list publications in peer-reviewed journals and other non-re
 
 Peer-reviewed journals
 ^^^^^^^^^^^^^^^^^^^^^^
-- Silva Aguirre V., Stello D., Stokholm A. et al. 2019, `Detection and characterisation of oscillating red giants: first results from the TESS satellite
-<https://ui.adsabs.harvard.edu/abs/2019arXiv191207604S/abstract>`_, The Astrophyisical Journal Letters (in press) 
+- Silva Aguirre V., Stello D., Stokholm A. et al. 2019, `Detection and characterisation of oscillating red giants: first results from the TESS satellite <https://ui.adsabs.harvard.edu/abs/2019arXiv191207604S/abstract>`_, The Astrophyisical Journal Letters (in press)
 - Pereira F., Campante T. L., Cunha M. et al. 2019, `Gaussian process modelling of granulation and oscillations in red giant stars <https://academic.oup.com/mnras/article/489/4/5764/5561520>`_, Monthly Notices of the Royal Astronomical Society, 489, 5764
-- Campante T. L., Corsaro E., Lund M. N. et al. 2019, `TESS Asteroseismology of the Known Red-giant Host Stars HD 212771 and HD 203949 <https://iopscience.iop.org/article/10.3847/1538-4357/ab44a8>`_, The Astrophysical Journal, 885, 31 
+- Campante T. L., Corsaro E., Lund M. N. et al. 2019, `TESS Asteroseismology of the Known Red-giant Host Stars HD 212771 and HD 203949 <https://iopscience.iop.org/article/10.3847/1538-4357/ab44a8>`_, The Astrophysical Journal, 885, 31
 - Bonanno A., Corsaro E., Del Sordo F. et al. 2019, `Acoustic oscillations and dynamo action in the G8 sub-giant EK Eri <https://www.aanda.org/articles/aa/abs/2019/08/aa35834-19/aa35834-19.html>`_, Astronomy & Astrophysics, 628, 106
 - Viani L., Basu S., Corsaro E. et al. 2019, `Determining the Best Method of Calculating the Large Frequency Separation For Stellar Models <https://iopscience.iop.org/article/10.3847/1538-4357/ab232e>`_, The Astrophysical Journal, 879, 33
 - Huber D., Chaplin W. J., Chontos A. 2019, `A Hot Saturn Orbiting an Oscillating Late Subgiant Discovered by TESS <https://iopscience.iop.org/article/10.3847/1538-3881/ab1488>`_, The Astronomical Journal, 157, 245
