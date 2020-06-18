@@ -112,7 +112,7 @@ int main(int argc, char *argv[])
    
     string outputPathPrefix = "demoSingle2DGaussian_";
     nestedSampler.run(livePointsReducer, NinitialIterationsWithoutClustering, NiterationsWithSameClustering, 
-                      maxNdrawAttempts, terminationFactor, 0, outputPathPrefix);
+                      maxNdrawAttempts, terminationFactor, 1000, outputPathPrefix);
 
     nestedSampler.outputFile << "# List of configuring parameters used for the ellipsoidal sampler and X-means" << endl;
     nestedSampler.outputFile << "# Row #1: Minimum Nclusters" << endl;
