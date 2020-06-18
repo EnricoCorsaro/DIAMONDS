@@ -15,13 +15,43 @@ Prerequisites
     .. warning:: 
         Make sure you install the CMake command line tool as well, since you need that to compile DIAMONDS via terminal. To do so, either open the CMake app and go to Tools/Install for Command Line Use if you have installed it already, or select the option during the installation phase. To avoid further compilation issues, we also recommend to update Xcode to its latest version.
 
+You also have the possibility to install cmake directly from the terminal. If you are running on a Mac OS X system, then execute the command
+
+.. code:: shell
+    
+    $ sudo brew install cmake
+
+If you are running on a Unix system such as Ubuntu, then use the command
+
+.. code:: shell
+
+    $ sudo apt-get install cmake
+
+Alternatively, CMake can be installed automatically with the pipeline by using the installing shell script, ``install_osx.sh`` for Mac OS X, or ``install_unix.sh`` for Unix OS, that is provided in the GitHub repository of FAMED.
+
 3. Retrieve the code package from the public GitHub repository. How to retrieve the package and a description of the content of the package are presented in the :ref:`package_content` section of this website. We also recommend to read this information before proceeding.
 
 
+Shell script installation
+^^^^^^^^^^^^^^^^^^^^^^^^^
+If you decide to perform a shell script installation then you need to execute the shell script ``install_osx.sh`` for Mac OS X, or ``install_unix.sh`` for Unix OS. The shell scripts are made different depending on which OS you are running because different compilers are used and because Unix systems may require some additional fixes during the installation process (see also the section below). The scripts are available in the GitHub repository of DIAMONDS, for `Mac OS X <https://github.com/EnricoCorsaro/DIAMONDS/blob/master/install_osx.sh>`_ and for `Unix OS <https://github.com/EnricoCorsaro/DIAMONDS/blob/master/install_unix.sh>`_. Once you downloaded the script, place it under the main folder where you want all the software installed. Then we recommend to make it an executable by typing the terminal command (e.g. for the Mac OS version)
+
+.. code:: shell
+    
+    $ chmod +x install_osx.sh
+
+In order to start the installation from scratch, go to the directory where you want to place the DIAMONDS software and run the following command via terminal
+
+.. code:: shell
+    
+    $ ./install_osx.sh
+
+The shell script will also compile one demo of DIAMONDS and make a run test for it. If you are able to see the demo test running, then your code has been installed successfully.
+
 Mac OS X 10.6 or later
 ^^^^^^^^^^^^^^^^^^^^^^
-The installation procedure is rather simple. However, we recommend you to strictly follow the steps listed below in the same order as they are indicated.
-Once you have installed CMake, we can proceed by compiling the code. To do so, go to your Diamonds directory, then open the ASCII file CMakeLists.txt. Inside you will find the first lines commented with what you need to execute via terminal.
+If one wants to follow a standard manual installation, the procedure is rather simple. However, we recommend you to strictly follow the steps listed below in the same order as they are indicated.
+Once you have downloaded the DIAMONDS package and installed CMake following step #2 of the prerequisites, we can proceed by compiling the code. To do so, go to your Diamonds directory, then open the ASCII file CMakeLists.txt. Inside you will find the first lines commented with what you need to execute via terminal.
 Simply follow the guidline below. Starting from your Diamonds directory:
 
 .. code:: shell
@@ -97,7 +127,7 @@ Alternatively you can set an environment variable and store the information in y
 
 .. code:: bash
     
-    setenv LD_LIBRARY_PATH /localPath/Diamonds/build
+    export LD_LIBRARY_PATH=/localPath/Diamonds/build
 
 
 Compilation failure due to hidden files starting with ._
@@ -165,6 +195,6 @@ The problem is that the GNU compiler is generating ``rep; ret`` instructions to 
 A version of Binutils that causes the problem is the GNU assembler (Linux/GNU Binutils) 2.22.52. To solve the problem, it is necessary to install a more recent version of Binutils, namely the 2.23.52 (or later).
 
 
-Windows OS
-^^^^^^^^^^
-TBW
+Windows OS 10
+^^^^^^^^^^^^^
+For Windows OS 10 we recommend using the free applications for creating an Ubuntu virtual machine. For details on how to set up this environment, visit `Install Ubuntu on Windows 10 <https://github.com/EnricoCorsaro/DIAMONDS/blob/master/install_unix.sh>`_. Once the Ubuntu VM is installed and running in Windows OS, simply follow the guidlines presented in the Linux OS section of this page. You can even decide to use the shell script installation with the ``install_unix.sh`` script inside the Ubuntu VM, making sure to have the basic ubuntu packages installed, which include the GCC compiler suite.
