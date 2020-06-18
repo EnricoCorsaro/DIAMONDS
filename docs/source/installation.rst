@@ -197,6 +197,6 @@ A version of Binutils that causes the problem is the GNU assembler (Linux/GNU Bi
 
 Windows OS 10
 ^^^^^^^^^^^^^
-For Windows OS 10 we recommend using the free application for creating an Ubuntu virtual machine. For details on how to set up this environment, visit `Install Ubuntu on Windows 10 <https://github.com/EnricoCorsaro/DIAMONDS/blob/master/install_unix.sh>`_. 
+For Windows OS 10 we recommend using the free application for creating an Ubuntu virtual machine. For details on how to set up this environment, visit `Install Ubuntu on Windows 10 <https://ubuntu.com/tutorials/tutorial-ubuntu-on-windows#1-overview>`_. 
 
 Once the Ubuntu VM is installed and running in Windows OS, simply follow the guidlines presented in the Linux OS section of this page. You can even decide to use the shell script installation with the ``install_unix.sh`` script inside the Ubuntu VM, making sure to have the basic ubuntu packages installed, which include the GCC compiler suite.
