@@ -1,7 +1,7 @@
 # DIAMONDS - Bayesian Software
 <p align="center">
 <a href="https://github.com/EnricoCorsaro/DIAMONDS"><img src="https://img.shields.io/badge/GitHub-DIAMONDS-yellow"/></a>
-<a href="https://github.com/EnricoCorsaro/DIAMONDS/blob/master/LICENSE.txt"><img src="https://img.shields.io/badge/license-CC%20BY--SA-blue"/></a>
+<a href="https://github.com/EnricoCorsaro/DIAMONDS/blob/master/LICENSE.txt"><img src="https://img.shields.io/badge/license-MIT-blue"/></a>
 <a href="https://www.aanda.org/articles/aa/abs/2014/11/aa24181-14/aa24181-14.html"><img src="https://img.shields.io/badge/DOI-10.1051%2F0004--6361%2F201424181-blueviolet"/></a>
 <a href='https://diamonds.readthedocs.io/en/latest/?badge=latest'><img src='https://readthedocs.org/projects/diamonds/badge/?version=latest' alt='Documentation Status' /></a>
 <a href="https://github.com/EnricoCorsaro/DIAMONDS/issues"><img src="https://img.shields.io/github/issues-closed/EnricoCorsaro/DIAMONDS"/></a>
