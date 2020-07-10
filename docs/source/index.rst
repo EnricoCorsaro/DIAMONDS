@@ -7,6 +7,8 @@ DIAMONDS - Bayesian Software
     :target: https://github.com/EnricoCorsaro/DIAMONDS/blob/master/LICENSE.txt
 .. image:: https://img.shields.io/badge/DOI-10.1051%2F0004--6361%2F201424181-blueviolet
     :target: https://www.aanda.org/articles/aa/abs/2014/11/aa24181-14/aa24181-14.html
+.. image:: https://img.shields.io/badge/ASCL-1410.001-red
+    :target: https://ascl.net/1410.001
 .. image:: https://readthedocs.org/projects/diamonds/badge/?version=latest
     :target: https://diamonds.readthedocs.io/en/latest/?badge=latest
 .. image:: https://img.shields.io/github/issues-closed/EnricoCorsaro/DIAMONDS
