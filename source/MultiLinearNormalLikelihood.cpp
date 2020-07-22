@@ -20,7 +20,7 @@ MultiLinearNormalLikelihood::MultiLinearNormalLikelihood(const RefArrayXd observ
 {
     Nobservables = model.getNobservables();
     Npoints = model.getNpoints();
-    assert(observations.size() || observationsUncertainty.size());
+    assert(observations.size() == observationsUncertainty.size());
 }
 
 

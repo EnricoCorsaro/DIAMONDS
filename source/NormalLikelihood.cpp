@@ -16,7 +16,7 @@ NormalLikelihood::NormalLikelihood(const RefArrayXd observations, const RefArray
 : Likelihood(observations, model),
   uncertainties(uncertainties)
 {
-    assert(observations.size() || uncertainties.size());
+    assert(observations.size() == uncertainties.size());
 }
 
 
@@ -95,7 +95,7 @@ double NormalLikelihood::logValue(RefArrayXd modelParameters)
     
     lambda0 = -0.5 * log(2.0*Functions::PI) -1.0 * uncertainties.log(); 
     lambda = lambda0 - 0.5 * ((observations - predictions)*(observations - predictions)) / (uncertainties*uncertainties);
-    
+   
     return lambda.sum();
 }
 

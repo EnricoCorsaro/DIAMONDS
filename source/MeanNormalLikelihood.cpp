@@ -18,8 +18,7 @@ MeanNormalLikelihood::MeanNormalLikelihood(const RefArrayXd observations, const 
   uncertainties(uncertainties)
 {
     double normalizeFactor;
-    
-    assert(observations.size() != uncertainties.size());
+    assert(observations.size() == uncertainties.size());
     normalizeFactor = sqrt(observations.size()/uncertainties.pow(-2).sum());
     normalizedUncertainties = uncertainties/normalizeFactor; 
     weights = normalizedUncertainties.pow(-2);
