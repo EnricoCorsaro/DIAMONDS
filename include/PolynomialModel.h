@@ -5,8 +5,8 @@
 // Implementations contained in "PolynomialModel.cpp"
 
 
-#ifndef LINEARMODEL_H
-#define LINEARMODEL_H
+#ifndef POLYNOMIALMODEL_H
+#define POLYNOMIALMODEL_H
 
 #include <cstdlib>
 #include <Eigen/Core>
