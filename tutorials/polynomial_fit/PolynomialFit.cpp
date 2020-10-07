@@ -34,9 +34,9 @@ int main(int argc, char *argv[])
 
     // Check number of arguments for main function
     
-    if (argc != 3)
+    if (argc != 4)
     {
-        cerr << "Usage: ./PolynomialFit <data filename> <prior filename>" << endl;
+        cerr << "Usage: ./PolynomialFit <data filename> <prior filename> <covariates offset>" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -51,7 +51,9 @@ int main(int argc, char *argv[])
     string baseInputDirName = "";
     string inputFileName(argv[1]);
     string outputPathPrefix = "PolynomialFit_";
-
+    string inputCovariatesOffset(argv[3]);
+    double covariatesOffset = stod(inputCovariatesOffset);
+    
     ifstream inputFile;
     File::openInputFile(inputFile, inputFileName);
     File::sniffFile(inputFile, Nrows, Ncols);
@@ -111,7 +113,7 @@ int main(int argc, char *argv[])
     // ---- Second step. Set up the models for the inference problem ----- 
     // -------------------------------------------------------------------
     
-    PolynomialModel model(covariates, Ndegrees);      // Polynomial function of the type f = offset + a*x + b*x^2 + c*x^3 + ...
+    PolynomialModel model(covariates, Ndegrees, covariatesOffset);      // Polynomial function of the type f = offset + a*x + b*x^2 + c*x^3 + ...
 
 
     // -----------------------------------------------------------------

@@ -23,16 +23,18 @@ class PolynomialModel : public Model
 {
     public:
     
-        PolynomialModel(const RefArrayXd covariates, int Ndegrees);
+        PolynomialModel(const RefArrayXd covariates, const int Ndegrees, const double covariatesOffset);
         ~PolynomialModel();
         ArrayXd getCovariates();
         int getNdegrees();
+        double getCovariatesOffset();
 
         virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
 
     protected:
 
         int Ndegrees;
+        double covariatesOffset;
 
     private:
     

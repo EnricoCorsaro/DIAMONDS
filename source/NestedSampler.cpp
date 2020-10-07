@@ -309,7 +309,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         // it in our collection of posterior sample. Also save its likelihood value. The weight is 
         // computed and collected at the end of each iteration.
 
-        posteriorSample.col(Niterations) = nestedSample.col(indexOfLivePointWithWorstLikelihood); 
+        posteriorSample.col(Niterations) = nestedSample.col(indexOfLivePointWithWorstLikelihood);
         logLikelihoodOfPosteriorSample(Niterations) = worstLiveLogLikelihood; 
 
 
@@ -320,7 +320,6 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         // at the end of the iteration.
         
         logMeanLikelihoodOfLivePoints = logLikelihood(0);
-
         for (int m = 1; m < NlivePoints; m++)
         {
             logMeanLikelihoodOfLivePoints = Functions::logExpSum(logMeanLikelihoodOfLivePoints, logLikelihood(m));
@@ -486,7 +485,6 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
         logMeanLiveEvidence = logMeanLikelihoodOfLivePoints + Niterations * (log(NlivePoints) - log(NlivePoints + 1));
 
-
         // Compute the ratio of the evidence of the live sample to the current Skilling's evidence.
         // Only when we gathered enough evidence, this ratio will be sufficiently small so that we can stop the iterations.
 
@@ -507,7 +505,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
             nestedSamplingShouldContinue = (Niterations <= maxNiterations);
         }
 
-
+        
         // Shrink prior mass interval according to proper number of live points 
         // (see documentation by Enrico Corsaro October 2013). When reducing the number of live points 
         // the equation is a generalized version of that used by Skilling 2004. The equation

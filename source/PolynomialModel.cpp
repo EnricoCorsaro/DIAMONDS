@@ -11,11 +11,13 @@
 //                              of the independent variable.
 //      Ndegrees:                 an integer containing the degree of the polynomial to fit.
 //                              A polynomial of the type y = a*x + b has degree = 1.
+//		covariatesOffset:		a double specifying the starting point of the intercept in the covariates
 //
 
-PolynomialModel::PolynomialModel(const RefArrayXd covariates, int Ndegrees)
+PolynomialModel::PolynomialModel(const RefArrayXd covariates, const int Ndegrees, const double covariatesOffset)
 : Model(covariates),
-  Ndegrees(Ndegrees)
+  Ndegrees(Ndegrees),
+  covariatesOffset(covariatesOffset)
 {
 }
 
@@ -70,6 +72,29 @@ int PolynomialModel::getNdegrees()
 
 
 
+// PolynomialModel::getCovariatesOffset()
+//
+// PURPOSE: 
+//      Get the protected data member covariatesOffset.
+//
+// OUTPUT:
+//      A double containing the offset used for the covariates.
+//
+
+double PolynomialModel::getCovariatesOffset()
+{
+    return covariatesOffset;
+}
+
+
+
+
+
+
+
+
+
+
 // PolynomialModel::predict()
 //
 // PURPOSE:
@@ -93,7 +118,7 @@ void PolynomialModel::predict(RefArrayXd predictions, RefArrayXd const modelPara
 
     for (int degree = 0; degree < Ndegrees; ++degree)
     {
-        predictions += covariates.pow(degree + 1)*modelParameters(degree);
+        predictions += (covariates - covariatesOffset).pow(degree + 1)*modelParameters(degree);
     }
 
     predictions += modelParameters(Ndegrees);
