@@ -25,7 +25,6 @@ class SuperGaussianModel : public Model
     
         SuperGaussianModel(const RefArrayXd covariates);
         ~SuperGaussianModel();
-        ArrayXd getCovariates();
 
         virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
 

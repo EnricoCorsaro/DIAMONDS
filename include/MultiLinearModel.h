@@ -25,7 +25,6 @@ class MultiLinearModel : public Model
     
         MultiLinearModel(const RefArrayXd covariates, int Nobservables);
         ~MultiLinearModel();
-        ArrayXd getCovariates();
         int getNobservables();
         int getNpoints();
 

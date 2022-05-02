@@ -141,10 +141,10 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
 
     if (printOnTheScreen)
     {
-        cerr << "------------------------------------------------" << endl;
-        cerr << " Bayesian Inference problem has " << Ndimensions << " dimensions." << endl;
-        cerr << "------------------------------------------------" << endl;
-        cerr << endl;
+        cout << "------------------------------------------------" << endl;
+        cout << " Bayesian Inference problem has " << Ndimensions << " dimensions." << endl;
+        cout << "------------------------------------------------" << endl;
+        cout << endl;
     }
 
 
@@ -191,10 +191,10 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     
     if (printOnTheScreen)
     {
-        cerr << "------------------------------------------------" << endl;
-        cerr << " Doing initial sampling of parameter space..." << endl;
-        cerr << "------------------------------------------------" << endl;
-        cerr << endl;
+        cout << "------------------------------------------------" << endl;
+        cout << " Doing initial sampling of parameter space..." << endl;
+        cout << "------------------------------------------------" << endl;
+        cout << endl;
     }
         
     nestedSample.resize(Ndimensions, NlivePoints);
@@ -273,10 +273,10 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     
     if (printOnTheScreen)
     {
-        cerr << "-------------------------------" << endl;
-        cerr << " Starting nested sampling...   " << endl;
-        cerr << "-------------------------------" << endl;
-        cerr << endl;
+        cout << "-------------------------------" << endl;
+        cout << " Starting nested sampling...   " << endl;
+        cout << "-------------------------------" << endl;
+        cout << endl;
     }
         
     bool nestedSamplingShouldContinue = true;
@@ -551,7 +551,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         {
             if ((Niterations % 50) == 0)
             {
-                cerr << "Nit: " << Niterations 
+                cout << "Nit: " << Niterations 
                      << "   Ncl: " << Nclusters 
                      << "   Nlive: " << NlivePoints
                      << "   CPM: " << exp(logCumulatedPriorMass)
@@ -616,9 +616,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     
     if (printOnTheScreen)
     {
-        cerr << "------------------------------------------------" << endl;
-        cerr << " Final log(E): " << logEvidence << " +/- " << logEvidenceError << endl;
-        cerr << "------------------------------------------------" << endl;
+        cout << "------------------------------------------------" << endl;
+        cout << " Final log(E): " << logEvidence << " +/- " << logEvidenceError << endl;
+        cout << "------------------------------------------------" << endl;
     }
 
     // Print total computational time
@@ -753,29 +753,29 @@ void NestedSampler::printComputationalTime(const double startTime)
     double endTime = time(0);
     computationalTime = endTime - startTime; 
    
-    cerr << " Total Computational Time: ";
+    cout << " Total Computational Time: ";
 
     if (computationalTime < 60)
     {
-        cerr << computationalTime << " seconds" << endl;
+        cout << computationalTime << " seconds" << endl;
     }
     else 
         if ((computationalTime >= 60) && (computationalTime < 60*60))
         {
-            cerr << setprecision(3) << computationalTime/60. << " minutes" << endl;
+            cout << setprecision(3) << computationalTime/60. << " minutes" << endl;
         }
     else 
         if (computationalTime >= 60*60)
         {
-            cerr << setprecision(3) << computationalTime/(60.*60.) << " hours" << endl;
+            cout << setprecision(3) << computationalTime/(60.*60.) << " hours" << endl;
         }
     else 
         if (computationalTime >= 60*60*24)
         {
-            cerr << setprecision(3) << computationalTime/(60.*60.*24.) << " days" << endl;
+            cout << setprecision(3) << computationalTime/(60.*60.*24.) << " days" << endl;
         }
     
-    cerr << "------------------------------------------------" << endl;
+    cout << "------------------------------------------------" << endl;
 }
 
 

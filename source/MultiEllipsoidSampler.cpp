@@ -311,8 +311,8 @@ bool MultiEllipsoidSampler::verifySamplerStatus()
 {
     if (!ellipsoidMatrixDecompositionIsSuccessful)
     {
-        cout << "Ellipsoid Matrix decomposition failed." << endl;
-        cout << "Quitting program." << endl;
+        cerr << "Ellipsoid Matrix decomposition failed." << endl;
+        cerr << "Quitting program." << endl;
         return false;
     }
     else
