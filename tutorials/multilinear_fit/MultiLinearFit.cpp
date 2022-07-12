@@ -180,7 +180,7 @@ int main(int argc, char *argv[])
 
     bool printNdimensions = false;
     PrincipalComponentProjector projector(printNdimensions);
-    bool featureProjectionActivated = true;
+    bool featureProjectionActivated = false;
     
     KmeansClusterer kmeans(myMetric, projector, featureProjectionActivated, 
                            minNclusters, maxNclusters, Ntrials, relTolerance); 

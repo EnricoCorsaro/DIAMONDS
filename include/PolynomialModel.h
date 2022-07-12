@@ -25,7 +25,6 @@ class PolynomialModel : public Model
     
         PolynomialModel(const RefArrayXd covariates, const int Ndegrees, const double covariatesOffset);
         ~PolynomialModel();
-        ArrayXd getCovariates();
         int getNdegrees();
         double getCovariatesOffset();
 

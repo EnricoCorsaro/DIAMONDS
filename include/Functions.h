@@ -94,6 +94,7 @@ namespace Functions
 
     // Utility functions
 
+    long double factorial(int number);
     template <typename Type>
     vector<int> argsort(const vector<Type> &myVector);
 

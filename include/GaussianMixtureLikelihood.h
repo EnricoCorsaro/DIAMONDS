@@ -1,4 +1,4 @@
-// Derived class for normal likelihood computations
+// Derived class for a Gaussian Mixture Likelihood
 // Created by Enrico Corsaro @ OACT - September 2020
 // e-mail: emncorsaro@gmail.com
 // Header file "GaussianMixtureLikelihood.h"
@@ -35,6 +35,7 @@ class GaussianMixtureLikelihood : public Likelihood
     private:
 
         ArrayXd uncertainties;
+        int Npoints;
 
 }; 
 

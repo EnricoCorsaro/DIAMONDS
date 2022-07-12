@@ -1053,3 +1053,45 @@ ArrayXd Functions::cubicSplineInterpolation(RefArrayXd const observedAbscissa, R
 
     return interpolatedOrdinate;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+// Functions::factorial()
+// 
+// PURPOSE:
+//      This function computes the factorial of an integer number. If the integer number is larger than 50, it relies on the 
+//      evaluation of factorial through the Ramanujan approximation (Ramanujan 1988). 
+//
+// INPUT:
+//      number:                   a positive integer number for which the factorial has to be computed
+//
+// OUTPUT:
+//      A long double containing the factorial of the input number.
+//
+//
+long double Functions::factorial(int number)
+{
+    if (number < 0) 
+        number = abs(number);
+
+    if (number > 1)
+    {
+        if (number <= 50)
+            return static_cast<long double>(number*factorial(number-1));
+        else
+            // Adopt Ramanujan 1988 approximation for large numbers. The result is very accurate.
+            return exp(static_cast<long double>(number*log(number) - number  + (1.0/6.0)*log(number*(1 + 4*number*(1 + 2*number))) + log(Functions::PI)/2.0));
+    }
+    else
+        return 1;
+}

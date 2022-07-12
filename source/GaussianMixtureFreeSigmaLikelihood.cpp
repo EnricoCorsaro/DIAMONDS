@@ -92,7 +92,7 @@ double GaussianMixtureFreeSigmaLikelihood::logValue(RefArrayXd modelParameters)
             lambda(i) = -0.5 * log(2.0*Functions::PI) -1.0 * logSigma + log(1.0 - weight) + argument2(i) + log(1.0 + (weight/(1.0 - weight)) * exp(argument1(i) - argument2(i)));
         }
     } 
-    
+   
     return lambda.sum();
 }
 

@@ -49,6 +49,55 @@ MultiLinearModel::~MultiLinearModel()
 
 
 
+// MultiLinearModel::getNobservables()
+//
+// PURPOSE: 
+//      Get the protected data member Nobservables.
+//
+// OUTPUT:
+//      An integer containing the number of independent
+//      covariates used in the model.
+//
+
+int MultiLinearModel::getNobservables()
+{
+    return Nobservables;
+}
+
+
+
+
+
+
+
+
+
+
+// MultiLinearModel::getNpoints()
+//
+// PURPOSE: 
+//      Get the protected data member Npoints.
+//
+// OUTPUT:
+//      An integer containing the number of data points.
+//
+
+int MultiLinearModel::getNpoints()
+{
+    return Npoints;
+}
+
+
+
+
+
+
+
+
+
+
+
+
 // MultiLinearModel::predict()
 //
 // PURPOSE:
@@ -90,40 +139,3 @@ void MultiLinearModel::predict(RefArrayXd predictions, RefArrayXd const modelPar
 
 
 
-// MultiLinearModel::getNobservables()
-//
-// PURPOSE: 
-//      Get the protected data member Nobservables.
-//
-// OUTPUT:
-//      An integer containing the number of independent
-//      covariates used in the model.
-//
-
-int MultiLinearModel::getNobservables()
-{
-    return Nobservables;
-}
-
-
-
-
-
-
-
-
-
-
-// MultiLinearModel::getNpoints()
-//
-// PURPOSE: 
-//      Get the protected data member Npoints.
-//
-// OUTPUT:
-//      An integer containing the number of data points.
-//
-
-int MultiLinearModel::getNpoints()
-{
-    return Npoints;
-}

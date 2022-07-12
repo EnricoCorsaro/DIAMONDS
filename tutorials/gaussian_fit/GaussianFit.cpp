@@ -175,7 +175,7 @@ int main(int argc, char *argv[])
 
     bool printNdimensions = false;
     PrincipalComponentProjector projector(printNdimensions);
-    bool featureProjectionActivated = true;
+    bool featureProjectionActivated = false;
 
     EuclideanMetric myMetric;
     KmeansClusterer kmeans(myMetric, projector, featureProjectionActivated, 
