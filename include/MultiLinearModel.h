@@ -23,17 +23,19 @@ class MultiLinearModel : public Model
 {
     public:
     
-        MultiLinearModel(const RefArrayXd covariates, int Nobservables);
+        MultiLinearModel(const RefArrayXd covariates, const RefArrayXd covariatesUncertainties, int Nobservables);
         ~MultiLinearModel();
         int getNobservables();
-        int getNpoints();
+        ArrayXd getCovariatesUncertainties();
 
         virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
+        virtual void computeVariance(RefArrayXd modelVariance, const RefArrayXd modelParameters);
 
     protected:
 
         int Nobservables;
-        int Npoints;
+        ArrayXd covariatesUncertainties;
+
 
     private:
     

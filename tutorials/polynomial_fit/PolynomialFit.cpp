@@ -112,8 +112,10 @@ int main(int argc, char *argv[])
     // -------------------------------------------------------------------
     // ---- Second step. Set up the models for the inference problem ----- 
     // -------------------------------------------------------------------
-    
-    PolynomialModel model(covariates, Ndegrees, covariatesOffset);      // Polynomial function of the type f = offset + a*x + b*x^2 + c*x^3 + ...
+   
+    ArrayXd covariatesUncertainties(covariates.size());       // Create empy covariates uncertainties for simple polynomial model (not generalized)
+    covariatesUncertainties.setZero();  
+    PolynomialModel model(covariates, covariatesUncertainties, Ndegrees, covariatesOffset);      // Polynomial function of the type f = offset + a*x + b*x^2 + c*x^3 + ...
 
 
     // -----------------------------------------------------------------
@@ -183,13 +185,32 @@ int main(int argc, char *argv[])
     }
 
     bool printOnTheScreen = true;                       // Print results on the screen
-    int initialNobjects = configuringParameters(0);     // Initial number of live points 
-    int minNobjects = configuringParameters(1);         // Minimum number of live points 
+    int initialNlivePoints = configuringParameters(0);     // Initial number of live points 
+    int minNlivePoints = configuringParameters(1);         // Minimum number of live points 
     int maxNdrawAttempts = configuringParameters(2);    // Maximum number of attempts when trying to draw a new sampling point
     int NinitialIterationsWithoutClustering = configuringParameters(3); // The first N iterations, we assume that there is only 1 cluster
     int NiterationsWithSameClustering = configuringParameters(4);       // Clustering is only happening every N iterations.
-    double initialEnlargementFraction = configuringParameters(5);   // Fraction by which each axis in an ellipsoid has to be enlarged.
-                                                                    // It can be a number >= 0, where 0 means no enlargement.
+    
+    // Fraction by which each axis in an ellipsoid has to be enlarged
+    // It can be a number >= 0, where 0 means no enlargement. configuringParameters(5)
+    // Calibration from Corsaro et al. (2018)
+    double initialEnlargementFraction;
+
+    if (initialNlivePoints <= 500)
+    {
+        cerr << endl;
+        cerr << " Using the calibration for 500 live points." << endl;
+        cerr << endl;
+        initialEnlargementFraction = 0.369*pow(Ndimensions,0.574);  
+    }
+    else
+    {
+        cerr << endl;
+        cerr << " Using the calibration for 1000 live points." << endl;
+        cerr << endl;
+        initialEnlargementFraction = 0.310*pow(Ndimensions,0.598);  
+    }
+
     double shrinkingRate = configuringParameters(6);        // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                             // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                             // of the ellipsoids.
@@ -197,7 +218,7 @@ int main(int argc, char *argv[])
 
     
     MultiEllipsoidSampler nestedSampler(printOnTheScreen, ptrPriors, likelihood, myMetric, kmeans, 
-                                        initialNobjects, minNobjects, initialEnlargementFraction, shrinkingRate);
+                                        initialNlivePoints, minNlivePoints, initialEnlargementFraction, shrinkingRate);
     
     double tolerance = 1.e2;
     double exponent = 0.4;

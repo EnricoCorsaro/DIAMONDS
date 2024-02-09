@@ -41,6 +41,56 @@ Model::~Model()
 
 
 
+// Model::getNparameters()
+//
+// PURPOSE: 
+//      Get the protected data member Nparameters;
+//
+// OUTPUT:
+//      Returns an integer containing the total number of 
+//      free parameters used in the model.
+//
+
+int Model::getNparameters()
+{
+    return Nparameters;
+}
+
+
+
+
+
+
+
+
+
+
+
+// Model::getNpoints()
+//
+// PURPOSE: 
+//      Get the protected data member Npoints;
+//
+// OUTPUT:
+//      Returns an integer containing the total number of 
+//      covariates points used in the model.
+//
+
+int Model::getNpoints()
+{
+    return Npoints;
+}
+
+
+
+
+
+
+
+
+
+
+
 
 // Model::getCovariates()
 //
@@ -55,29 +105,4 @@ Model::~Model()
 ArrayXd Model::getCovariates()
 {
     return covariates;
-}
-
-
-
-
-
-
-
-
-
-
-
-// Model::getNparameters()
-//
-// PURPOSE: 
-//      Get the protected data member Nparameters;
-//
-// OUTPUT:
-//      Returns an integer containing the total number of 
-//      free parameters used in the model.
-//
-
-int Model::getNparameters()
-{
-    return Nparameters;
 }

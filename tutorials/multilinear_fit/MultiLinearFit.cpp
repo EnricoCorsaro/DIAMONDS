@@ -21,7 +21,7 @@
 #include "Prior.h"
 #include "UniformPrior.h"
 #include "NormalPrior.h"
-#include "MultiLinearNormalLikelihood.h"
+#include "GeneralizedNormalLikelihood.h"
 #include "MultiLinearModel.h"
 #include "FerozReducer.h"
 #include "PowerlawReducer.h"
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     
     if (argc != 3)
     {
-        cerr << "Usage: ./MultiLinearFit <data filename> <prior filename>" << endl;
+        cerr << " Usage: ./MultiLinearFit <data filename> <prior filename>" << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -65,7 +65,7 @@ int main(int argc, char *argv[])
 
     if (Nobservables == 0)
     {
-        cerr << "Dataset must contain at least one observable (covariates) and corresponding uncertainties." << endl;
+        cerr << " Dataset must contain at least one observable (covariates) and corresponding uncertainties." << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -101,8 +101,8 @@ int main(int argc, char *argv[])
 
     if (Nparameters != Ndimensions)
     {
-        cerr << "Wrong number of input prior hyper-parameters." << endl;
-        cerr << "No match found with number of independent covariates." << endl;
+        cerr << " Wrong number of input prior hyper-parameters." << endl;
+        cerr << " No match found with number of independent covariates." << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -135,14 +135,14 @@ int main(int argc, char *argv[])
     // ---- Second step. Set up the models for the inference problem ----- 
     // -------------------------------------------------------------------
     
-    MultiLinearModel model(multiCovariates, Nobservables);      // MultiLinear function of the type y = offset + a*x_1 + b*x_2 + c*x_3 + ...
+    MultiLinearModel model(multiCovariates, covariatesUncertainties, Nobservables);      // MultiLinear function of the type y = offset + a*x_1 + b*x_2 + c*x_3 + ...
 
 
     // -----------------------------------------------------------------
     // ----- Third step. Set up the likelihood function to be used -----
     // -----------------------------------------------------------------
     
-    MultiLinearNormalLikelihood likelihood(observations, covariatesUncertainties, observationsUncertainty, model);
+    GeneralizedNormalLikelihood likelihood(observations, observationsUncertainty, model);
     
 
     // -------------------------------------------------------------------------------
@@ -155,7 +155,7 @@ int main(int argc, char *argv[])
 
     if (Nparameters != 2)
     {
-        cerr << "Wrong number of input parameters for X-means algorithm." << endl;
+        cerr << " Wrong number of input parameters for X-means algorithm." << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -168,8 +168,8 @@ int main(int argc, char *argv[])
     
     if ((minNclusters <= 0) || (maxNclusters <= 0) || (maxNclusters < minNclusters))
     {
-        cerr << "Minimum or maximum number of clusters cannot be <= 0, and " << endl;
-        cerr << "minimum number of clusters cannot be larger than maximum number of clusters." << endl;
+        cerr << " Minimum or maximum number of clusters cannot be <= 0, and " << endl;
+        cerr << " minimum number of clusters cannot be larger than maximum number of clusters." << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -199,7 +199,7 @@ int main(int argc, char *argv[])
 
     if (Nparameters != 8)
     {
-        cerr << "Wrong number of input parameters for NSMC algorithm." << endl;
+        cerr << " Wrong number of input parameters for NSMC algorithm." << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -209,8 +209,27 @@ int main(int argc, char *argv[])
     int maxNdrawAttempts = configuringParameters(2);    // Maximum number of attempts when trying to draw a new sampling point
     int NinitialIterationsWithoutClustering = configuringParameters(3); // The first N iterations, we assume that there is only 1 cluster
     int NiterationsWithSameClustering = configuringParameters(4);       // Clustering is only happening every N iterations.
-    double initialEnlargementFraction = configuringParameters(5);   // Fraction by which each axis in an ellipsoid has to be enlarged.
-                                                                    // It can be a number >= 0, where 0 means no enlargement.
+    
+    // Fraction by which each axis in an ellipsoid has to be enlarged
+    // It can be a number >= 0, where 0 means no enlargement. configuringParameters(5)
+    // Calibration from Corsaro et al. (2018)
+    double initialEnlargementFraction;
+
+    if (initialNobjects <= 500)
+    {
+        cerr << endl;
+        cerr << " Using the calibration for 500 live points." << endl;
+        cerr << endl;
+        initialEnlargementFraction = 0.369*pow(Ndimensions,0.574);  
+    }
+    else
+    {
+        cerr << endl;
+        cerr << " Using the calibration for 1000 live points." << endl;
+        cerr << endl;
+        initialEnlargementFraction = 0.310*pow(Ndimensions,0.598);  
+    }
+
     double shrinkingRate = configuringParameters(6);        // Exponent for remaining prior mass in ellipsoid enlargement fraction.
                                                             // It is a number between 0 and 1. The smaller the slower the shrinkage
                                                             // of the ellipsoids.

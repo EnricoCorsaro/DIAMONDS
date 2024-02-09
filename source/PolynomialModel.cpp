@@ -7,18 +7,21 @@
 //      Constructor. Initializes model computation.
 //
 // INPUT:
-//      covariates:             one-dimensional array containing the values
-//                              of the independent variable.
-//      Ndegrees:                 an integer containing the degree of the polynomial to fit.
-//                              A polynomial of the type y = a*x + b has degree = 1.
-//		covariatesOffset:		a double specifying the starting point of the intercept in the covariates
+//      covariates:                 one-dimensional array containing the values
+//                                  of the independent variable.
+//      covariatesUncertainties:    ome-dimensional array containing the values of the uncertainties on the independent variable
+//      Ndegrees:                   an integer containing the degree of the polynomial to fit.
+//                                  A polynomial of the type y(x) = a*x + b has degree = 1.
+//      covariatesOffset:           a double specifying the starting point of the intercept in the covariates
 //
 
-PolynomialModel::PolynomialModel(const RefArrayXd covariates, const int Ndegrees, const double covariatesOffset)
+PolynomialModel::PolynomialModel(const RefArrayXd covariates, const RefArrayXd covariatesUncertainties, const int Ndegrees, const double covariatesOffset)
 : Model(covariates),
+  covariatesUncertainties(covariatesUncertainties),
   Ndegrees(Ndegrees),
   covariatesOffset(covariatesOffset)
 {
+    Npoints = covariates.size();
 }
 
 
@@ -121,10 +124,58 @@ void PolynomialModel::predict(RefArrayXd predictions, RefArrayXd const modelPara
         predictions += (covariates - covariatesOffset).pow(degree + 1)*modelParameters(degree);
     }
 
+    // Add offset term to the polynomial
+    
     predictions += modelParameters(Ndegrees);
 }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// PolynomialModel::computeVariance()
+//
+// PURPOSE:
+//      Builds the total covariates uncertainties by applying a standard error propagation from the model equation.
+//
+// INPUT:
+//      modelVariance:        one-dimensional array to contain the total variance on the covariates
+//                            as computed by the model
+//      modelParameters:      one-dimensional array where each element
+//                            contains the value of a free parameter of the model
+//
+// OUTPUT:
+//      void
+//
+
+void PolynomialModel::computeVariance(RefArrayXd modelVariance, RefArrayXd const modelParameters)
+{
+    ArrayXd polynomialSDV(Npoints);
+    polynomialSDV.setZero();
     
+    // Compute the total uncertainty arising from the polynomial model
+    
+    for (int degree = 0; degree < Ndegrees; ++degree)
+    {
+        polynomialSDV += (degree + 1)*modelParameters(degree)*(covariates - covariatesOffset).pow(degree);
+    }
+
+    polynomialSDV *= covariatesUncertainties;
+    modelVariance += polynomialSDV.square();
+} 
+    
+
 
 
 

@@ -24,16 +24,20 @@ class Model
     
         Model(const RefArrayXd covariates);
         ~Model();
+
+        int getNparameters();
+        int getNpoints();
         ArrayXd getCovariates();
 
         virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters) = 0;
-        int getNparameters();
+        virtual void computeVariance(RefArrayXd modelVariance, const RefArrayXd modelParameters) = 0;
 
 
     protected:
         
-        ArrayXd covariates;
         int Nparameters;
+        int Npoints;
+        ArrayXd covariates;
 
 
     private:

@@ -169,8 +169,9 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     outputFile << "# Row #11: Final Nclusters" << endl;
     outputFile << "# Row #12: Final NlivePoints" << endl;
     outputFile << "# Row #13: Computational Time (seconds)" << endl;
-    outputFile << "# Row #14: Error: No better likelihood found (1 = yes / 0 = no)" << endl;
-    outputFile << "# Row #15: Error: Ellipsoid matrix decomposition failed (1 = yes / 0 = no)" << endl;
+    outputFile << "# Row #14: Ratio Remainder/Collected Evidence" << endl;
+    outputFile << "# Row #15: Error: No better likelihood found (1 = yes / 0 = no)" << endl;
+    outputFile << "# Row #16: Error: Ellipsoid matrix decomposition failed (1 = yes / 0 = no)" << endl;
     outputFile << Ndimensions << endl;
     outputFile << initialNlivePoints << endl;
     outputFile << minNlivePoints << endl;
@@ -634,6 +635,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
     outputFile << Nclusters << endl;
     outputFile << NlivePoints << endl;
     outputFile << computationalTime << endl;
+    outputFile << ratioOfRemainderToCurrentEvidence << endl;
 
     if (noBetterLikelihoodFound)
     {

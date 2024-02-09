@@ -27,6 +27,7 @@ class SuperGaussianModel : public Model
         ~SuperGaussianModel();
 
         virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
+        virtual void computeVariance(RefArrayXd modelVariance, const RefArrayXd modelParameters){};
 
     protected:
 

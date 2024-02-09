@@ -30,6 +30,7 @@ class GaussianModel : public Model
         int getNpoints();
 
         virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
+        virtual void computeVariance(RefArrayXd modelVariance, const RefArrayXd modelParameters){};
 
     protected:
 
