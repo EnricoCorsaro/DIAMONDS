@@ -7,14 +7,17 @@
 //      Constructor. Initializes model computation.
 //
 // INPUT:
-//      multiCovariates:        one-dimensional array containing the values
-//                              of the independent variables concatenated in the same
-//                              order as the columns from left to right in the input data file.
-//      Nobservables:           the number of observables in the multilinear model
+//      covariates:                 one-dimensional array containing the values
+//                                  of the independent variables concatenated in the same
+//                                  order as the columns from left to right in the input data file.
+//      covariatesUncertainties:    ome-dimensional array containing the values of the uncertainties on the independent variables concatenated
+//                                  in the same order as the columns from left to right in the input data file
+//      Nobservables:               the number of observables in the multilinear model
 //
 
-MultiLinearModel::MultiLinearModel(const RefArrayXd covariates, int Nobservables)
+MultiLinearModel::MultiLinearModel(const RefArrayXd covariates, const RefArrayXd covariatesUncertainties, int Nobservables)
 : Model(covariates),
+  covariatesUncertainties(covariatesUncertainties),
   Nobservables(Nobservables)
 {
     Npoints = static_cast<int>(covariates.size()/Nobservables);
@@ -73,20 +76,20 @@ int MultiLinearModel::getNobservables()
 
 
 
-// MultiLinearModel::getNpoints()
+// MultiLinearModel::getCovariatesUncertainties();
 //
-// PURPOSE: 
-//      Get the protected data member Npoints.
+// PURPOSE:
+//      Get protected data member covariatesUncertainties.
 //
 // OUTPUT:
-//      An integer containing the number of data points.
+//      covariatesUncertainties: one-dimensional array containing the
+//      uncertainties on the independent variables.
 //
 
-int MultiLinearModel::getNpoints()
+ArrayXd MultiLinearModel::getCovariatesUncertainties()
 {
-    return Npoints;
+    return covariatesUncertainties;
 }
-
 
 
 
@@ -139,3 +142,29 @@ void MultiLinearModel::predict(RefArrayXd predictions, RefArrayXd const modelPar
 
 
 
+
+// MultiLinearModel::computeVariance()
+//
+// PURPOSE:
+//      Builds the total covariates uncertainties by applying a standard error propagation from the model equation.
+//
+// INPUT:
+//      modelVariance:        one-dimensional array to contain the total variance on the covariates
+//                            as computed by the model
+//      modelParameters:      one-dimensional array where each element
+//                            contains the value of a free parameter of the model
+//
+// OUTPUT:
+//      void
+//
+
+void MultiLinearModel::computeVariance(RefArrayXd modelVariance, RefArrayXd const modelParameters)
+{
+    // Compute the total uncertainty arising from the multi-linear model 
+
+    for (int observable = 0; observable < Nobservables; ++observable)
+    {
+        modelVariance += covariatesUncertainties.segment(observable*Npoints, Npoints).square()
+                        *modelParameters(observable)*modelParameters(observable);
+    }
+} 
