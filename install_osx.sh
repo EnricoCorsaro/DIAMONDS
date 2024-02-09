@@ -1,9 +1,4 @@
 #!/bin/bash
-if [ $# -eq 0 ]; then
-    echo "Usage: ./install_osx.sh"
-    exit 1
-fi
-
 if ! [ -x "$(command -v git)" ]; then
 	echo "Error: git is not installed. Aborting..." >&2
 	exit 1
