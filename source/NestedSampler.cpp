@@ -503,7 +503,7 @@ void NestedSampler::run(LivePointsReducer &livePointsReducer, const int Ninitial
         }
         else
         {   
-            nestedSamplingShouldContinue = (Niterations <= maxNiterations);
+            nestedSamplingShouldContinue = (Niterations < maxNiterations - 1);
         }
 
         

@@ -25,7 +25,7 @@ class ZeroModel : public Model
         ZeroModel(const RefArrayXd covariates);
         ~ZeroModel();
 
-        virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters) override;
+        virtual void predict(RefArrayXd predictions, const RefArrayXd modelParameters);
         virtual void computeVariance(RefArrayXd modelVariance, const RefArrayXd modelParameters){};
 
     protected:
