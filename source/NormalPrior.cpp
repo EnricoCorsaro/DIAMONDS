@@ -24,7 +24,7 @@ NormalPrior::NormalPrior(RefArrayXd const mean, RefArrayXd const standardDeviati
 
     if ( (standardDeviation <= 0.0).any() )
     {
-        cerr << "Normal Prior hyper parameters are not correctly typeset." << endl;
+        cerr << "Normal Prior standard deviation must be greater than 0." << endl;
         exit(EXIT_FAILURE);
     }
 

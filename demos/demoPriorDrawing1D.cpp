@@ -262,14 +262,14 @@ int main()
     /*      GRID UNIFORM PRIOR      */
     vector<Prior*> ptrPriors(1);
     ArrayXd parametersStartingCoordinate(Ndimensions);
+    ArrayXd parametersEndingCoordinate(Ndimensions);
     ArrayXd parametersNgridPoints(Ndimensions);
-    ArrayXd parametersSeparation(Ndimensions);
     ArrayXd parametersTolerance(Ndimensions);
     parametersStartingCoordinate << 1.0;
+    parametersEndingCoordinate << 2.5;
     parametersNgridPoints << 4;
-    parametersSeparation << 0.5;
     parametersTolerance << 0.1;
-    GridUniformPrior gridUniformPrior(parametersStartingCoordinate, parametersNgridPoints, parametersSeparation, parametersTolerance);
+    GridUniformPrior gridUniformPrior(parametersStartingCoordinate, parametersEndingCoordinate, parametersNgridPoints, parametersTolerance);
     ptrPriors[0] = &gridUniformPrior;  
     /*  */
 

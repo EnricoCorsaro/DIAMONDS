@@ -24,7 +24,7 @@ UniformPrior::UniformPrior(const RefArrayXd minima, const RefArrayXd maxima)
     
     if ( (minima >= maxima).any() )
     {
-        cerr << "Uniform Prior hyper parameters are not correctly typeset." << endl;
+        cerr << "Uniform Prior minima must be smaller than maxima." << endl;
         exit(EXIT_FAILURE);
     }
 }
@@ -198,7 +198,7 @@ bool UniformPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
 //
 // PURPOSE:
 //      Draw a sample of parameters values from a uniform prior
-//      distributions. The parameters are in number Ndimensions
+//      distribution. The parameters are in number Ndimensions
 //      and contain Npoints values each.
 //
 // INPUT:

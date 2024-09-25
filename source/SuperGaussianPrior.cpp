@@ -30,7 +30,7 @@ SuperGaussianPrior::SuperGaussianPrior(const RefArrayXd center, const RefArrayXd
 
     if ( (sigma <= 0.0).any() || (widthOfPlateau <= 0.0).any() )
     {
-        cerr << "Super Gaussian Prior hyper parameters are not correctly typeset." << endl;
+        cerr << "Super Gaussian Prior standard deviation and width of pleateau must be greater than 0." << endl;
         exit(EXIT_FAILURE);
     }
 

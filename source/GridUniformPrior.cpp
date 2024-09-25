@@ -10,25 +10,33 @@
 //
 // INPUT:
 //      startingCoordinate: an array containing the starting point of the grid prior in each coordinate.
+//      startingCoordinate: an array containing the ending point of the grid prior in each coordinate.
 //      NgridPoints:        an array containing the number of grid points in each dimension (considered as an integer number).
-//      separation:         an array containing the separation of the grid points. It has to be a number greater than the tolerance itself.
-//      tolerance:          an array containing the tolerance of the grid points. This tolerance is an interval on each side of the grid point. 
+//      tolerance:          an array containing the tolerance of the grid points in percentage. This tolerance defines the width of each grid point.
+//                          If the tolerance is set to 1 (100%) for a given coordinate, then the grid has no empty spaces in that coordinate. 
 //
-GridUniformPrior::GridUniformPrior(const RefArrayXd startingCoordinate, const RefArrayXd NgridPoints, const RefArrayXd separation, 
+GridUniformPrior::GridUniformPrior(const RefArrayXd startingCoordinate, const RefArrayXd endingCoordinate, const RefArrayXd NgridPoints,  
                                    const RefArrayXd tolerance)
 : Prior(tolerance.size()),
   uniform(-1.0,1.0),
   startingCoordinate(startingCoordinate),
+  endingCoordinate(endingCoordinate),
   NgridPoints(NgridPoints),
-  separation(separation),
   tolerance(tolerance)
 {
-    assert (tolerance.size() == separation.size());
+    assert (tolerance.size() == NgridPoints.size());
+    assert (startingCoordinate.size() == endingCoordinate.size());
     assert (startingCoordinate.size() == tolerance.size());
 
-    if ( (tolerance <= 0.0).any() || (tolerance >= separation/2.).any() )
+    if ( (tolerance <= 0.0).any() || (tolerance > 1.0).any() )
     {
-        cerr << "Grid Prior hyper parameters are not correctly typeset." << endl;
+        cerr << "Grid Uniform Prior tolerance has to be set in the range ]0,1]." << endl;
+        exit(EXIT_FAILURE);
+    }
+
+    if ( (startingCoordinate >= endingCoordinate).any() )
+    {
+        cerr << "Grid Uniform Prior starting coordinate must be smaller than ending coordinate." << endl;
         exit(EXIT_FAILURE);
     }
 
@@ -39,6 +47,13 @@ GridUniformPrior::GridUniformPrior(const RefArrayXd startingCoordinate, const Re
         uniform_int_distribution<int> uniformInteger(0, NgridPoints(i)-1);
         uniformIntegerVector[i] = uniformInteger;
     }
+
+    interval.resize(Ndimensions);
+    separation.resize(Ndimensions);
+    halfWidth.resize(Ndimensions);
+    interval = endingCoordinate - startingCoordinate;
+    separation = interval/(NgridPoints - 1.0);
+    halfWidth = separation*tolerance/2.0;
 }
 
 
@@ -96,18 +111,18 @@ ArrayXd GridUniformPrior::getStartingCoordinate()
 
 
 
-// GridUniformPrior::getNgridPoints()
+// GridUniformPrior::getEndingCoordinate()
 //
 // PURPOSE:
-//      Get the private data member NgridPoints.
+//      Get the private data member endingCoordinate.
 //
 // OUTPUT:
-//      An array of integers containing the number of gridPoints in each dimension.
+//      An array containing the ending point of the grid prior in each coordinate.
 //
 
-ArrayXd GridUniformPrior::getNgridPoints()
+ArrayXd GridUniformPrior::getEndingCoordinate()
 {
-    return NgridPoints;    
+    return endingCoordinate;    
 }
 
 
@@ -121,18 +136,19 @@ ArrayXd GridUniformPrior::getNgridPoints()
 
 
 
-// GridUniformPrior::getSeparation()
+
+// GridUniformPrior::getNgridPoints()
 //
 // PURPOSE:
-//      Get the private data member separation.
+//      Get the private data member NgridPoints.
 //
 // OUTPUT:
-//      An array containing the separation of the grid gridPoints. It has to be a number greater than the tolerance itself.
+//      An array of integers containing the number of gridPoints in each dimension.
 //
 
-ArrayXd GridUniformPrior::getSeparation()
+ArrayXd GridUniformPrior::getNgridPoints()
 {
-    return separation;    
+    return NgridPoints;    
 }
 
 
@@ -187,8 +203,8 @@ ArrayXd GridUniformPrior::getTolerance()
 double GridUniformPrior::logDensity(RefArrayXd const x, const bool includeConstantTerm)
 {
     double logDens;
-    
-    if ((x < (startingCoordinate - tolerance)).any() || (x > (startingCoordinate + (NgridPoints-1)*separation + tolerance)).any())
+
+    if ((x < (startingCoordinate - halfWidth)).any() || (x > (endingCoordinate + halfWidth)).any())
     {
         // The point x falls out of the grid of points (including tolerance on each side). In this case
         // the density is zero, and thus the log(density) is -infinity. The value
@@ -211,7 +227,7 @@ double GridUniformPrior::logDensity(RefArrayXd const x, const bool includeConsta
         if (absoluteDistanceFromGridPoint(i) >= separation(i)/2.0)
             absoluteDistanceFromGridPoint(i) = separation(i) - absoluteDistanceFromGridPoint(i);
 
-        if (absoluteDistanceFromGridPoint(i) >= tolerance(i))
+        if (absoluteDistanceFromGridPoint(i) >= halfWidth(i))
         {
             logDens = minusInfinity;
             return logDens;
@@ -227,7 +243,7 @@ double GridUniformPrior::logDensity(RefArrayXd const x, const bool includeConsta
 
     if (includeConstantTerm)
     {
-        logDens += (-1.0) * (NgridPoints*tolerance*2).log().sum(); 
+        logDens += (-1.0) * (NgridPoints*halfWidth*2).log().sum(); 
     }
 
     return logDens;
@@ -285,8 +301,8 @@ bool GridUniformPrior::drawnPointIsAccepted(RefArrayXd const drawnPoint)
 // GridUniformPrior::draw()
 //
 // PURPOSE:
-//      Draw a sample of parameters values from a uniform prior
-//      distributions. The parameters are in number Ndimensions
+//      Draw a sample of parameters values from a grid uniform prior
+//      distribution. The parameters are in number Ndimensions
 //      and contain Npoints values each.
 //
 // INPUT:
@@ -308,7 +324,7 @@ void GridUniformPrior::draw(RefArrayXXd drawnSample)
     {
         for (int j = 0; j < Npoints; j++)
         {
-            drawnSample(i,j) = tolerance(i)*uniform(engine) + uniformIntegerVector[i](engine)*separation(i) + startingCoordinate(i);
+            drawnSample(i,j) = halfWidth(i)*uniform(engine) + uniformIntegerVector[i](engine)*separation(i) + startingCoordinate(i);
         }
     }
 
@@ -353,7 +369,7 @@ void GridUniformPrior::drawWithConstraint(RefArrayXd drawnPoint, Likelihood &lik
     {
         for (int i = 0; i < Ndimensions; i++)
             {
-                drawnPoint(i) = tolerance(i)*uniform(engine) + uniformIntegerVector[i](engine)*separation(i) + startingCoordinate(i);
+                drawnPoint(i) = halfWidth(i)*uniform(engine) + uniformIntegerVector[i](engine)*separation(i) + startingCoordinate(i);
             }
     
         logLikelihood = likelihood.logValue(drawnPoint);

@@ -25,13 +25,13 @@ class GridUniformPrior : public Prior
 
     public:
 
-        GridUniformPrior(const RefArrayXd startingCoordinate, const RefArrayXd NgridPoints, const RefArrayXd separation, 
+        GridUniformPrior(const RefArrayXd startingCoordinate, const RefArrayXd endingCoordinate, const RefArrayXd NgridPoints, 
                          const RefArrayXd tolerance);
         ~GridUniformPrior();
 
         ArrayXd getStartingCoordinate();
+        ArrayXd getEndingCoordinate();
         ArrayXd getNgridPoints();
-        ArrayXd getSeparation();
         ArrayXd getTolerance();
 
         virtual double logDensity(RefArrayXd const x, const bool includeConstantTerm = false);
@@ -46,9 +46,12 @@ class GridUniformPrior : public Prior
         uniform_real_distribution<> uniform;
         vector<uniform_int_distribution<>> uniformIntegerVector;
         ArrayXd startingCoordinate;
+        ArrayXd endingCoordinate;
         ArrayXd NgridPoints;
-        ArrayXd separation;
         ArrayXd tolerance;
+        ArrayXd interval;
+        ArrayXd separation;
+        ArrayXd halfWidth;
 
 };
 

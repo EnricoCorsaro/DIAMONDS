@@ -1,4 +1,4 @@
-// Class for implementing some extra functions useful 
+// Namespace for implementing some extra functions useful for 
 // computations of models and likelihoods.
 // Created by Enrico Corsaro @ IvS - 22 January 2013
 // e-mail: emncorsaro@gmail.com
