@@ -195,7 +195,7 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const double 
     double interpolatedBinWidth = binWidth/NinterpolationsPerBin;
     double parameterMinimumRebinned = parameterValuesRebinned.minCoeff();
 
-    
+
     // Initialize the abscissa of the interpolated distribution
     
     parameterValuesInterpolated.resize(Ninterpolations);
@@ -220,7 +220,7 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const double 
     {
         marginalDistributionInterpolated(selectedIndices[i]) = 0.0;
     }
-        
+    
 
     // Renormalize interpolated marginal distribution by the sum of its elements
 
@@ -299,10 +299,9 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const double 
             limitProbabilityRight = marginalDistributionInterpolated(NbinsLeft + stepRight);  
             limitParameterRight = parameterValuesInterpolated(NbinsLeft + stepRight);         
 
-            
             // Find which point in the left part is the closest in probability to that of the right edge.
 
-            marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();                                      
+            marginalDifferenceLeft = (marginalDistributionLeft - limitProbabilityRight).abs();                                                  
             limitProbabilityLeft = marginalDifferenceLeft.minCoeff(&min);       
 
 
@@ -340,26 +339,38 @@ ArrayXd Results::computeCredibleLimits(const double credibleLevel, const double 
             
             // Find which point in the right part is the closest in probability to that of the left edge.
 
-            marginalDifferenceRight = (marginalDistributionRight - limitProbabilityLeft).abs();                                      
-            limitProbabilityRight = marginalDifferenceRight.minCoeff(&min);       
+            if (marginalDifferenceRight.size() == 0.0)
+            {
+                // The right side of the distribution is missing. 
+                // Set the limiting upper point to the maximum of the distribution
+                
+                min = 0;
+                limitParameterRight = parameterValuesInterpolated(max);
+            }
+            else
+            {
+                marginalDifferenceRight = (marginalDistributionRight - limitProbabilityLeft).abs();                                      
+                limitProbabilityRight = marginalDifferenceRight.minCoeff(&min);       
 
 
-            // Save the point and its probability as the right edge of the searching interval
+                // Save the point and its probability as the right edge of the searching interval
 
-            limitProbabilityRight = marginalDistributionRight(min);
-            limitParameterRight = parameterValuesRight(min);
+                limitProbabilityRight = marginalDistributionRight(min);
+                limitParameterRight = parameterValuesRight(min);
+            }
 
 
             // Cumulate the probability within the identified interval
 
             int intervalSize = min + stepLeft;
-            totalProbability = marginalDistributionInterpolated.segment(NbinsLeft - stepLeft, intervalSize).sum();
+            totalProbability = marginalDistributionInterpolated.segment(NbinsLeft - stepLeft - 1, intervalSize).sum();
 
 
             // Move one step further to the left
 
             ++stepLeft;
         }
+        
     }
     
     ArrayXd credibleLimits(2);
@@ -428,14 +439,12 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         parameterValues = nestedSampler.getPosteriorSample().row(i);
         marginalDistribution = posteriorDistribution;
 
-
         // Sort elements of array parameterValues in ascending
         // order and sort elements of array marginalDistribution accordingly.
         // Use a mergesort algorithm for more efficiency with a large number of array elements (O(n*log n)).
         
         Functions::topDownMergeSort(parameterValues, marginalDistribution); 
         
-
         // Compute the mean value (expectation value, or first moment) of the sample distribution
        
         double parameterMean = (parameterValues * marginalDistribution).sum();
@@ -550,13 +559,11 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
                 
             }
         
-            
             // Cumulate the values of the rebinning into a total array
 
             parameterValuesRebinned += parameterValuesRebinnedPerShift;
             marginalDistributionRebinned += marginalDistributionRebinnedPerShift;
         }
-
 
         // Average all the rebinnings done by the total number of shifts adopted
         
@@ -571,7 +578,6 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         double parameterMode = parameterValuesRebinned(max);
         parameterEstimates(i,2) = parameterMode;
 
-        
         // Save the second moment of the distribution
        
         parameterEstimates(i,3) = secondMoment;
@@ -582,7 +588,6 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
         double thirdMoment = ((parameterValues - parameterMean).pow(3) * marginalDistribution).sum();
         double skewness = thirdMoment/pow(secondMoment,3.0/2.0);
 
-        
         // Compute shortest credible intervals (CI) and save their corresponding limiting values (credible limits)
 
         ArrayXd credibleLimits(2);
@@ -604,7 +609,6 @@ ArrayXXd Results::parameterEstimation(double credibleLevel, bool writeMarginalDi
             writeMarginalDistributionToFile(i);
         }
 
-        
     }   // END for loop over the parameters
 
     return parameterEstimates;
